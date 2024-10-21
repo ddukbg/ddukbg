@@ -1,6 +1,6 @@
 <h2> 👋 Hello, and welcome to my GitHub!</h2>
 
-<a href="https://www.linkedin.com/in/ddukbg/">
+<a href="https://www.linkedin.com/in/yongwoo-kim-b2a23a200/">
   <img src="https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=Linkedin&logoColor=white"/>
 </a>
 <a href="mailto:wowrebong@gmail.com">
