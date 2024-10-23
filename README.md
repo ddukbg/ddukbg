@@ -1,5 +1,7 @@
 <h2> 👋 Hello, and welcome to my GitHub!</h2>
 
+![helm_deployment](https://github.com/user-attachments/assets/82e5d056-585d-4207-8436-566a82cc086d)
+
 <a href="https://www.linkedin.com/in/yongwoo-kim-b2a23a200/">
   <img src="https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=Linkedin&logoColor=white"/>
 </a>
