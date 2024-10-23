@@ -23,14 +23,42 @@ I am a highly motivated **DevOps Engineer** with a proven track record in automa
 
 ### 🛠 Skills
 
-- **Cloud Platforms**: AWS, GCP
-- **Containerization & Orchestration**: Docker, Kubernetes
-- **Infrastructure as Code**: Terraform, Ansible, Packer
-- **CI/CD Tools**: Jenkins, GitHub Actions, Bamboo
-- **Monitoring & Logging**: Grafana, Prometheus, ELK Stack, New Relic
-- **Programming Languages**: Python, Go
-- **Version Control**: Git (GitHub, Bitbucket)
-- **Security**: ISMS Certification, AWS IAM
+- **Cloud Platforms**:  
+  ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=flat&logo=amazon-aws&logoColor=white) 
+  ![GCP](https://img.shields.io/badge/GCP-%234285F4.svg?style=flat&logo=google-cloud&logoColor=white)
+
+- **Containerization & Orchestration**:  
+  ![Docker](https://img.shields.io/badge/Docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
+  ![Kubernetes](https://img.shields.io/badge/Kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)
+
+- **Infrastructure as Code**:  
+  ![Terraform](https://img.shields.io/badge/Terraform-%23623CE4.svg?style=flat&logo=terraform&logoColor=white) 
+  ![Ansible](https://img.shields.io/badge/Ansible-%231A1918.svg?style=flat&logo=ansible&logoColor=white) 
+  ![Packer](https://img.shields.io/badge/Packer-%2378CFF5.svg?style=flat&logo=packer&logoColor=white)
+
+- **CI/CD Tools**:  
+  ![Jenkins](https://img.shields.io/badge/Jenkins-%232C5263.svg?style=flat&logo=jenkins&logoColor=white) 
+  ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-%232088FF.svg?style=flat&logo=github-actions&logoColor=white) 
+  ![Bamboo](https://img.shields.io/badge/Bamboo-%23026AA7.svg?style=flat&logo=bamboo&logoColor=white)
+
+- **Monitoring & Logging**:  
+  ![Grafana](https://img.shields.io/badge/Grafana-%23F46800.svg?style=flat&logo=grafana&logoColor=white) 
+  ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C.svg?style=flat&logo=prometheus&logoColor=white)
+  ![ELK Stack](https://img.shields.io/badge/ELK-005571?style=flat&logo=elastic-stack&logoColor=white)
+  ![New Relic](https://img.shields.io/badge/New_Relic-008C99?style=flat&logo=new-relic&logoColor=white)
+
+- **Programming Languages**:  
+  ![Python](https://img.shields.io/badge/Python-%233776AB.svg?style=flat&logo=python&logoColor=white) 
+  ![Go](https://img.shields.io/badge/Go-%2300ADD8.svg?style=flat&logo=go&logoColor=white)
+
+- **Version Control**:  
+  ![Git](https://img.shields.io/badge/Git-%23F05033.svg?style=flat&logo=git&logoColor=white) 
+  ![GitHub](https://img.shields.io/badge/GitHub-%23181717.svg?style=flat&logo=github&logoColor=white)
+  ![Bitbucket](https://img.shields.io/badge/Bitbucket-%230047B3.svg?style=flat&logo=bitbucket&logoColor=white)
+
+- **Security**:  
+  ![AWS IAM](https://img.shields.io/badge/AWS_IAM-%23FF4F8B.svg?style=flat&logo=amazon-aws&logoColor=white) 
+  ![ISMS Certification](https://img.shields.io/badge/ISMS-Certified-brightgreen)
 
 ---
 
@@ -48,7 +76,7 @@ I am a highly motivated **DevOps Engineer** with a proven track record in automa
 
 I am currently focused on:
 
-- **FinOps**: I think a lot about using the best performance and the right cost.
+- **FinOps**: I think a lot about using the best performance and the right cost.
 - **Private Serverless Architecture**: Designing workflow-based configurations using private communications within enterprise environments to build scalable and secure applications.
 - **Open Source Contributions**: Engaging in various open-source projects as a hobby, brainstorming and addressing diverse challenges to contribute meaningful solutions to the community.
 
