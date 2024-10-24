@@ -1,17 +1,26 @@
 <h2> 👋 Hello, and welcome to my GitHub!</h2>
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/f228b07d-9359-490e-91a5-fccd47f89d00" width="500" />
+    </td>
+    <td>
+      <img src="https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula" />
+    </td>
+  </tr>
+</table>
 
-![helm_deployment](https://github.com/user-attachments/assets/82e5d056-585d-4207-8436-566a82cc086d)
-
-<a href="https://www.linkedin.com/in/yongwoo-kim-b2a23a200/">
-  <img src="https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=Linkedin&logoColor=white"/>
-</a>
-<a href="mailto:wowrebong@gmail.com">
-  <img src="https://img.shields.io/badge/-Gmail-c14438?style=flat&logo=Gmail&logoColor=white"/>
-</a>
 <br>
-<br>
 
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula)
+<div align="center">
+  <a href="https://www.linkedin.com/in/yongwoo-kim-b2a23a200/">
+    <img src="https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=Linkedin&logoColor=white"/>
+  </a>
+  <a href="mailto:wowrebong@gmail.com">
+    <img src="https://img.shields.io/badge/-Gmail-c14438?style=flat&logo=Gmail&logoColor=white"/>
+  </a>
+</div>
+
 
 <img width="45%" align="right" alt="DevOps" src="https://raw.githubusercontent.com/github/explore/main/topics/devops/devops.png" />
 
