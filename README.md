@@ -11,7 +11,7 @@
       <img src="https://github.com/user-attachments/assets/f228b07d-9359-490e-91a5-fccd47f89d00" width="500" />
     </td>
     <td>
-      <img src="https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula" />
+      <img src="https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula&count_private=true" />
     </td>
   </tr>
 </table>
@@ -128,7 +128,7 @@ If you'd like to chat or collaborate, feel free to reach out via [LinkedIn](http
       <img src="https://github.com/user-attachments/assets/f228b07d-9359-490e-91a5-fccd47f89d00" width="500" />
     </td>
     <td>
-      <img src="https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula" />
+      <img src="https://github-readme-stats.vercel.app/api?username=ddukbg&show_icons=true&theme=dracula&count_private=true" />
     </td>
   </tr>
 </table>
