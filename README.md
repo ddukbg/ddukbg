@@ -148,7 +148,7 @@ If you'd like to chat or collaborate, feel free to reach out via [LinkedIn](http
 
 ### 🚀 소개
 
-저는 워크플로우 자동화, 견고한 표준 설계, 확장 가능한 클라우드 인프라 관리에 뛰어난 **DevOps 엔지니어**입니다. 일상적인 작업을 간소화하여 효율성과 생산성을 높이는 워크플로우 기반 자동화를 잘합니다. 모든 프로젝트에서 일관성, 보안, 품질을 보장하는 표준을 설계하고 구현하는 데 열정이 있습니다. CI/CD 파이프라인, 클라우드 서비스, 컨테이너 오케스트레이션에 대한 풍부한 경험을 바탕으로 복잡한 기술적 도전에 도전하고, 지속적으로 기술을 향상시켜 혁신적이고 신뢰할 수 있는 솔루션을 제공합니다.
+저는 워크플로우 자동화, 견고한 표준 설계, 확장 가능한 클라우드 인프라 관리에 뛰어난 **DevOps 엔지니어**입니다. 일상적인 작업을 간소화하여 효율성과 생산성을 높이는 워크플로우 기반 자동화를 잘합니다. 모든 프로젝트에서 일관성, 보안, 품질을 보장하는 표준을 설계하고 구현하는 데 열정이 있습니다. CI/CD 파이프라인, 클라우드 서비스, 컨테이너 오케스트레이션에 대한 풍부한 경험을 바탕으로 복잡한 기술적 도전에 도전합니다.
 
 ---
 
@@ -162,7 +162,7 @@ If you'd like to chat or collaborate, feel free to reach out via [LinkedIn](http
   ![Docker](https://img.shields.io/badge/Docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
   ![Kubernetes](https://img.shields.io/badge/Kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)
 
-- **코드로서의 인프라**:  
+- **Iac**:  
   ![Terraform](https://img.shields.io/badge/Terraform-%23623CE4.svg?style=flat&logo=terraform&logoColor=white) 
   ![Ansible](https://img.shields.io/badge/Ansible-%231A1918.svg?style=flat&logo=ansible&logoColor=white) 
   ![Packer](https://img.shields.io/badge/Packer-%2378CFF5.svg?style=flat&logo=packer&logoColor=white)
