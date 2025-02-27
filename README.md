@@ -42,7 +42,7 @@ I'm a **DevOps Engineer** building scalable, secure, and automated systems. I de
 
 These are personal projects I work on in my spare time to explore new technologies and solve real-world challenges:
 
-- **[Matrix Style Portfolio](https://github.com/ddukbg)**  
+- **[Matrix Style Portfolio](https://ddukbg.pages.dev)**  
   A personal website with Matrix-themed animations, responsive design, and dark/light mode.
 
 - **[K8s-Deploy-Watcher](https://github.com/ddukbg/K8s-Deploy-Watcher)**  
