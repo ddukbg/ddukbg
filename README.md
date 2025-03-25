@@ -40,7 +40,8 @@ I'm a **DevOps Engineer** building scalable, secure, and automated systems. I de
 
 ## 💻 Side Projects
 
-These are personal projects I work on in my spare time to explore new technologies and solve real-world challenges:
+- **[GitHub Enterprise MCP Server](https://github.com/ddukbg/github-enterprise-mcp)**  
+  An MCP (Model Context Protocol) server for integration with GitHub Enterprise API. This server provides an MCP interface to easily access repository information, issues, PRs, and more from GitHub Enterprise in Cursor.
 
 - **[Matrix Style Portfolio](https://ddukbg.pages.dev)**  
   A personal website with Matrix-themed animations, responsive design, and dark/light mode.
