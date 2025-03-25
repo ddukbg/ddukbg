@@ -15,7 +15,9 @@
 
 ## 🚀 About Me
 
-I'm a **DevOps Engineer** building scalable, secure, and automated systems. I design efficient CI/CD pipelines and modern cloud infrastructures while exploring innovative side projects and contributing to open source.
+I'm a **DevOps Engineer** who thrives on building **scalable, secure, and cost-efficient systems**. My focus is on **maximizing impact with minimal resources**, automating everything that can be automated, and designing **lean CI/CD pipelines** and modern cloud infrastructure.  
+
+While I'm not a traditional full-time developer, I make full use of **AI tools and automation** to develop, learn, and ship faster—turning ideas into working products as efficiently as possible.
 
 ---
 
@@ -56,7 +58,7 @@ I'm a **DevOps Engineer** building scalable, secure, and automated systems. I de
   A guide to deploying Ambient Mesh on AWS EKS for streamlined service mesh operations.
 
 - **[100 Apps Challenge](https://github.com/ddukbg/100-apps-challenge)**  
-  An AI-assisted challenge to build 100 cross-platform mobile apps (7/100 complete).
+  An AI-assisted challenge to build 100 cross-platform mobile apps (8/100 complete).
 
 - **[Prompts for Anything](https://github.com/ddukbg/prompts-for-anything)**  
   A collection of prompt APIs that simplify complex programming tasks using AI.
