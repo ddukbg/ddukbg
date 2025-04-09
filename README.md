@@ -47,6 +47,9 @@ My personal projects are primarily developed under my **ddukbg** account, while 
 - **[GitHub Enterprise MCP Server](https://github.com/ddukbg/github-enterprise-mcp)**  
   An MCP (Model Context Protocol) server for integration with GitHub Enterprise API. This server provides an MCP interface to easily access repository information, issues, PRs, and more from GitHub Enterprise in Cursor.
 
+- **[amazon-ecr-login-for-pod-identity](https://github.com/containerelic/amazon-ecr-login-for-pod-identity)**  
+  A fork of the official amazon-ecr-login action that adds Pod Identity support, enabling seamless AWS ECR login in environments where traditional authentication methods fall short.
+
 - **[Matrix Style Portfolio](https://ddukbg.pages.dev)**  
   A personal website with Matrix-themed animations, responsive design, and dark/light mode.
 
