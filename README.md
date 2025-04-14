@@ -11,9 +11,8 @@
   </tr>
 </table>
 
----
 
-## 🚀 About Me
+## 🚀 About Me [![GitHub stars](https://img.shields.io/github/stars/ddukbg?style=social)](https://github.com/ddukbg?tab=stars)
 
 I'm a **DevOps Engineer** who thrives on building **scalable, secure, and cost-efficient systems**. My focus is on **maximizing impact with minimal resources**, automating everything that can be automated, and designing **lean CI/CD pipelines** and modern cloud infrastructure.
 
@@ -43,6 +42,9 @@ My personal projects are primarily developed under my **ddukbg** account, while 
 ---
 
 ## 💻 Side Projects
+
+- **[stylemd](https://github.com/ddukbg/stylemd)**  
+  A command-line tool to generate static HTML from Markdown, featuring a collection of unique themes (Windows 98, Terminal, Geocities, C64, and more!) for styling your documents.
 
 - **[GitHub Enterprise MCP Server](https://github.com/ddukbg/github-enterprise-mcp)**  
   An MCP (Model Context Protocol) server for integration with GitHub Enterprise API. This server provides an MCP interface to easily access repository information, issues, PRs, and more from GitHub Enterprise in Cursor.
