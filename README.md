@@ -44,7 +44,7 @@ My personal projects are primarily developed under my **ddukbg** account, while 
 ## 💻 Side Projects
 
 - **[stylemd](https://github.com/ddukbg/stylemd)**  
-  A command-line tool to generate static HTML from Markdown, featuring a collection of unique themes (Windows 98, Terminal, Geocities, C64, and more!) for styling your documents.
+  A command-line tool to generate static HTML from Markdown, featuring a collection of unique themes (Windows 98, Terminal, Geocities, C64, and more!) for styling your documents. I built [my own tech blog](https://ddukbg.github.io/ddukbg/) using the Windows 98 theme!
 
 - **[GitHub Enterprise MCP Server](https://github.com/ddukbg/github-enterprise-mcp)**  
   An MCP (Model Context Protocol) server for integration with GitHub Enterprise API. This server provides an MCP interface to easily access repository information, issues, PRs, and more from GitHub Enterprise in Cursor.
