@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EKS AZ 간 통신 최적화 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>EKS AZ 간 통신 최적화</h1>
+    <p><small>2025-05-05 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="eks-trafficdistribution-preferclose-az-"><a href="#eks-trafficdistribution-preferclose-az-" class="header-anchor"></a>EKS에서 trafficDistribution: PreferClose를 활용한 AZ 간 통신 최적화</h1><h2 id="--36"><a href="#--36" class="header-anchor"></a>목차</h2><ul>
+<li><a href="#%EA%B0%9C%EC%9A%94">개요</a></li>
+<li><a href="#%ED%86%A0%ED%8F%B4%EB%A1%9C%EC%A7%80-%EC%9D%B8%EC%8B%9D-%EB%9D%BC%EC%9A%B0%ED%8C%85-%EB%B0%9C%EC%A0%84-%EC%97%AD%EC%82%AC">토폴로지 인식 라우팅 발전 역사</a></li>
+<li><a href="#trafficdistribution-preferclose-%EC%86%8C%EA%B0%9C">trafficDistribution: PreferClose 소개</a></li>
+<li><a href="#%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%84%B1">테스트 환경 구성</a></li>
+<li><a href="#%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4-%EB%B0%8F-%EA%B2%B0%EA%B3%BC">테스트 시나리오 및 결과</a></li>
+<li><a href="#%EA%B8%B0%EC%A1%B4-topology-aware-routing%EA%B3%BC%EC%9D%98-%EB%B9%84%EA%B5%90">기존 Topology-Aware Routing과의 비교</a></li>
+<li><a href="#%EC%A0%81%EC%9A%A9-%EA%B0%80%EC%9D%B4%EB%93%9C%EB%9D%BC%EC%9D%B8-%EB%B0%8F-%EA%B3%A0%EB%A0%A4%EC%82%AC%ED%95%AD">적용 가이드라인 및 고려사항</a></li>
+<li><a href="#%EA%B2%B0%EB%A1%A0">결론</a></li>
+</ul>
+<h2 id="--37"><a href="#--37" class="header-anchor"></a>개요</h2><p>Kubernetes 클러스터, 특히 AWS EKS와 같은 클라우드 환경에서는 여러 가용 영역(Availability Zone, AZ)에 걸쳐 워크로드가 배포됩니다. 서로 다른 AZ 간 통신은 추가적인 네트워크 비용과 지연 시간을 발생시키는데, 이를 최소화하기 위해 Kubernetes에서는 토폴로지 인식 트래픽 라우팅 기능을 제공합니다.</p>
+<p>이 문서에서는 Kubernetes의 토폴로지 인식 라우팅 기능의 발전 과정과 최신 방식인 <code>trafficDistribution: PreferClose</code> 옵션을 EKS 환경에서 테스트한 결과를 공유합니다.</p>
+<h2 id="--38"><a href="#--38" class="header-anchor"></a>토폴로지 인식 라우팅 발전 역사</h2><p>Kubernetes에서 토폴로지 인식 라우팅 기능은 다음과 같이 발전해왔습니다:</p>
+<div class="mermaid">timeline
+    title Kubernetes 토폴로지 인식 라우팅 발전 과정
+    v1.21 : Alpha 도입
+            TopologyAwareHints 기능 게이트
+            service.kubernetes.io/topology-aware-hints 어노테이션
+    v1.23 : Beta 승격
+            기능 게이트 유지
+            EKS v1.24부터 지원
+    v1.24 : Beta 계속
+            기능 게이트 기본 활성화
+    v1.27 : 명칭 변경
+            "Topology Aware Hints" → "Topology Aware Routing"
+            어노테이션 변경: service.kubernetes.io/topology-mode
+    v1.28 : EndpointSlice hints 필드만 GA 목표
+            어노테이션 및 휴리스틱은 GA 미포함
+    v1.33 : trafficDistribution 필드 GA 예정
+            service.kubernetes.io/topology-mode 어노테이션 Deprecated</div><h3 id="--39"><a href="#--39" class="header-anchor"></a>주요 변화 요약</h3><ol>
+<li><p><strong>v1.21 (알파)</strong>: &quot;Topology Aware Hints&quot;라는 이름으로 처음 도입</p>
+<ul>
+<li><code>TopologyAwareHints</code> 기능 게이트 필요</li>
+<li><code>service.kubernetes.io/topology-aware-hints</code> 어노테이션 사용</li>
+</ul>
+</li>
+<li><p><strong>v1.23 (베타)</strong>: 베타 단계로 승격</p>
+<ul>
+<li>EKS는 v1.24부터 이 기능 지원</li>
+</ul>
+</li>
+<li><p><strong>v1.24</strong>: 기능 게이트가 기본적으로 활성화</p>
+</li>
+<li><p><strong>v1.27</strong>: 이름 및 어노테이션 변경</p>
+<ul>
+<li>&quot;Topology Aware Hints&quot; → &quot;Topology Aware Routing&quot;</li>
+<li>어노테이션이 <code>service.kubernetes.io/topology-mode</code>로 변경</li>
+</ul>
+</li>
+<li><p><strong>v1.28</strong>: EndpointSlice의 hints 필드만 GA 목표</p>
+<ul>
+<li>어노테이션과 라우팅 휴리스틱은 GA 대상에서 제외</li>
+</ul>
+</li>
+<li><p><strong>v1.33 (예정)</strong>:</p>
+<ul>
+<li><code>service.kubernetes.io/topology-mode</code> 어노테이션이 deprecated 예정</li>
+<li><code>spec.trafficDistribution</code> 필드가 GA로 승격 예정</li>
+<li>이전 어노테이션은 하위 호환성을 위해 유지되지만 사용 권장하지 않음</li>
+</ul>
+</li>
+</ol>
+<h2 id="trafficdistribution-preferclose-"><a href="#trafficdistribution-preferclose-" class="header-anchor"></a>trafficDistribution: PreferClose 소개</h2><h3 id="--40"><a href="#--40" class="header-anchor"></a>기능 소개</h3><p><code>trafficDistribution: PreferClose</code>는 Kubernetes Service 리소스의 필드로, 같은 AZ 내에서 우선적으로 트래픽을 분산시키는 기능을 제공합니다. 이를 통해 AZ 간 네트워크 통신을 최소화하여 지연 시간과 데이터 전송 비용을 줄일 수 있습니다.</p>
+<h3 id="--41"><a href="#--41" class="header-anchor"></a>동작 방식</h3><ol>
+<li>EndpointSlice 컨트롤러가 각 엔드포인트의 토폴로지 정보(가용 영역)를 힌트로 기록</li>
+<li>kube-proxy가 이 힌트를 활용하여 같은 AZ 내에서 우선적으로 트래픽 라우팅</li>
+<li>동일 AZ에 가용한 엔드포인트가 없는 경우에만 다른 AZ로 트래픽 라우팅</li>
+</ol>
+<h3 id="--42"><a href="#--42" class="header-anchor"></a>설정 방법</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">my-service</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
+  <span class="hljs-attr">ports:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
+    <span class="hljs-attr">targetPort:</span> <span class="hljs-number">8080</span>
+  <span class="hljs-attr">trafficDistribution:</span> <span class="hljs-string">PreferClose</span>  <span class="hljs-comment"># v1.33에서 GA 예정</span></code></pre><p>v1.33 이전 버전에서는 아래와 같이 어노테이션을 사용 (Kubernetes v1.27 이상):</p>
+<pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">my-service</span>
+  <span class="hljs-attr">annotations:</span>
+    <span class="hljs-attr">service.kubernetes.io/topology-mode:</span> <span class="hljs-string">Auto</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
+  <span class="hljs-attr">ports:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span></code></pre><h2 id="--43"><a href="#--43" class="header-anchor"></a>테스트 환경 구성</h2><h3 id="--44"><a href="#--44" class="header-anchor"></a>클러스터 환경</h3><p>테스트는 ap-northeast-2 리전의 EKS 클러스터에서 수행되었으며, 노드는 A존과 C존에 분산 배치되었습니다.</p>
+<div class="mermaid">graph TD
+    subgraph "EKS Cluster (ap-northeast-2)"
+        subgraph "Availability Zone A"
+            NodeA1["Node: ip-10-241-41-84"]
+            NodeA2["Node: ip-10-241-43-56"]
+            NodeA3["Node: ip-10-241-42-70"]
+        end
+        
+        subgraph "Availability Zone C"
+            NodeC1["Node: ip-10-241-63-97"]
+            NodeC2["Node: ip-10-241-63-71"]
+            NodeC3["Node: ip-10-241-63-246"]
+        end
+    end</div><h3 id="--45"><a href="#--45" class="header-anchor"></a>테스트용 리소스 구성</h3><pre><code class="hljs yaml"><span class="hljs-comment"># 네임스페이스</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Namespace</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">topo-test</span>
+<span class="hljs-meta">---</span>
+<span class="hljs-comment"># 애플리케이션: test-app (5 replicas, 기본 스케줄링)</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">test-app</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">topo-test</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">5</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">test-app</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">test-app</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">http-echo</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">hashicorp/http-echo:0.2.3</span>
+        <span class="hljs-attr">args:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;-text=$(POD_NAME)&quot;</span>
+        <span class="hljs-attr">env:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">POD_NAME</span>
+          <span class="hljs-attr">valueFrom:</span>
+            <span class="hljs-attr">fieldRef:</span>
+              <span class="hljs-attr">fieldPath:</span> <span class="hljs-string">metadata.name</span>
+        <span class="hljs-attr">ports:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">containerPort:</span> <span class="hljs-number">5678</span>
+<span class="hljs-meta">---</span>
+<span class="hljs-comment"># Service: ClusterIP + PreferClose</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">test-app-svc</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">topo-test</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">type:</span> <span class="hljs-string">ClusterIP</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">app:</span> <span class="hljs-string">test-app</span>
+  <span class="hljs-attr">ports:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
+    <span class="hljs-attr">targetPort:</span> <span class="hljs-number">5678</span>
+  <span class="hljs-attr">trafficDistribution:</span> <span class="hljs-string">PreferClose</span>
+<span class="hljs-meta">---</span>
+<span class="hljs-comment"># A존 클라이언트</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">client-a</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">topo-test</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">client-a</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">client-a</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">nodeSelector:</span>
+        <span class="hljs-attr">topology.kubernetes.io/zone:</span> <span class="hljs-string">ap-northeast-2a</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">curl</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">nicolaka/netshoot:latest</span>
+        <span class="hljs-attr">command:</span> [<span class="hljs-string">&quot;sleep&quot;</span>,<span class="hljs-string">&quot;3600&quot;</span>]
+<span class="hljs-meta">---</span>
+<span class="hljs-comment"># C존 클라이언트</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">client-c</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">topo-test</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">client-c</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">client-c</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">nodeSelector:</span>
+        <span class="hljs-attr">topology.kubernetes.io/zone:</span> <span class="hljs-string">ap-northeast-2c</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">curl</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">nicolaka/netshoot:latest</span>
+        <span class="hljs-attr">command:</span> [<span class="hljs-string">&quot;sleep&quot;</span>,<span class="hljs-string">&quot;3600&quot;</span>]</code></pre><h3 id="-pod-"><a href="#-pod-" class="header-anchor"></a>초기 Pod 배치</h3><div class="mermaid">graph TD
+    subgraph "EKS Cluster"
+        subgraph "Availability Zone A"
+            NodeA1["Node: ip-10-241-41-84"]
+            NodeA2["Node: ip-10-241-43-56"]
+            NodeA3["Node: ip-10-241-42-70"]
+            
+            ClientA["client-a-96cc9fbcc-9gjwz"]
+            PodA1["test-app-6477bdcb89-m5ds6"]
+            PodA2["test-app-6477bdcb89-btrhg"]
+            PodA3["test-app-6477bdcb89-d7jv8"]
+            
+            NodeA1 --- ClientA
+            NodeA1 --- PodA1
+            NodeA2 --- PodA2
+            NodeA3 --- PodA3
+        end
+        
+        subgraph "Availability Zone C"
+            NodeC1["Node: ip-10-241-63-97"]
+            NodeC2["Node: ip-10-241-63-71"]
+            
+            ClientC["client-c-865657b5-r747w"]
+            PodC1["test-app-6477bdcb89-79xq5"]
+            PodC2["test-app-6477bdcb89-rclxt"]
+            
+            NodeC1 --- ClientC
+            NodeC1 --- PodC1
+            NodeC2 --- PodC2
+        end
+    end</div><h2 id="--46"><a href="#--46" class="header-anchor"></a>테스트 시나리오 및 결과</h2><h3 id="-1-endpointslice-"><a href="#-1-endpointslice-" class="header-anchor"></a>시나리오 1: EndpointSlice 힌트 확인</h3><p>EndpointSlice에는 각 Pod의 AZ 정보가 힌트로 저장되어 있습니다.</p>
+<pre><code class="hljs bash">kubectl -n topo-test get endpointslices \
+  -l kubernetes.io/service-name=test-app-svc \
+  -o jsonpath=<span class="hljs-string">&#x27;{.items[*].endpoints[*].hints.forZones}&#x27;</span></code></pre><p>결과:</p>
+<pre><code class="hljs plaintext">[{&quot;name&quot;:&quot;ap-northeast-2c&quot;}] [{&quot;name&quot;:&quot;ap-northeast-2a&quot;}] [{&quot;name&quot;:&quot;ap-northeast-2a&quot;}] [{&quot;name&quot;:&quot;ap-northeast-2a&quot;}] [{&quot;name&quot;:&quot;ap-northeast-2c&quot;}]</code></pre><h3 id="-2-az-"><a href="#-2-az-" class="header-anchor"></a>시나리오 2: 동일 AZ 내 트래픽 분산</h3><div class="mermaid">flowchart LR
+    subgraph "Availability Zone A"
+        ClientA["client-a<br>Pod"]
+        PodA1["test-app<br>Pod A-1"]
+        PodA2["test-app<br>Pod A-2"]
+        PodA3["test-app<br>Pod A-3"]
+    end
+    
+    subgraph "Availability Zone C"
+        ClientC["client-c<br>Pod"]
+        PodC1["test-app<br>Pod C-1"]
+        PodC2["test-app<br>Pod C-2"]
+    end
+    
+    ClientA -->|"30 요청"| ServiceA["Service<br>(PreferClose)"]
+    ClientC -->|"30 요청"| ServiceC["Service<br>(PreferClose)"]
+    
+    ServiceA -->|"모든 요청"| PodA1 & PodA2 & PodA3
+    ServiceC -->|"모든 요청"| PodC1 & PodC2
+    
+    style ServiceA fill:#f9f,stroke:#333,stroke-width:2px
+    style ServiceC fill:#f9f,stroke:#333,stroke-width:2px</div><h4 id="a-"><a href="#a-" class="header-anchor"></a>A존 클라이언트 호출 결과</h4><pre><code class="hljs plaintext">  11 test-app-6477bdcb89-btrhg
+  13 test-app-6477bdcb89-d7jv8
+   6 test-app-6477bdcb89-m5ds6</code></pre><p><strong>분석</strong>: A존 클라이언트의 모든 요청이 <strong>A존에 위치한 3개의 Pod으로만</strong> 분산되었습니다.</p>
+<h4 id="c-"><a href="#c-" class="header-anchor"></a>C존 클라이언트 호출 결과</h4><pre><code class="hljs plaintext">  19 test-app-6477bdcb89-79xq5
+  11 test-app-6477bdcb89-rclxt</code></pre><p><strong>분석</strong>: C존 클라이언트의 모든 요청이 <strong>C존에 위치한 2개의 Pod으로만</strong> 분산되었습니다.</p>
+<h3 id="-3-fallback-"><a href="#-3-fallback-" class="header-anchor"></a>시나리오 3: 폴백(Fallback) 메커니즘 검증</h3><p>A존의 Pod를 모두 제거하고 C존에만 Pod이 있는 상황에서 테스트했습니다.</p>
+<div class="mermaid">flowchart LR
+    subgraph "Availability Zone A"
+        ClientA["client-a<br>Pod"]
+        NoPods["Pod 없음"]
+    end
+    
+    subgraph "Availability Zone C"
+        ClientC["client-c<br>Pod"]
+        PodC1["test-app<br>Pod C-1"]
+        PodC2["test-app<br>Pod C-2"]
+        PodC3["test-app<br>Pod C-3"]
+    end
+    
+    ClientA -->|"30 요청"| Service["Service<br>(PreferClose)"]
+    
+    Service -->|"모든 요청<br>(폴백)"| PodC1 & PodC2 & PodC3
+    
+    style Service fill:#f9f,stroke:#333,stroke-width:2px
+    style NoPods fill:#f99,stroke:#f33,stroke-width:2px,stroke-dasharray: 5 5</div><h4 id="a-a-pod-"><a href="#a-a-pod-" class="header-anchor"></a>A존 클라이언트 호출 결과 (A존 Pod 없는 상황)</h4><pre><code class="hljs plaintext">   9 test-app-54fb4d54c6-9vvtj
+  12 test-app-54fb4d54c6-hl2r4
+   9 test-app-54fb4d54c6-wv2qw</code></pre><p><strong>분석</strong>: A존에 Pod이 없으므로, 클러스터 전체(실제로는 C존)의 Pod로 트래픽이 분산되었습니다.</p>
+<h3 id="-4-"><a href="#-4-" class="header-anchor"></a>시나리오 4: 복구 후 동작 확인</h3><p>A존과 C존에 다시 Pod을 분산 배치한 후 테스트했습니다.</p>
+<pre><code class="hljs plaintext">  12 test-app-6477bdcb89-k6p49
+  18 test-app-6477bdcb89-pmfm2</code></pre><p><strong>분석</strong>: A존 클라이언트의 요청이 다시 A존 Pod에게만 분산되었습니다.</p>
+<h2 id="-topology-aware-routing-"><a href="#-topology-aware-routing-" class="header-anchor"></a>기존 Topology-Aware Routing과의 비교</h2><p>Kubernetes에서는 AZ 간 통신을 최적화하기 위한 두 가지 주요 접근 방식이 있습니다:</p>
+<h3 id="1-service-kubernetes-io-topology-mode-auto-"><a href="#1-service-kubernetes-io-topology-mode-auto-" class="header-anchor"></a>1. service.kubernetes.io/topology-mode: Auto (기존 방식)</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">my-service</span>
+  <span class="hljs-attr">annotations:</span>
+    <span class="hljs-attr">service.kubernetes.io/topology-mode:</span> <span class="hljs-string">Auto</span>  <span class="hljs-comment"># v1.27부터 사용, v1.33에서 Deprecated 예정</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
+  <span class="hljs-attr">ports:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span></code></pre><h3 id="2-trafficdistribution-preferclose-"><a href="#2-trafficdistribution-preferclose-" class="header-anchor"></a>2. trafficDistribution: PreferClose (신규 방식)</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">my-service</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
+  <span class="hljs-attr">ports:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
+  <span class="hljs-attr">trafficDistribution:</span> <span class="hljs-string">PreferClose</span>  <span class="hljs-comment"># v1.33에서 GA 예정</span></code></pre><h3 id="--47"><a href="#--47" class="header-anchor"></a>주요 차이점</h3><div class="mermaid">graph TD
+    A[토폴로지 인식 라우팅 방식] --> B["service.kubernetes.io/topology-mode: Auto"]
+    A --> C["trafficDistribution: PreferClose"]
+    
+    B --> D["CPU 리소스 비율에 따라<br>트래픽 분산"]
+    B --> E["복잡한 알고리즘으로<br>부하 분산 고려"]
+    
+    C --> F["단순하고 예측 가능한 방식:<br>로컬 AZ에 우선 분산"]
+    C --> G["로컬 AZ에 Pod이 없을 때만<br>다른 AZ로 분산"]
+    
+    H[버전 히스토리] --> I["어노테이션: v1.21(알파)부터 도입<br>v1.27에서 이름 변경<br>v1.33에서 Deprecated 예정"]
+    H --> J["trafficDistribution: v1.24에서 도입<br>v1.33에서 GA 예정"]
+    
+    K[적용 우선순위] --> L["어노테이션이 설정된 경우<br>trafficDistribution보다 우선 적용"]</div><ol>
+<li><p><strong>분산 알고리즘</strong>:</p>
+<ul>
+<li><strong>topology-mode: Auto</strong>: 할당 가능한 CPU 리소스 비율에 따라 트래픽을 분산합니다. 더 복잡한 휴리스틱을 사용하며, 엔드포인트 수가 적을 때 폴백 동작을 포함하는 등 부하 분산을 고려합니다.</li>
+<li><strong>PreferClose</strong>: 단순하고 예측 가능한 방식으로 작동합니다 - &quot;해당 존에 엔드포인트가 있으면 그 존의 모든 트래픽을 받고, 존에 엔드포인트가 없으면 트래픽이 다른 존으로 분산됩니다&quot;.</li>
+</ul>
+</li>
+<li><p><strong>적용 우선순위</strong>:</p>
+<ul>
+<li><code>service.kubernetes.io/topology-mode</code> 어노테이션이 Auto로 설정된 경우, <code>trafficDistribution</code> 필드보다 우선 적용됩니다.</li>
+</ul>
+</li>
+<li><p><strong>버전 상태</strong>:</p>
+<ul>
+<li><code>service.kubernetes.io/topology-mode</code>: v1.27부터 도입되었으며, v1.33에서 deprecated 예정</li>
+<li><code>trafficDistribution</code>: v1.33에서 GA(정식 버전)로 승격 예정</li>
+</ul>
+</li>
+</ol>
+<h2 id="--48"><a href="#--48" class="header-anchor"></a>적용 가이드라인 및 고려사항</h2><h3 id="--49"><a href="#--49" class="header-anchor"></a>어떤 옵션을 사용해야 할까?</h3><div class="mermaid">flowchart TD
+    A[시작] --> B{쿠버네티스<br>버전은?}
+    B -->|"v1.33 이상"| C["trafficDistribution: PreferClose<br>사용 권장"]
+    B -->|"v1.27~v1.32"| D{"어떤 기능이<br>중요한가?"}
+    B -->|"v1.21~v1.26"| E["service.kubernetes.io/topology-aware-hints: Auto<br>사용"]
+    
+    D -->|"단순하고 예측<br>가능한 라우팅"| F["trafficDistribution: PreferClose<br>(GA 전 베타 기능)"]
+    D -->|"부하 분산 최적화"| G["service.kubernetes.io/topology-mode: Auto<br>(deprecated 예정이지만 사용 가능)"]</div><ol>
+<li><p><strong>Kubernetes 버전 기준</strong>:</p>
+<ul>
+<li><strong>v1.33 이상</strong>: <code>trafficDistribution: PreferClose</code> 사용 권장 (GA 버전)</li>
+<li><strong>v1.27~v1.32</strong>: 두 옵션 모두 사용 가능하나, 향후 마이그레이션을 고려하면 <code>trafficDistribution: PreferClose</code> 권장</li>
+<li><strong>v1.21~v1.26</strong>: <code>service.kubernetes.io/topology-aware-hints: Auto</code> 사용</li>
+</ul>
+</li>
+<li><p><strong>기능적 요구사항 기준</strong>:</p>
+<ul>
+<li><strong>단순하고 예측 가능한 라우팅이 중요</strong>: <code>trafficDistribution: PreferClose</code> 권장</li>
+<li><strong>복잡한 부하 분산 최적화가 필요</strong>: <code>topology-mode: Auto</code> 고려 (v1.33 이전 버전에서)</li>
+</ul>
+</li>
+<li><p><strong>마이그레이션 계획</strong>:</p>
+<ul>
+<li>v1.33 이후에는 점진적으로 <code>trafficDistribution: PreferClose</code>로 마이그레이션할 계획 수립 필요</li>
+</ul>
+</li>
+</ol>
+<h3 id="--50"><a href="#--50" class="header-anchor"></a>주의사항</h3><ol>
+<li><p><strong>Pod 분포 관리</strong>:</p>
+<ul>
+<li><code>PreferClose</code>를 사용할 경우, 애플리케이션 Pod이 AZ 간에 적절하게 분산되도록 관리해야 합니다.</li>
+<li>특정 AZ에 Pod이 과도하게 집중되면 불균형한 부하 분산이 발생할 수 있습니다.</li>
+</ul>
+</li>
+<li><p><strong>가용성과 복원력</strong>:</p>
+<ul>
+<li>특정 AZ에 장애가 발생하면 해당 AZ의 트래픽이 다른 AZ로 이동할 수 있습니다.</li>
+<li>모든 AZ의 서비스가 갑작스런 트래픽 증가를 처리할 수 있도록 충분한 용량을 확보해야 합니다.</li>
+</ul>
+</li>
+<li><p><strong>모니터링</strong>:</p>
+<ul>
+<li>AZ 별 트래픽 패턴과 Pod 부하를 모니터링하여 필요한 경우 Pod 분산 전략을 조정하세요.</li>
+</ul>
+</li>
+<li><p><strong>단계적 적용</strong>:</p>
+<ul>
+<li>프로덕션 환경에 적용하기 전에 테스트 환경에서 충분히 검증하세요.</li>
+<li>특히 트래픽이 많은 서비스에는 단계적으로 적용하는 것이 좋습니다.</li>
+</ul>
+</li>
+</ol>
+<h2 id="--51"><a href="#--51" class="header-anchor"></a>결론</h2><p>EKS 환경에서 토폴로지 인식 라우팅 기능, 특히 <code>trafficDistribution: PreferClose</code> 옵션을 사용하면 다음과 같은 이점을 얻을 수 있습니다:</p>
+<ol>
+<li><strong>네트워크 비용 최적화</strong>: AZ 간 데이터 전송 비용을 최소화할 수 있습니다.</li>
+<li><strong>지연 시간 감소</strong>: 같은 AZ 내에서의 통신은 지연 시간이 줄어듭니다.</li>
+<li><strong>예측 가능한 트래픽 패턴</strong>: 트래픽 흐름이 단순하고 예측 가능해집니다.</li>
+<li><strong>안정적인 폴백 메커니즘</strong>: 로컬 AZ에 Pod이 없을 경우에만 다른 AZ로 트래픽이 분산됩니다.</li>
+</ol>
+<p>테스트 결과, <code>trafficDistribution: PreferClose</code> 옵션은 의도한 대로 정확하게 작동하며, 로컬 AZ 내에서 트래픽을 효과적으로 유지하는 것을 확인했습니다. 이는 특히 마이크로서비스 아키텍처에서 서비스 간 호출이 많은 경우 상당한 비용 절감과 성능 향상을 가져올 수 있습니다.</p>
+<p>쿠버네티스 v1.33에서는 <code>trafficDistribution: PreferClose</code>가 GA로 승격될 예정이므로, 장기적인 관점에서 새로운
+서비스에는 이 방식을 적용하는 것이 권장됩니다. 기존에 <code>topology-mode: Auto</code> 어노테이션을 사용 중인 서비스는 향후 v1.33 이후에 점진적으로 마이그레이션을 계획하는 것이 좋습니다.</p>
+<h2 id="--52"><a href="#--52" class="header-anchor"></a>참고 문헌</h2><ol>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/">Kubernetes 공식 문서: 토폴로지 인식 라우팅</a></li>
+<li><a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-network/2433-topology-aware-hints/README.md">KEP-2433: Topology Aware Hints</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.33.md">Kubernetes v1.33 Changelog</a></li>
+<li><a href="https://www.eksworkshop.com/advanced/320_servicemesh_with_appmesh/topology_aware_hints/">EKS 워크숍: 토폴로지 인식 힌트</a></li>
+<li><a href="https://aws.amazon.com/blogs/containers/introducing-topology-aware-hints-for-kubernetes/">AWS 블로그: EKS에서 토폴로지 인식 라우팅</a></li>
+</ol>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

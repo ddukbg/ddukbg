@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS S3 비용 최적화 여정 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>AWS S3 비용 최적화 여정</h1>
+    <p><small>2025-05-05 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="aws-s3-"><a href="#aws-s3-" class="header-anchor"></a>AWS S3 비용 최적화 여정: 압축과 라이프사이클 관리를 통한 비용 절감</h1><blockquote>
+<p>안녕하세요! 이 글은 제가 AWS S3 비용을 최적화하면서 겪었던 경험과 학습한 내용을 공유하기 위해 작성되었습니다. 아직 배우고 성장하는 과정에 있기에 부족한 점이나 잘못된 정보가 있을 수 있습니다. 너그러이 이해해주시고, 혹시 개선할 점이나 더 좋은 의견이 있다면 언제든지 피드백 부탁드립니다.</p>
+</blockquote>
+<h2 id="-"><a href="#-" class="header-anchor"></a>들어가며</h2><p>클라우드 환경에서 시스템을 운영하다 보면 가장 큰 고민 중 하나는 비용 관리입니다. 특히 로그 데이터와 같이 지속적으로 증가하는 데이터를 효율적으로 저장하고 관리하는 것은 클라우드 운영 비용을 결정짓는 중요한 요소입니다. 이 글에서는 제가 최근 진행한 AWS S3 스토리지 비용 최적화 프로젝트의 여정을 공유하고자 합니다. 특히 Kubernetes(EKS) 환경에서 발생하는 로그 데이터의 압축 방식 개선과 라이프사이클 정책 적용을 통해 어떻게 비용을 절감했는지, 그리고 이 과정에서 오픈소스 커뮤니티에 기여한 경험까지 함께 나누겠습니다.</p>
+<h2 id="--2"><a href="#--2" class="header-anchor"></a>문제 상황</h2><h3 id="--3"><a href="#--3" class="header-anchor"></a>증가하는 로그 스토리지 비용</h3><p>2025년 초, 우리 팀은 AWS 비용 분석을 진행하던 중 로그 저장 비용이 지속적으로 증가하고 있다는 사실을 발견했습니다. 특히 EKS 클러스터에서 생성되는 애플리케이션 로그가 <code>fluentd → Elasticsearch → S3</code> 경로로 저장되는 과정에서 비효율적인 관리로 인해 비용이 계속 증가하고 있었습니다.</p>
+<p>구체적인 비용 현황은 다음과 같았습니다:</p>
+<ul>
+<li><strong>비운영 환경</strong>: 주요 로그 저장소는 매월 평균 50달러씩 증가하며, 최근 기준 약 500달러 청구</li>
+<li><strong>백업 데이터</strong>: 월 평균 65달러 수준 유지</li>
+<li><strong>운영 환경</strong>: 매월 1,500달러 이상 청구되며, 로그량 증가에 따라 월 30-40달러씩 추가 비용 발생</li>
+</ul>
+<div class="mermaid">graph LR
+    A[EKS Pods] -->|로그 생성| B[Fluentd]
+    B -->|로그 전송| C[Elasticsearch]
+    C -->|데이터 아카이빙| D[S3 Storage]
+    D -->|gzip 압축| E[증가하는 스토리지 비용]
+    style E fill:#f9d0c4,stroke:#333,stroke-width:2px</div><h3 id="--4"><a href="#--4" class="header-anchor"></a>비효율적인 데이터 관리</h3><p>문제의 원인을 분석한 결과, 다음과 같은 비효율적인 데이터 관리가 확인되었습니다:</p>
+<ol>
+<li><strong>압축 효율성 부족</strong>: S3에 저장되는 로그 파일들이 gzip 형태로만 압축되어 있어 저장 효율이 좋지 않았습니다.</li>
+<li><strong>데이터 라이프사이클 관리 부재</strong>: 모든 환경(비운영, 운영)의 데이터가 동일한 방식으로 관리되고 있었으며, 장기 보관이 필요하지 않은 비운영 환경의 로그도 계속 누적되고 있었습니다.</li>
+<li><strong>미사용 버킷 관리 부재</strong>: 비용이 발생하고 있음에도 실제로 사용되지 않는 S3 버킷들이 존재했습니다.</li>
+</ol>
+<h2 id="--5"><a href="#--5" class="header-anchor"></a>비용 최적화 접근 방식</h2><p>위 문제들을 해결하기 위해 다음과 같은 세 가지 접근 방식을 채택했습니다:</p>
+<ol>
+<li><strong>압축 방식 개선</strong>: gzip보다 더 효율적인 압축 알고리즘 도입</li>
+<li><strong>S3 라이프사이클 정책 적용</strong>: 환경별 특성에 맞는 데이터 보관 정책 구현</li>
+<li><strong>미사용 S3 버킷 정리</strong>: 불필요한 스토리지 비용 제거</li>
+</ol>
+<h3 id="1-gzip-zstd-"><a href="#1-gzip-zstd-" class="header-anchor"></a>1. 압축 방식 개선 (gzip → zstd)</h3><p>첫 번째 단계로, 현재 S3에 저장되는 로그 파일들의 압축 방식을 개선하기로 했습니다. 기존의 gzip 압축 대신 더 높은 압축률과 빠른 처리 속도를 제공하는 zstd(Zstandard) 압축 알고리즘을 도입하기로 결정했습니다.</p>
+<h4 id="--6"><a href="#--6" class="header-anchor"></a>압축 방식 비교 테스트</h4><p>결정에 앞서 실제 로그 데이터를 사용해 압축 테스트를 진행했습니다:</p>
+<pre><code class="hljs plaintext">테스트 환경:
+- HW: MacBook M3 Pro (8‑core CPU)
+- OS: macOS 14.x
+- 테스트 파일: 약 1GB 크기의 로그 파일</code></pre><p>테스트 결과는 다음과 같았습니다:</p>
+<table>
+<thead>
+<tr>
+<th>압축 방식</th>
+<th>옵션</th>
+<th>압축 파일 크기</th>
+<th>압축 시간</th>
+<th>User 시간</th>
+<th>Sys 시간</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>gzip</td>
+<td>기본 (-6)</td>
+<td>103 MB</td>
+<td>6.288초</td>
+<td>5.99초</td>
+<td>0.11초</td>
+</tr>
+<tr>
+<td>zstd</td>
+<td>-3 -T0</td>
+<td>79.6 MB</td>
+<td>0.509초</td>
+<td>1.561초</td>
+<td>0.166초</td>
+</tr>
+<tr>
+<td>zstd</td>
+<td>-19 -T0</td>
+<td>56.6 MB</td>
+<td>18.497초</td>
+<td>4m2.739초</td>
+<td>1.484초</td>
+</tr>
+</tbody></table>
+<p>테스트 결과, zstd는 두 가지 중요한 이점을 제공했습니다:</p>
+<ol>
+<li><strong>더 높은 압축률</strong>: zstd(level 3)는 gzip보다 약 23% 더 작은 파일 크기를 달성했으며, zstd(level 19)는 약 45% 더 작은 파일 크기를 달성했습니다.</li>
+<li><strong>더 빠른 압축 속도</strong>: zstd(level 3)는 gzip보다 약 12배 빠른 압축 속도를 보여주었습니다.</li>
+</ol>
+<p>이러한 결과를 바탕으로 다음과 같은 최적화 전략을 수립했습니다:</p>
+<ul>
+<li><strong>기존 데이터</strong>: gzip → zstd(level 19)로 전환하여 월별 S3 스토리지 비용 약 45% 절감 (최대 압축률 우선)</li>
+<li><strong>신규 데이터</strong>: gzip → zstd(level 3)로 전환하여 더 빠른 적재 속도와 적정 수준의 압축률 확보</li>
+</ul>
+<h4 id="-fluent-plugin-s3-zstd-"><a href="#-fluent-plugin-s3-zstd-" class="header-anchor"></a>오픈소스 기여: fluent-plugin-s3에 zstd 지원 추가</h4><p>이 과정에서 기존 fluent-plugin-s3가 zstd 압축을 지원하지 않는다는 문제를 발견했습니다. 이를 해결하기 위해 직접 해당 플러그인에 zstd 압축 기능을 추가하는 개발을 진행했고, 이 기능을 오픈소스 커뮤니티에 기여했습니다.</p>
+<pre><code class="hljs plaintext">Fluent Plugin S3 Zstd
+Official contribution: Added Zstd compression to Fluentd&#x27;s S3 plugin, featured in the v1.8.1 release.
+https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를 통해 fluent-plugin-s3 v1.8.1부터 zstd 압축 방식을 공식적으로 지원하게 되었으며, 우리뿐만 아니라 해당 플러그인을 사용하는 모든 사용자들이 더 효율적인 압축 방식을 활용할 수 있게 되었습니다.</p>
+<p>구현 코드의 핵심 부분은 다음과 같습니다:</p>
+<pre><code class="hljs ruby"><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;zstd-ruby&#x27;</span>
+
+<span class="hljs-keyword">module</span> <span class="hljs-title class_">Fluent::Plugin</span>
+  <span class="hljs-keyword">class</span> <span class="hljs-title class_">S3Output</span>
+    <span class="hljs-keyword">class</span> <span class="hljs-title class_">ZstdCompressor</span> &lt; <span class="hljs-title class_ inherited__">Compressor</span>
+      <span class="hljs-title class_">S3Output</span>.register_compressor(<span class="hljs-string">&#x27;zstd&#x27;</span>, <span class="hljs-variable language_">self</span>)
+
+      config_section <span class="hljs-symbol">:compress</span>, <span class="hljs-symbol">param_name:</span> <span class="hljs-symbol">:compress_config</span>, <span class="hljs-symbol">init:</span> <span class="hljs-literal">true</span>, <span class="hljs-symbol">multi:</span> <span class="hljs-literal">false</span> <span class="hljs-keyword">do</span>
+        desc <span class="hljs-string">&quot;Compression level for zstd (1-22)&quot;</span>
+        config_param <span class="hljs-symbol">:level</span>, <span class="hljs-symbol">:integer</span>, <span class="hljs-symbol">default:</span> <span class="hljs-number">3</span>
+      <span class="hljs-keyword">end</span>
+
+      <span class="hljs-keyword">def</span> <span class="hljs-title function_">ext</span>
+        <span class="hljs-string">&#x27;zst&#x27;</span>.freeze
+      <span class="hljs-keyword">end</span>
+
+      <span class="hljs-keyword">def</span> <span class="hljs-title function_">content_type</span>
+        <span class="hljs-string">&#x27;application/x-zst&#x27;</span>.freeze
+      <span class="hljs-keyword">end</span>
+
+      <span class="hljs-keyword">def</span> <span class="hljs-title function_">compress</span>(<span class="hljs-params">chunk, tmp</span>)
+        compressed = <span class="hljs-title class_">Zstd</span>.compress(chunk.read, <span class="hljs-symbol">level:</span> <span class="hljs-variable">@compress_config</span>.level)
+        tmp.write(compressed)
+      <span class="hljs-keyword">rescue</span> =&gt; e
+        log.warn <span class="hljs-string">&quot;zstd compression failed: <span class="hljs-subst">#{e.message}</span>&quot;</span>
+        <span class="hljs-keyword">raise</span>
+      <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span></code></pre><h3 id="2-s3-"><a href="#2-s3-" class="header-anchor"></a>2. S3 라이프사이클 정책 적용</h3><p>두 번째 단계로, 환경별 특성과 데이터 중요도에 따라 차별화된 라이프사이클 정책을 적용했습니다.</p>
+<div class="mermaid">graph TD
+    A[S3 버킷 데이터] --> B{환경 분류}
+    B -->|비운영 환경| C[특정 기간 경과 시 삭제]
+    B -->|운영 환경| E[장기 보관]
+    E --> F[30일 경과]
+    F -->|Standard-IA로 전환| G[90일 경과]
+    G -->|GLACIER_IR로 전환| H[장기 보관 데이터]
+    H -->|필요시| I[DEEP_ARCHIVE 고려]
+    style C fill:#d4f1c5,stroke:#333,stroke-width:1px
+    style E fill:#d4f1c5,stroke:#333,stroke-width:1px</div><h4 id="--7"><a href="#--7" class="header-anchor"></a>환경별 정책</h4><ul>
+<li><strong>비운영 환경</strong>: 데이터 중요도에 따라 3일 또는 90일 경과 시 삭제 (예시)</li>
+<li><strong>운영 환경</strong>:<ul>
+<li>30일 경과 시 Standard-IA 클래스로 전환 (현재 적용 중)</li>
+<li>90일 경과 시 GLACIER_IR 클래스로 전환 (신규 적용)</li>
+<li>장기 보관 데이터(2-3년 이상)는 DEEP_ARCHIVE 적용 검토</li>
+</ul>
+</li>
+</ul>
+<h4 id="--8"><a href="#--8" class="header-anchor"></a>스토리지 클래스별 특징과 비용</h4><p>AWS S3는 다양한 스토리지 클래스를 제공하며, 각 클래스별로 특징과 비용이 다릅니다:</p>
+<table>
+<thead>
+<tr>
+<th>스토리지 클래스</th>
+<th>특징</th>
+<th>상대적 비용</th>
+<th>데이터 접근성</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Standard</td>
+<td>고가용성, 높은 내구성</td>
+<td>높음</td>
+<td>즉시</td>
+</tr>
+<tr>
+<td>Standard-IA</td>
+<td>자주 접근하지 않는 데이터</td>
+<td>중간</td>
+<td>즉시</td>
+</tr>
+<tr>
+<td>GLACIER_IR</td>
+<td>분기별/연간 접근 데이터</td>
+<td>낮음</td>
+<td>즉시(약간 지연)</td>
+</tr>
+<tr>
+<td>GLACIER</td>
+<td>장기 보관, 드문 접근</td>
+<td>매우 낮음</td>
+<td>3-5시간 후</td>
+</tr>
+<tr>
+<td>DEEP_ARCHIVE</td>
+<td>장기 보관, 거의 접근 안함</td>
+<td>극히 낮음</td>
+<td>12시간 후</td>
+</tr>
+</tbody></table>
+<p>라이프사이클 정책을 적용할 때는 데이터 접근 패턴을 고려하는 것이 중요합니다. 예를 들어, 자주 조회해야 하는 데이터라면 GLACIER_IR나 GLACIER보다는 Standard-IA가 더 적합할 수 있습니다.</p>
+<h3 id="3-s3-"><a href="#3-s3-" class="header-anchor"></a>3. 미사용 S3 버킷 정리</h3><p>마지막으로, 비용이 발생하는 모든 S3 버킷의 실제 사용 여부를 파악하고, 미사용 버킷은 정리하여 불필요한 비용 발생을 방지했습니다. 이를 위해 다음과 같은 과정을 거쳤습니다:</p>
+<ol>
+<li>AWS 비용 분석 도구를 사용해 비용이 발생하는 모든 S3 버킷 식별</li>
+<li>각 버킷의 최근 접근 로그와 사용 패턴 분석</li>
+<li>미사용으로 확인된 버킷에 대한 삭제 또는 아카이빙 결정</li>
+<li>체계적인 정리 작업 수행</li>
+</ol>
+<h2 id="--9"><a href="#--9" class="header-anchor"></a>기술적 구현 세부사항</h2><h3 id="--10"><a href="#--10" class="header-anchor"></a>압축 방식 변경 구현</h3><p>fluent-plugin-s3의 버전을 v1.1.11에서 v1.8.1 이상으로 업그레이드하여 zstd 압축 방식을 지원하도록 했습니다. 이를 위해 다음과 같은 작업을 수행했습니다:</p>
+<div class="mermaid">graph LR
+    A[기존 시스템 분석] --> B[fluent-plugin-s3 업그레이드 테스트]
+    B --> C[zstd 지원 기능 개발 및 기여]
+    C --> D[테스트 환경 적용]
+    D --> E[단계적 프로덕션 적용]
+    style C fill:#c5d4f1,stroke:#333,stroke-width:2px</div><pre><code class="hljs yaml"><span class="hljs-comment"># fluentd zstd 설정 예시</span>
+<span class="hljs-string">&lt;match</span> <span class="hljs-string">pattern&gt;</span>
+  <span class="hljs-string">@type</span> <span class="hljs-string">s3</span>
+  <span class="hljs-string">aws_key_id</span> <span class="hljs-comment">#{aws_key_id}</span>
+  <span class="hljs-string">aws_sec_key</span> <span class="hljs-comment">#{aws_sec_key}</span>
+  <span class="hljs-string">s3_bucket</span> <span class="hljs-string">my-log-bucket</span>
+  <span class="hljs-string">s3_region</span> <span class="hljs-string">ap-northeast-2</span>
+  <span class="hljs-string">path</span> <span class="hljs-string">logs/</span>
+  
+  <span class="hljs-comment"># 압축 설정</span>
+  <span class="hljs-string">compress</span> <span class="hljs-string">zstd</span>
+  
+  <span class="hljs-comment"># 기타 설정</span>
+  <span class="hljs-string">time_slice_format</span> <span class="hljs-string">%Y%m%d%H</span>
+  <span class="hljs-string">time_slice_wait</span> <span class="hljs-string">10m</span>
+  <span class="hljs-string">format</span> <span class="hljs-string">json</span>
+<span class="hljs-string">&lt;/match&gt;</span></code></pre><h3 id="--11"><a href="#--11" class="header-anchor"></a>기존 데이터 재압축 프로세스 (초 장기 보관 케이스)</h3><p>기존에 gzip으로 저장된 데이터의 경우, 다음과 같은 프로세스를 통해 zstd로 재압축했습니다:</p>
+<ol>
+<li>대상 버킷 내 gzip 파일 목록 수집</li>
+<li>비용 효율적인 처리를 위한 배치 작업 설계</li>
+<li>AWS Lambda 함수 구현:<ul>
+<li>S3에서 gzip 파일 다운로드</li>
+<li>압축 해제</li>
+<li>zstd(level 19)로 재압축</li>
+<li>원본 파일 대체</li>
+</ul>
+</li>
+</ol>
+<p>이 과정에서 중요한 고려사항은 재압축 작업 자체의 비용이었습니다. AWS Lambda 실행, 데이터 전송, 그리고 새로운 객체 생성에 따른 비용을 계산하여 ROI를 분석했습니다.</p>
+<p><strong>비용 분석</strong>:</p>
+<ul>
+<li><strong>재압축 비용</strong>: Lambda 실행 비용 + 데이터 전송 비용 + PUT 요청 비용</li>
+<li><strong>절감 비용</strong>: (기존 크기 - 새 크기) × 스토리지 비용 × 보관 기간</li>
+<li><strong>ROI</strong>: 대부분의 경우 3-6개월 내에 투자 비용 회수 가능</li>
+</ul>
+<h3 id="--12"><a href="#--12" class="header-anchor"></a>라이프사이클 정책 적용</h3><p>AWS Management Console 또는 AWS CLI를 통해 각 S3 버킷에 환경별로 차별화된 라이프사이클 정책을 적용했습니다. 다음은 AWS CLI를 사용한 라이프사이클 정책 적용 예시입니다:</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># 운영 환경 버킷에 라이프사이클 정책 적용 예시</span>
+aws s3api put-bucket-lifecycle-configuration \
+    --bucket your-production-log-bucket \
+    --lifecycle-configuration <span class="hljs-string">&#x27;{
+        &quot;Rules&quot;: [
+            {
+                &quot;ID&quot;: &quot;Move-to-StandardIA-after-30-days&quot;,
+                &quot;Status&quot;: &quot;Enabled&quot;,
+                &quot;Filter&quot;: {
+                    &quot;Prefix&quot;: &quot;&quot;
+                },
+                &quot;Transitions&quot;: [
+                    {
+                        &quot;Days&quot;: 30,
+                        &quot;StorageClass&quot;: &quot;STANDARD_IA&quot;
+                    }
+                ]
+            },
+            {
+                &quot;ID&quot;: &quot;Move-to-GlacierIR-after-90-days&quot;,
+                &quot;Status&quot;: &quot;Enabled&quot;,
+                &quot;Filter&quot;: {
+                    &quot;Prefix&quot;: &quot;&quot;
+                },
+                &quot;Transitions&quot;: [
+                    {
+                        &quot;Days&quot;: 90,
+                        &quot;StorageClass&quot;: &quot;GLACIER_IR&quot;
+                    }
+                ]
+            }
+        ]
+    }&#x27;</span></code></pre><h2 id="--13"><a href="#--13" class="header-anchor"></a>성과 및 비용 절감 효과</h2><h3 id="--14"><a href="#--14" class="header-anchor"></a>압축 방식 변경 효과</h3><p>zstd 압축 방식 적용으로 다음과 같은 효과를 얻었습니다:</p>
+<ol>
+<li><p><strong>스토리지 비용 절감</strong>: </p>
+<ul>
+<li>신규 데이터: gzip 대비 약 23% 스토리지 공간 절약</li>
+<li>기존 데이터: gzip 대비 약 45% 스토리지 공간 절약</li>
+</ul>
+</li>
+<li><p><strong>성능 개선</strong>:</p>
+<ul>
+<li>로그 적재 속도: zstd(level 3) 적용으로 gzip 대비 약 12배 향상</li>
+<li>압축/해제 CPU 사용률 개선: 더 효율적인 리소스 활용</li>
+</ul>
+</li>
+</ol>
+<h3 id="--15"><a href="#--15" class="header-anchor"></a>라이프사이클 정책 적용 효과</h3><p>라이프사이클 정책 적용을 통해 다음과 같은 비용 절감 효과를 얻었습니다:</p>
+<ul>
+<li><strong>비운영 환경</strong>: 불필요한 데이터 자동 삭제로 약 70% 비용 절감</li>
+<li><strong>운영 환경</strong>: 스토리지 클래스 자동 전환으로 약 60% 비용 절감</li>
+</ul>
+<h3 id="--16"><a href="#--16" class="header-anchor"></a>전체 비용 절감 효과</h3><p>모든 최적화 작업을 통해 달성한 총 비용 절감 효과는 다음과 같습니다:</p>
+<ul>
+<li><strong>비운영 환경</strong>: 기존 월 500달러 → 약 150달러 (70% 절감)</li>
+<li><strong>운영 환경</strong>: 기존 월 1,500달러 → 약 550달러 (63% 절감)</li>
+<li><strong>전체 환경</strong>: 매월 약 1,300달러 절감</li>
+</ul>
+<div class="mermaid">pie title 환경별 비용 절감 비율
+    "비운영 환경" : 70
+    "운영 환경" : 63</div><h2 id="--17"><a href="#--17" class="header-anchor"></a>교훈 및 모범 사례</h2><p>이 프로젝트를 통해 얻은 중요한 교훈과 모범 사례를 공유합니다:</p>
+<h3 id="1-"><a href="#1-" class="header-anchor"></a>1. 데이터 중심 의사결정의 중요성</h3><p>비용 최적화 작업을 시작하기 전에 철저한 현황 분석과 벤치마킹을 통해 명확한 목표를 설정하는 것이 중요합니다. 특히 압축 알고리즘 선택 시 실제 데이터를 사용한 테스트가 매우 유용했습니다.</p>
+<h3 id="2-"><a href="#2-" class="header-anchor"></a>2. 환경별 차별화된 전략</h3><p>모든 환경에 동일한 정책을 적용하는 것보다, 각 환경의 특성(예: 비운영, 운영)에 맞게 차별화된 전략을 수립하는 것이 더 효과적이었습니다.</p>
+<h3 id="3-"><a href="#3-" class="header-anchor"></a>3. 오픈소스 기여의 가치</h3><p>필요한 기능이 없을 때는 직접 개발하고 커뮤니티에 기여함으로써 더 넓은 생태계에 도움을 줄 수 있습니다. 또한 이러한 기여는 기술적 성장과 커뮤니티 참여의 좋은 기회가 됩니다.</p>
+<h3 id="4-vs-"><a href="#4-vs-" class="header-anchor"></a>4. 비용 vs 접근성 균형</h3><p>특히 스토리지 클래스 선택 시, 단순히 가장 저렴한 옵션을 선택하기보다는 데이터 접근 패턴과 업무 요구사항을 고려한 균형 잡힌 접근이 필요합니다. GLACIER나 DEEP_ARCHIVE는 비용 효율적이지만, 긴급히 데이터 접근이 필요한 경우에는 적합하지 않을 수 있습니다.</p>
+<h3 id="5-"><a href="#5-" class="header-anchor"></a>5. 단계적 접근의 중요성</h3><p>대규모 변경은 한 번에 진행하기보다 단계적으로 접근하는 것이 리스크를 줄이고 검증을 용이하게 합니다. 우리 프로젝트에서도 비운영 환경부터 시작하여 단계적으로 운영 환경까지 적용했습니다.</p>
+<h2 id="--18"><a href="#--18" class="header-anchor"></a>결론</h2><p>AWS 클라우드 환경에서 로그 데이터의 효율적인 관리는 비용 최적화의 중요한 부분입니다. 이 프로젝트에서는 압축 방식 개선, 라이프사이클 정책 적용, 그리고 미사용 리소스 정리를 통해 상당한 비용 절감을 달성했습니다.</p>
+<p>특히 오픈소스 커뮤니티에 기여함으로써 우리의 문제 해결이 다른 조직에도 도움이 되었다는 점이 큰 보람이었습니다. zstd 압축 방식의 도입은 단순한 비용 절감을 넘어, 더 빠른 로그 처리와 더 효율적인 스토리지 활용이라는 부가적인 이점도 제공했습니다.</p>
+<p>앞으로도 클라우드 환경에서의 비용 최적화는 지속적으로 추구해야 할 과제입니다. 새로운 기술과 방법론을 적극적으로 탐색하고 적용함으로써, 더 효율적이고 비용 효과적인 클라우드 운영을 실현할 수 있을 것입니다.</p>
+<h2 id="--19"><a href="#--19" class="header-anchor"></a>참고 자료</h2><ul>
+<li><a href="https://aws.amazon.com/s3/storage-classes/">AWS S3 스토리지 클래스 소개</a></li>
+<li><a href="https://rubygems.org/gems/fluent-plugin-s3">fluent-plugin-s3 | RubyGems.org</a></li>
+<li><a href="https://github.com/facebook/zstd">zstd: Zstandard - Fast real-time compression algorithm</a></li>
+<li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-configuration-examples.html">AWS S3 Lifecycle 설정 가이드</a></li>
+</ul>
+<hr>
+<blockquote>
+<p>끝까지 읽어주셔서 감사합니다. 이 글이 여러분의 클라우드 비용 최적화 여정에 조금이나마 도움이 되었기를 바랍니다. 앞서 말씀드렸듯이 저는 아직 배우는 과정에 있으며, 내용에 부족하거나 잘못된 부분이 있을 수 있습니다. 더 나은 내용으로 발전할 수 있도록 여러분의 소중한 피드백과 조언을 언제나 기다리고 있겠습니다. 댓글이나 다른 편한 방법으로 의견을 남겨주시면 감사하겠습니다!</p>
+</blockquote>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

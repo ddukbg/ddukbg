@@ -1,0 +1,42 @@
+{
+  "siteTitle": "DDUKBG Blog",
+  "siteDescription": "그동안 쌓아온 기술 경험을 공유합니다. 미흡한 부분이 있을 수 있으니, 언제든지 피드백 주시면 감사하겠습니다.",
+  "theme": "windows98",
+  "postsDir": "content",
+  "pagesDir": "pages",
+  "outputDir": "public",
+  "dateFormat": "YYYY-MM-DD",
+  "timeFormat": "HH:mm",
+  "pagination": {
+    "enabled": true,
+    "perPage": 5
+  },
+  "sortOrder": "newest-first",
+  "showDrafts": false,
+  "flatPosts": true,
+  "flatPages": true,
+  "author": {
+    "name": "DDUKBG",
+    "email": "wowrebong@gmail.com",
+    "avatar": "https://avatars.githubusercontent.com/u/32587132?v=4"
+  },
+  "navigationLinks": [
+    {
+      "title": "About",
+      "url": "about.html"
+    }
+    
+  ],
+  "socialLinks": [
+    {
+      "platform": "GitHub",
+      "url": "https://github.com/ddukbg/stylemd"
+    },
+    {
+      "platform": "LinkedIn",
+      "url": "https://www.linkedin.com/in/yongwoo-kim-b2a23a200/"
+    }
+  ],
+  "footerText": "© 2025 StyleMD Blog. All rights reserved.",
+  "customCSS": ".stylemd-watermark { bottom: 35px; right: 15px; z-index: 900; } body { overflow-y: auto; padding-bottom: 80px; }"
+}
