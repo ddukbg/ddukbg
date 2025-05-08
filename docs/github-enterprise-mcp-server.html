@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인 프로젝트: GitHub Enterprise MCP 서버 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>개인 프로젝트: GitHub Enterprise MCP 서버</h1>
+    <p><small>2025-05-08 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="github-enterprise-mcp-"><a href="#github-enterprise-mcp-" class="header-anchor"></a>GitHub Enterprise MCP 서버 구현 해보기</h1><h2 id="mcp-model-context-protocol-"><a href="#mcp-model-context-protocol-" class="header-anchor"></a>MCP(Model Context Protocol)란 무엇인가?</h2><p>최근 AI 기술의 발전으로 코딩 어시스턴트와 같은 도구들이 개발자 생산성을 크게 향상시키고 있습니다. 그러나 AI 모델이 실시간 데이터에 접근하거나 실제 시스템과 상호작용하는 데는 여전히 제약이 있었습니다. 이런 제약을 해결하기 위해 등장한 것이 <strong>Model Context Protocol(MCP)</strong> 입니다.</p>
+<p>MCP는 AI 모델이 외부 시스템과 상호작용할 수 있게 해주는 표준화된 프로토콜로, AI가 실시간 데이터를 조회하고 작업을 수행할 수 있는 인터페이스를 제공합니다. 이를 통해 AI는 단순히 정적인 학습 데이터에만 의존하는 것이 아니라, 실제 환경의 최신 정보를 활용할 수 있게 됩니다.</p>
+<div class="mermaid">graph LR
+    A[AI 모델] <-->|MCP| B[MCP 서버]
+    B <-->|API 호출| C[외부 서비스]
+    C --> D[데이터베이스]
+    C --> E[웹 서비스]
+    C --> F[소스 코드]</div><h2 id="github-mcp-"><a href="#github-mcp-" class="header-anchor"></a>GitHub MCP 서버의 필요성</h2><p>소프트웨어 개발에서 GitHub은 중심적인 역할을 합니다. 코드 저장소, 이슈 관리, PR 검토, 코드 검색 등 개발 워크플로우의 많은 부분이 GitHub에서 이루어집니다.</p>
+<p>따라서 AI 코딩 어시스턴트가 GitHub과 원활하게 통합된다면 개발자 경험을 크게 향상시킬 수 있습니다.</p>
+<p>GitHub MCP 서버는 AI 모델이 GitHub API와 직접 상호작용할 수 있게 해주는 중간 계층입니다. 이를 통해 AI는:</p>
+<ul>
+<li>저장소의 코드를 실시간으로 검색하고 분석</li>
+<li>이슈와 PR을 생성, 관리, 검토</li>
+<li>코드 변경 사항을 제출하고 병합</li>
+<li>사용자 정보 및 권한 관리</li>
+</ul>
+<p>등의 작업을 수행할 수 있습니다.</p>
+<h2 id="-github-enterprise-mcp-"><a href="#-github-enterprise-mcp-" class="header-anchor"></a>개인 프로젝트: GitHub Enterprise MCP 서버</h2><p>공식 GitHub MCP 서버가 출시되기 전, 저는 GitHub Enterprise 환경에서 사용할 수 있는 MCP 서버를 직접 개발했습니다. 
+<br>이 프로젝트는 <a href="https://github.com/containerelic/github-enterprise-mcp">github-enterprise-mcp</a>라는 이름으로 공개되어 있습니다.</p>
+<h3 id="--42"><a href="#--42" class="header-anchor"></a>프로젝트 배경</h3><p>GitHub Enterprise 환경에서 AI 코딩 어시스턴트를 효과적으로 활용하기 위해서는 엔터프라이즈 API에 접근할 수 있는 MCP 서버가 필요했습니다. <br>당시 공식 GitHub MCP 서버가 없었기 때문에, Node.js를 기반으로 자체 구현을 시작했습니다.</p>
+<p>이 프로젝트의 주요 목표는:</p>
+<ol>
+<li>GitHub Enterprise Server API와의 완벽한 통합</li>
+<li>다양한 AI 도구(Cursor, Claude 등)와의 호환성</li>
+<li>엔터프라이즈 환경에 필요한 확장 기능 지원</li>
+<li>보안 및 권한 관리 강화</li>
+</ol>
+<h3 id="--43"><a href="#--43" class="header-anchor"></a>주요 기능</h3><div class="mermaid">graph TD
+    A[GitHub Enterprise MCP] --> B[저장소 관리]
+    A --> C[이슈/PR 관리]
+    A --> D[사용자 관리]
+    A --> E[GitHub Actions]
+    A --> F[엔터프라이즈 통계]
+    
+    B --> B1[저장소 목록]
+    B --> B2[파일/디렉토리 내용]
+    B --> B3[브랜치 관리]
+    
+    C --> C1[이슈 생성/조회]
+    C --> C2[PR 생성/병합]
+    C --> C3[코멘트 관리]
+    
+    D --> D1[사용자 생성/조회]
+    D --> D2[사용자 정지/해제]</div><ul>
+<li><strong>저장소 관리</strong>: 저장소 목록 조회, 세부 정보 확인, 브랜치 관리, 파일 및 디렉토리 내용 조회</li>
+<li><strong>이슈 및 PR 관리</strong>: 이슈/PR 생성, 조회, 업데이트, 코멘트 관리</li>
+<li><strong>사용자 관리</strong>: 사용자 목록 조회, 생성, 업데이트, 정지/해제</li>
+<li><strong>GitHub Actions</strong>: 워크플로우 목록 조회, 실행 기록 관리, 워크플로우 트리거</li>
+<li><strong>엔터프라이즈 기능</strong>: 라이센스 정보 조회, 엔터프라이즈 시스템 통계 확인</li>
+</ul>
+<h3 id="--44"><a href="#--44" class="header-anchor"></a>구현 방식</h3><p>GitHub Enterprise MCP 서버는 Node.js와 TypeScript를 사용하여 개발되었으며, 다음과 같은 기술적 특징을 가지고 있습니다:</p>
+<ol>
+<li><strong>모듈화된 구조</strong>: 각 기능 영역별로 분리된 모듈 구조로 유지보수성 향상</li>
+<li><strong>확장 가능한 설계</strong>: 새로운 GitHub API 엔드포인트 추가가 용이한 구조</li>
+<li><strong>다국어 지원</strong>: 영어와 한국어 인터페이스 제공</li>
+<li><strong>Docker 컨테이너화</strong>: 쉬운 배포와 관리를 위한 Docker 지원</li>
+<li><strong>다양한 전송 방식</strong>: HTTP, CLI, 표준 입출력 등 다양한 통신 방식 지원</li>
+</ol>
+<div class="mermaid">sequenceDiagram
+    participant AI as AI 모델
+    participant MCP as GitHub Enterprise MCP
+    participant API as GitHub Enterprise API
+    
+    AI->>MCP: 도구 호출 요청
+    MCP->>API: REST API 호출
+    API->>MCP: 응답 데이터
+    MCP->>AI: 포맷팅된 응답</div><h2 id="-github-mcp-"><a href="#-github-mcp-" class="header-anchor"></a>공식 GitHub MCP 서버와의 비교</h2><p>이후 GitHub에서 <a href="https://github.com/github/github-mcp-server">공식 MCP 서버</a>를 출시했습니다. 두 프로젝트를 비교해보면:</p>
+<table>
+<thead>
+<tr>
+<th>특징</th>
+<th>내 github-enterprise-mcp</th>
+<th>공식 github-mcp-server</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>개발 언어</td>
+<td>Node.js / TypeScript</td>
+<td>Go</td>
+</tr>
+<tr>
+<td>성능</td>
+<td>준수</td>
+<td>최적화됨</td>
+</tr>
+<tr>
+<td>기능 범위</td>
+<td>GitHub Enterprise 특화</td>
+<td>GitHub.com 중심, Enterprise 부분 지원</td>
+</tr>
+<tr>
+<td>확장성</td>
+<td>중간</td>
+<td>높음 (도구 세트 개념)</td>
+</tr>
+<tr>
+<td>다국어 지원</td>
+<td>영어, 한국어</td>
+<td>영어 (설정으로 확장 가능)</td>
+</tr>
+<tr>
+<td>라이센스</td>
+<td>ISC</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>설치 방법</td>
+<td>npm, Docker</td>
+<td>Go 바이너리, Docker</td>
+</tr>
+<tr>
+<td>도구 수</td>
+<td>20+</td>
+<td>40+</td>
+</tr>
+</tbody></table>
+<h3 id="--45"><a href="#--45" class="header-anchor"></a>공식 서버의 장점</h3><ul>
+<li>Go 언어 기반으로 더 뛰어난 성능</li>
+<li>더 많은 도구와 기능 지원</li>
+<li>더 활발한 유지보수와 업데이트</li>
+<li>도구 세트(toolsets) 개념을 통한 유연한 구성</li>
+</ul>
+<h3 id="--46"><a href="#--46" class="header-anchor"></a>내 프로젝트의 차별점(제 프로젝트는 허술합니다..)</h3><ul>
+<li>GitHub Enterprise 환경에 특화된 기능</li>
+<li>Node.js 생태계 친화적</li>
+<li>엔터프라이즈 통계 및 관리 도구 강화</li>
+<li>한국어 인터페이스 기본 지원</li>
+</ul>
+<h2 id="--47"><a href="#--47" class="header-anchor"></a>설치 및 사용 방법</h2><h3 id="docker-"><a href="#docker-" class="header-anchor"></a>Docker를 사용한 설치</h3><pre><code class="hljs bash"><span class="hljs-comment"># Docker 이미지 빌드</span>
+docker build -t github-enterprise-mcp .
+
+<span class="hljs-comment"># Docker 컨테이너 실행</span>
+docker run -p 3000:3000 \
+  -e GITHUB_TOKEN=<span class="hljs-string">&quot;your_github_token&quot;</span> \
+  -e GITHUB_ENTERPRISE_URL=<span class="hljs-string">&quot;https://github.your-company.com/api/v3&quot;</span> \
+  -e DEBUG=<span class="hljs-literal">true</span> \
+  github-enterprise-mcp</code></pre><h3 id="cursor-"><a href="#cursor-" class="header-anchor"></a>Cursor와의 통합</h3><p>Cursor에서 MCP 서버를 사용하려면 <code>.cursor/mcp.json</code> 파일에 다음과 같이 설정합니다:</p>
+<pre><code class="hljs json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;mcpServers&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;github-enterprise&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">&quot;url&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;http://localhost:3000/sse&quot;</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code></pre><h3 id="--48"><a href="#--48" class="header-anchor"></a>사용 예시</h3><p>Cursor나 Claude와 같은 AI 도구에서 다음과 같이 MCP 도구를 호출할 수 있습니다:</p>
+<pre><code class="hljs plaintext"># 저장소 정보 조회
+mcp_github_enterprise_get_repository(owner=&quot;octocat&quot;, repo=&quot;hello-world&quot;)
+
+# 이슈 생성
+mcp_github_enterprise_create_issue(
+  owner=&quot;octocat&quot;, 
+  repo=&quot;hello-world&quot;,
+  title=&quot;버그 발견&quot;,
+  body=&quot;버그에 대한 설명입니다&quot;,
+  labels=[&quot;bug&quot;, &quot;priority:high&quot;]
+)
+
+# PR 검토
+mcp_github_enterprise_list_pull_requests(owner=&quot;octocat&quot;, repo=&quot;hello-world&quot;, state=&quot;open&quot;)</code></pre><h2 id="--49"><a href="#--49" class="header-anchor"></a>프로젝트를 통해 배운 점</h2><h3 id="1-"><a href="#1-" class="header-anchor"></a>1. 표준화와 상호운용성의 중요성</h3><p>MCP는 AI와 외부 시스템 간의 표준화된 인터페이스를 제공함으로써 다양한 AI 도구들이 동일한 방식으로 GitHub과 상호작용할 수 있게 합니다. <br>이런 표준화가 생태계 발전에 얼마나 중요한지 실감했습니다.</p>
+<h3 id="2-"><a href="#2-" class="header-anchor"></a>2. 엔터프라이즈 환경의 특수성</h3><p>GitHub.com과 GitHub Enterprise는 비슷하지만 중요한 차이점이 있습니다. <br>엔터프라이즈 환경에서는 라이센스 관리, 사용자 관리, 시스템 통계 등 추가적인 기능이 필요하며, 이를 위한 특별한 고려사항이 있습니다.</p>
+<h2 id="--50"><a href="#--50" class="header-anchor"></a>결론</h2><p>MCP와 같은 프로토콜은 AI가 단순한 텍스트 생성을 넘어 실제 개발 환경과 상호작용하는 데 필수적인 요소가 되고 있습니다.<br> 앞으로도 AI와 개발 도구 간의 통합은 더욱 깊어질 것이며, 이는 개발자 생산성과 코드 품질 향상에 큰 기여를 할 것입니다.</p>
+<p>저는 Devops 엔지니어로서 개발자 분들에 비해 코딩 실력이 현저히 부족합니다.<br> 새로운 기술 트렌드를 파악하고 직접 구현해보는 경험은 매우 가치 있었으며, 이런 사이드 프로젝트를 통해 얻은 지식은 일상 업무에도 많은 도움이 되고 있습니다.</p>
+<h2 id="--51"><a href="#--51" class="header-anchor"></a>참고 자료</h2><ul>
+<li><a href="https://github.com/containerelic/github-enterprise-mcp">개인 GitHub Enterprise MCP 프로젝트</a></li>
+<li><a href="https://github.com/github/github-mcp-server">공식 GitHub MCP 서버</a></li>
+<li><a href="https://modelcontextprotocol.io/introduction">Model Context Protocol 공식 문서</a></li>
+<li><a href="https://code.visualstudio.com/docs/copilot/chat/mcp-servers">Cursor 에디터의 MCP 서버 문서</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

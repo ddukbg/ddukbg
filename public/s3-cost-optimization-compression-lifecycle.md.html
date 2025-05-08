@@ -335,8 +335,8 @@
     <h1 id="aws-s3-"><a href="#aws-s3-" class="header-anchor"></a>AWS S3 비용 최적화 여정: 압축과 라이프사이클 관리를 통한 비용 절감</h1><blockquote>
 <p>안녕하세요! 이 글은 제가 AWS S3 비용을 최적화하면서 겪었던 경험과 학습한 내용을 공유하기 위해 작성되었습니다. 아직 배우고 성장하는 과정에 있기에 부족한 점이나 잘못된 정보가 있을 수 있습니다. 너그러이 이해해주시고, 혹시 개선할 점이나 더 좋은 의견이 있다면 언제든지 피드백 부탁드립니다.</p>
 </blockquote>
-<h2 id="--55"><a href="#--55" class="header-anchor"></a>들어가며</h2><p>클라우드 환경에서 시스템을 운영하다 보면 가장 큰 고민 중 하나는 비용 관리입니다. 특히 로그 데이터와 같이 지속적으로 증가하는 데이터를 효율적으로 저장하고 관리하는 것은 클라우드 운영 비용을 결정짓는 중요한 요소입니다. 이 글에서는 제가 최근 진행한 AWS S3 스토리지 비용 최적화 프로젝트의 여정을 공유하고자 합니다. 특히 Kubernetes(EKS) 환경에서 발생하는 로그 데이터의 압축 방식 개선과 라이프사이클 정책 적용을 통해 어떻게 비용을 절감했는지, 그리고 이 과정에서 오픈소스 커뮤니티에 기여한 경험까지 함께 나누겠습니다.</p>
-<h2 id="--56"><a href="#--56" class="header-anchor"></a>문제 상황</h2><h3 id="--57"><a href="#--57" class="header-anchor"></a>증가하는 로그 스토리지 비용</h3><p>2025년 초, 우리 팀은 AWS 비용 분석을 진행하던 중 로그 저장 비용이 지속적으로 증가하고 있다는 사실을 발견했습니다. 특히 EKS 클러스터에서 생성되는 애플리케이션 로그가 <code>fluentd → Elasticsearch → S3</code> 경로로 저장되는 과정에서 비효율적인 관리로 인해 비용이 계속 증가하고 있었습니다.</p>
+<h2 id="--65"><a href="#--65" class="header-anchor"></a>들어가며</h2><p>클라우드 환경에서 시스템을 운영하다 보면 가장 큰 고민 중 하나는 비용 관리입니다. 특히 로그 데이터와 같이 지속적으로 증가하는 데이터를 효율적으로 저장하고 관리하는 것은 클라우드 운영 비용을 결정짓는 중요한 요소입니다. 이 글에서는 제가 최근 진행한 AWS S3 스토리지 비용 최적화 프로젝트의 여정을 공유하고자 합니다. 특히 Kubernetes(EKS) 환경에서 발생하는 로그 데이터의 압축 방식 개선과 라이프사이클 정책 적용을 통해 어떻게 비용을 절감했는지, 그리고 이 과정에서 오픈소스 커뮤니티에 기여한 경험까지 함께 나누겠습니다.</p>
+<h2 id="--66"><a href="#--66" class="header-anchor"></a>문제 상황</h2><h3 id="--67"><a href="#--67" class="header-anchor"></a>증가하는 로그 스토리지 비용</h3><p>2025년 초, 우리 팀은 AWS 비용 분석을 진행하던 중 로그 저장 비용이 지속적으로 증가하고 있다는 사실을 발견했습니다. 특히 EKS 클러스터에서 생성되는 애플리케이션 로그가 <code>fluentd → Elasticsearch → S3</code> 경로로 저장되는 과정에서 비효율적인 관리로 인해 비용이 계속 증가하고 있었습니다.</p>
 <p>구체적인 비용 현황은 다음과 같았습니다:</p>
 <ul>
 <li><strong>비운영 환경</strong>: 주요 로그 저장소는 매월 평균 50달러씩 증가하며, 최근 기준 약 500달러 청구</li>
@@ -348,20 +348,20 @@
     B -->|로그 전송| C[Elasticsearch]
     C -->|데이터 아카이빙| D[S3 Storage]
     D -->|gzip 압축| E[증가하는 스토리지 비용]
-    style E fill:#f9d0c4,stroke:#333,stroke-width:2px</div><h3 id="--58"><a href="#--58" class="header-anchor"></a>비효율적인 데이터 관리</h3><p>문제의 원인을 분석한 결과, 다음과 같은 비효율적인 데이터 관리가 확인되었습니다:</p>
+    style E fill:#f9d0c4,stroke:#333,stroke-width:2px</div><h3 id="--68"><a href="#--68" class="header-anchor"></a>비효율적인 데이터 관리</h3><p>문제의 원인을 분석한 결과, 다음과 같은 비효율적인 데이터 관리가 확인되었습니다:</p>
 <ol>
 <li><strong>압축 효율성 부족</strong>: S3에 저장되는 로그 파일들이 gzip 형태로만 압축되어 있어 저장 효율이 좋지 않았습니다.</li>
 <li><strong>데이터 라이프사이클 관리 부재</strong>: 모든 환경(비운영, 운영)의 데이터가 동일한 방식으로 관리되고 있었으며, 장기 보관이 필요하지 않은 비운영 환경의 로그도 계속 누적되고 있었습니다.</li>
 <li><strong>미사용 버킷 관리 부재</strong>: 비용이 발생하고 있음에도 실제로 사용되지 않는 S3 버킷들이 존재했습니다.</li>
 </ol>
-<h2 id="--59"><a href="#--59" class="header-anchor"></a>비용 최적화 접근 방식</h2><p>위 문제들을 해결하기 위해 다음과 같은 세 가지 접근 방식을 채택했습니다:</p>
+<h2 id="--69"><a href="#--69" class="header-anchor"></a>비용 최적화 접근 방식</h2><p>위 문제들을 해결하기 위해 다음과 같은 세 가지 접근 방식을 채택했습니다:</p>
 <ol>
 <li><strong>압축 방식 개선</strong>: gzip보다 더 효율적인 압축 알고리즘 도입</li>
 <li><strong>S3 라이프사이클 정책 적용</strong>: 환경별 특성에 맞는 데이터 보관 정책 구현</li>
 <li><strong>미사용 S3 버킷 정리</strong>: 불필요한 스토리지 비용 제거</li>
 </ol>
 <h3 id="1-gzip-zstd-"><a href="#1-gzip-zstd-" class="header-anchor"></a>1. 압축 방식 개선 (gzip → zstd)</h3><p>첫 번째 단계로, 현재 S3에 저장되는 로그 파일들의 압축 방식을 개선하기로 했습니다. 기존의 gzip 압축 대신 더 높은 압축률과 빠른 처리 속도를 제공하는 zstd(Zstandard) 압축 알고리즘을 도입하기로 결정했습니다.</p>
-<h4 id="--60"><a href="#--60" class="header-anchor"></a>압축 방식 비교 테스트</h4><p>결정에 앞서 실제 로그 데이터를 사용해 압축 테스트를 진행했습니다:</p>
+<h4 id="--70"><a href="#--70" class="header-anchor"></a>압축 방식 비교 테스트</h4><p>결정에 앞서 실제 로그 데이터를 사용해 압축 테스트를 진행했습니다:</p>
 <pre><code class="hljs plaintext">테스트 환경:
 - HW: MacBook M3 Pro (8‑core CPU)
 - OS: macOS 14.x
@@ -456,7 +456,7 @@ https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를
     G -->|GLACIER_IR로 전환| H[장기 보관 데이터]
     H -->|필요시| I[DEEP_ARCHIVE 고려]
     style C fill:#d4f1c5,stroke:#333,stroke-width:1px
-    style E fill:#d4f1c5,stroke:#333,stroke-width:1px</div><h4 id="--61"><a href="#--61" class="header-anchor"></a>환경별 정책</h4><ul>
+    style E fill:#d4f1c5,stroke:#333,stroke-width:1px</div><h4 id="--71"><a href="#--71" class="header-anchor"></a>환경별 정책</h4><ul>
 <li><strong>비운영 환경</strong>: 데이터 중요도에 따라 3일 또는 90일 경과 시 삭제 (예시)</li>
 <li><strong>운영 환경</strong>:<ul>
 <li>30일 경과 시 Standard-IA 클래스로 전환 (현재 적용 중)</li>
@@ -465,7 +465,7 @@ https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를
 </ul>
 </li>
 </ul>
-<h4 id="--62"><a href="#--62" class="header-anchor"></a>스토리지 클래스별 특징과 비용</h4><p>AWS S3는 다양한 스토리지 클래스를 제공하며, 각 클래스별로 특징과 비용이 다릅니다:</p>
+<h4 id="--72"><a href="#--72" class="header-anchor"></a>스토리지 클래스별 특징과 비용</h4><p>AWS S3는 다양한 스토리지 클래스를 제공하며, 각 클래스별로 특징과 비용이 다릅니다:</p>
 <table>
 <thead>
 <tr>
@@ -514,7 +514,7 @@ https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를
 <li>미사용으로 확인된 버킷에 대한 삭제 또는 아카이빙 결정</li>
 <li>체계적인 정리 작업 수행</li>
 </ol>
-<h2 id="--63"><a href="#--63" class="header-anchor"></a>기술적 구현 세부사항</h2><h3 id="--64"><a href="#--64" class="header-anchor"></a>압축 방식 변경 구현</h3><p>fluent-plugin-s3의 버전을 v1.1.11에서 v1.8.1 이상으로 업그레이드하여 zstd 압축 방식을 지원하도록 했습니다. 이를 위해 다음과 같은 작업을 수행했습니다:</p>
+<h2 id="--73"><a href="#--73" class="header-anchor"></a>기술적 구현 세부사항</h2><h3 id="--74"><a href="#--74" class="header-anchor"></a>압축 방식 변경 구현</h3><p>fluent-plugin-s3의 버전을 v1.1.11에서 v1.8.1 이상으로 업그레이드하여 zstd 압축 방식을 지원하도록 했습니다. 이를 위해 다음과 같은 작업을 수행했습니다:</p>
 <div class="mermaid">graph LR
     A[기존 시스템 분석] --> B[fluent-plugin-s3 업그레이드 테스트]
     B --> C[zstd 지원 기능 개발 및 기여]
@@ -536,7 +536,7 @@ https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를
   <span class="hljs-string">time_slice_format</span> <span class="hljs-string">%Y%m%d%H</span>
   <span class="hljs-string">time_slice_wait</span> <span class="hljs-string">10m</span>
   <span class="hljs-string">format</span> <span class="hljs-string">json</span>
-<span class="hljs-string">&lt;/match&gt;</span></code></pre><h3 id="--65"><a href="#--65" class="header-anchor"></a>기존 데이터 재압축 프로세스 (초 장기 보관 케이스)</h3><p>기존에 gzip으로 저장된 데이터의 경우, 다음과 같은 프로세스를 통해 zstd로 재압축했습니다:</p>
+<span class="hljs-string">&lt;/match&gt;</span></code></pre><h3 id="--75"><a href="#--75" class="header-anchor"></a>기존 데이터 재압축 프로세스 (초 장기 보관 케이스)</h3><p>기존에 gzip으로 저장된 데이터의 경우, 다음과 같은 프로세스를 통해 zstd로 재압축했습니다:</p>
 <ol>
 <li>대상 버킷 내 gzip 파일 목록 수집</li>
 <li>비용 효율적인 처리를 위한 배치 작업 설계</li>
@@ -555,7 +555,7 @@ https://github.com/fluent/fluent-plugin-s3/pull/439</code></pre><p>이 기여를
 <li><strong>절감 비용</strong>: (기존 크기 - 새 크기) × 스토리지 비용 × 보관 기간</li>
 <li><strong>ROI</strong>: 대부분의 경우 3-6개월 내에 투자 비용 회수 가능</li>
 </ul>
-<h3 id="--66"><a href="#--66" class="header-anchor"></a>라이프사이클 정책 적용</h3><p>AWS Management Console 또는 AWS CLI를 통해 각 S3 버킷에 환경별로 차별화된 라이프사이클 정책을 적용했습니다. 다음은 AWS CLI를 사용한 라이프사이클 정책 적용 예시입니다:</p>
+<h3 id="--76"><a href="#--76" class="header-anchor"></a>라이프사이클 정책 적용</h3><p>AWS Management Console 또는 AWS CLI를 통해 각 S3 버킷에 환경별로 차별화된 라이프사이클 정책을 적용했습니다. 다음은 AWS CLI를 사용한 라이프사이클 정책 적용 예시입니다:</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># 운영 환경 버킷에 라이프사이클 정책 적용 예시</span>
 aws s3api put-bucket-lifecycle-configuration \
     --bucket your-production-log-bucket \
@@ -588,7 +588,7 @@ aws s3api put-bucket-lifecycle-configuration \
                 ]
             }
         ]
-    }&#x27;</span></code></pre><h2 id="--67"><a href="#--67" class="header-anchor"></a>성과 및 비용 절감 효과</h2><h3 id="--68"><a href="#--68" class="header-anchor"></a>압축 방식 변경 효과</h3><p>zstd 압축 방식 적용으로 다음과 같은 효과를 얻었습니다:</p>
+    }&#x27;</span></code></pre><h2 id="--77"><a href="#--77" class="header-anchor"></a>성과 및 비용 절감 효과</h2><h3 id="--78"><a href="#--78" class="header-anchor"></a>압축 방식 변경 효과</h3><p>zstd 압축 방식 적용으로 다음과 같은 효과를 얻었습니다:</p>
 <ol>
 <li><p><strong>스토리지 비용 절감</strong>: </p>
 <ul>
@@ -603,12 +603,12 @@ aws s3api put-bucket-lifecycle-configuration \
 </ul>
 </li>
 </ol>
-<h3 id="--69"><a href="#--69" class="header-anchor"></a>라이프사이클 정책 적용 효과</h3><p>라이프사이클 정책 적용을 통해 다음과 같은 비용 절감 효과를 얻었습니다:</p>
+<h3 id="--79"><a href="#--79" class="header-anchor"></a>라이프사이클 정책 적용 효과</h3><p>라이프사이클 정책 적용을 통해 다음과 같은 비용 절감 효과를 얻었습니다:</p>
 <ul>
 <li><strong>비운영 환경</strong>: 불필요한 데이터 자동 삭제로 약 70% 비용 절감</li>
 <li><strong>운영 환경</strong>: 스토리지 클래스 자동 전환으로 약 60% 비용 절감</li>
 </ul>
-<h3 id="--70"><a href="#--70" class="header-anchor"></a>전체 비용 절감 효과</h3><p>모든 최적화 작업을 통해 달성한 총 비용 절감 효과는 다음과 같습니다:</p>
+<h3 id="--80"><a href="#--80" class="header-anchor"></a>전체 비용 절감 효과</h3><p>모든 최적화 작업을 통해 달성한 총 비용 절감 효과는 다음과 같습니다:</p>
 <ul>
 <li><strong>비운영 환경</strong>: 기존 월 500달러 → 약 150달러 (70% 절감)</li>
 <li><strong>운영 환경</strong>: 기존 월 1,500달러 → 약 550달러 (63% 절감)</li>
@@ -616,16 +616,16 @@ aws s3api put-bucket-lifecycle-configuration \
 </ul>
 <div class="mermaid">pie title 환경별 비용 절감 비율
     "비운영 환경" : 70
-    "운영 환경" : 63</div><h2 id="--71"><a href="#--71" class="header-anchor"></a>교훈 및 모범 사례</h2><p>이 프로젝트를 통해 얻은 중요한 교훈과 모범 사례를 공유합니다:</p>
-<h3 id="1--2"><a href="#1--2" class="header-anchor"></a>1. 데이터 중심 의사결정의 중요성</h3><p>비용 최적화 작업을 시작하기 전에 철저한 현황 분석과 벤치마킹을 통해 명확한 목표를 설정하는 것이 중요합니다. 특히 압축 알고리즘 선택 시 실제 데이터를 사용한 테스트가 매우 유용했습니다.</p>
-<h3 id="2--3"><a href="#2--3" class="header-anchor"></a>2. 환경별 차별화된 전략</h3><p>모든 환경에 동일한 정책을 적용하는 것보다, 각 환경의 특성(예: 비운영, 운영)에 맞게 차별화된 전략을 수립하는 것이 더 효과적이었습니다.</p>
+    "운영 환경" : 63</div><h2 id="--81"><a href="#--81" class="header-anchor"></a>교훈 및 모범 사례</h2><p>이 프로젝트를 통해 얻은 중요한 교훈과 모범 사례를 공유합니다:</p>
+<h3 id="1--3"><a href="#1--3" class="header-anchor"></a>1. 데이터 중심 의사결정의 중요성</h3><p>비용 최적화 작업을 시작하기 전에 철저한 현황 분석과 벤치마킹을 통해 명확한 목표를 설정하는 것이 중요합니다. 특히 압축 알고리즘 선택 시 실제 데이터를 사용한 테스트가 매우 유용했습니다.</p>
+<h3 id="2--4"><a href="#2--4" class="header-anchor"></a>2. 환경별 차별화된 전략</h3><p>모든 환경에 동일한 정책을 적용하는 것보다, 각 환경의 특성(예: 비운영, 운영)에 맞게 차별화된 전략을 수립하는 것이 더 효과적이었습니다.</p>
 <h3 id="3--3"><a href="#3--3" class="header-anchor"></a>3. 오픈소스 기여의 가치</h3><p>필요한 기능이 없을 때는 직접 개발하고 커뮤니티에 기여함으로써 더 넓은 생태계에 도움을 줄 수 있습니다. 또한 이러한 기여는 기술적 성장과 커뮤니티 참여의 좋은 기회가 됩니다.</p>
 <h3 id="4-vs-"><a href="#4-vs-" class="header-anchor"></a>4. 비용 vs 접근성 균형</h3><p>특히 스토리지 클래스 선택 시, 단순히 가장 저렴한 옵션을 선택하기보다는 데이터 접근 패턴과 업무 요구사항을 고려한 균형 잡힌 접근이 필요합니다. GLACIER나 DEEP_ARCHIVE는 비용 효율적이지만, 긴급히 데이터 접근이 필요한 경우에는 적합하지 않을 수 있습니다.</p>
 <h3 id="5--3"><a href="#5--3" class="header-anchor"></a>5. 단계적 접근의 중요성</h3><p>대규모 변경은 한 번에 진행하기보다 단계적으로 접근하는 것이 리스크를 줄이고 검증을 용이하게 합니다. 우리 프로젝트에서도 비운영 환경부터 시작하여 단계적으로 운영 환경까지 적용했습니다.</p>
-<h2 id="--72"><a href="#--72" class="header-anchor"></a>결론</h2><p>AWS 클라우드 환경에서 로그 데이터의 효율적인 관리는 비용 최적화의 중요한 부분입니다. 이 프로젝트에서는 압축 방식 개선, 라이프사이클 정책 적용, 그리고 미사용 리소스 정리를 통해 상당한 비용 절감을 달성했습니다.</p>
+<h2 id="--82"><a href="#--82" class="header-anchor"></a>결론</h2><p>AWS 클라우드 환경에서 로그 데이터의 효율적인 관리는 비용 최적화의 중요한 부분입니다. 이 프로젝트에서는 압축 방식 개선, 라이프사이클 정책 적용, 그리고 미사용 리소스 정리를 통해 상당한 비용 절감을 달성했습니다.</p>
 <p>특히 오픈소스 커뮤니티에 기여함으로써 우리의 문제 해결이 다른 조직에도 도움이 되었다는 점이 큰 보람이었습니다. zstd 압축 방식의 도입은 단순한 비용 절감을 넘어, 더 빠른 로그 처리와 더 효율적인 스토리지 활용이라는 부가적인 이점도 제공했습니다.</p>
 <p>앞으로도 클라우드 환경에서의 비용 최적화는 지속적으로 추구해야 할 과제입니다. 새로운 기술과 방법론을 적극적으로 탐색하고 적용함으로써, 더 효율적이고 비용 효과적인 클라우드 운영을 실현할 수 있을 것입니다.</p>
-<h2 id="--73"><a href="#--73" class="header-anchor"></a>참고 자료</h2><ul>
+<h2 id="--83"><a href="#--83" class="header-anchor"></a>참고 자료</h2><ul>
 <li><a href="https://aws.amazon.com/s3/storage-classes/">AWS S3 스토리지 클래스 소개</a></li>
 <li><a href="https://rubygems.org/gems/fluent-plugin-s3">fluent-plugin-s3 | RubyGems.org</a></li>
 <li><a href="https://github.com/facebook/zstd">zstd: Zstandard - Fast real-time compression algorithm</a></li>
