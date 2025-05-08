@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EKS 클러스터에 GPU 노드 그룹 설정하기 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>EKS 클러스터에 GPU 노드 그룹 설정하기</h1>
+    <p><small>2025-05-08 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="eks-gpu-time-slicing-"><a href="#eks-gpu-time-slicing-" class="header-anchor"></a>EKS 클러스터에 GPU 노드 그룹 설정 가이드: 노드 그룹 구성부터 Time-Slicing까지</h1><p><img src="!%5Bimage%5D(https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/nvidia-gpu.png)" alt="NVIDIA 테슬라 T4 GPU 정보"></p>
+<h2 id="--17"><a href="#--17" class="header-anchor"></a>목차</h2><ol>
+<li><a href="#%EC%86%8C%EA%B0%9C">소개</a></li>
+<li><a href="#%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EA%B0%9C%EC%9A%94">아키텍처 개요</a></li>
+<li><a href="#gpu-%EB%85%B8%EB%93%9C-%EA%B7%B8%EB%A3%B9-%EA%B5%AC%EC%84%B1">GPU 노드 그룹 구성</a></li>
+<li><a href="#nvidia-device-plugin-%EC%84%A4%EC%A0%95">NVIDIA Device Plugin 설정</a></li>
+<li><a href="#gpu-%EC%9B%8C%ED%81%AC%EB%A1%9C%EB%93%9C-%EB%B0%B0%ED%8F%AC-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8">GPU 워크로드 배포 및 테스트</a></li>
+<li><a href="#gpu-time-slicing%EC%9C%BC%EB%A1%9C-%EC%9E%90%EC%9B%90-%EC%B5%9C%EC%A0%81%ED%99%94">GPU Time-Slicing으로 자원 최적화</a></li>
+<li><a href="#%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81-%EB%B0%8F-%EC%9A%B4%EC%98%81-%EA%B4%80%EB%A6%AC">모니터링 및 운영 관리</a></li>
+<li><a href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%ED%8C%81">성능 최적화 팁</a></li>
+<li><a href="#%EA%B2%B0%EB%A1%A0">결론</a></li>
+</ol>
+<h2 id="--18"><a href="#--18" class="header-anchor"></a>소개</h2><p>기계 학습, 딥 러닝, 컴퓨터 비전 및 기타 연산 집약적 워크로드를 실행하려면 강력한 GPU 리소스가 필수적입니다. Amazon EKS(Elastic Kubernetes Service)는 GPU 가속 워크로드를 위한 탁월한 플랫폼을 제공하지만, 이러한 고가의 리소스를 효율적으로 활용하려면 적절한 구성과 최적화가 필요합니다.</p>
+<p>이 글에서는 EKS 클러스터에 GPU 노드 그룹을 설정하는 방법부터 NVIDIA Device Plugin 배포, GPU 노드 보호를 위한 테인트(taint) 적용, 그리고 하나의 물리적 GPU를 여러 워크로드에서 공유할 수 있는 Time-Slicing 기술까지 전 과정을 단계별로 설명합니다.</p>
+<h2 id="--19"><a href="#--19" class="header-anchor"></a>아키텍처 개요</h2><p>EKS 클러스터에서 GPU 워크로드를 지원하는 완전한 아키텍처는 다음과 같은 구성 요소로 이루어집니다:</p>
+<ol>
+<li><strong>GPU 노드 그룹</strong>: NVIDIA 드라이버가 사전 설치된 Amazon EKS 최적화 AMI를 사용</li>
+<li><strong>NVIDIA Device Plugin</strong>: Kubernetes에서 컨테이너가 GPU에 접근할 수 있도록 지원</li>
+<li><strong>노드 라벨 및 테인트</strong>: GPU 노드를 식별하고 일반 워크로드로부터 보호</li>
+<li><strong>GPU 테스트 애플리케이션</strong>: 노드 설정이 올바르게 작동하는지 검증</li>
+</ol>
+<div class="mermaid">graph TD
+    A[EKS Cluster] --> B[GPU Node Group]
+    A --> C[Regular Node Group]
+    B --> D[NVIDIA Device Plugin]
+    B --> E[GPU Application Pods]
+    D --> F[GPU Resource Management]
+    E --> G[ML Training/Inference]
+
+    style B fill:#f9d9c8,stroke:#333,stroke-width:2px
+    style D fill:#c8f9d9,stroke:#333,stroke-width:1px
+    style E fill:#d9c8f9,stroke:#333,stroke-width:1px</div><h2 id="gpu-"><a href="#gpu-" class="header-anchor"></a>GPU 노드 그룹 구성</h2><h3 id="ami-"><a href="#ami-" class="header-anchor"></a>AMI 선택과 인스턴스 유형</h3><p>GPU 노드 그룹을 생성할 때는 NVIDIA 드라이버가 사전 설치된 AMI를 선택하는 것이 중요합니다. AWS는 이를 위한 최적화된 이미지를 제공합니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># 사용 가능한 Amazon EKS 최적화 NVIDIA AMI 조회</span>
+aws ec2 describe-images \
+    --owners amazon \
+    --filters <span class="hljs-string">&quot;Name=name,Values=amazon-eks-node-al2023-x86_64-nvidia*&quot;</span> \
+    --query <span class="hljs-string">&#x27;sort_by(Images, &amp;CreationDate)[-1].Name&#x27;</span></code></pre><p>GPU 워크로드에 적합한 인스턴스 유형:</p>
+<table>
+<thead>
+<tr>
+<th>인스턴스 유형</th>
+<th>GPU</th>
+<th>vCPU</th>
+<th>메모리</th>
+<th>사용 사례</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>g4dn.xlarge</td>
+<td>1x NVIDIA T4</td>
+<td>4</td>
+<td>16 GB</td>
+<td>추론, 가벼운 학습</td>
+</tr>
+<tr>
+<td>g5.xlarge</td>
+<td>1x NVIDIA A10G</td>
+<td>4</td>
+<td>16 GB</td>
+<td>중급 학습, 고성능 추론</td>
+</tr>
+<tr>
+<td>p3.2xlarge</td>
+<td>1x NVIDIA V100</td>
+<td>8</td>
+<td>16 GB</td>
+<td>고급 학습 워크로드</td>
+</tr>
+</tbody></table>
+<h3 id="self-managed-"><a href="#self-managed-" class="header-anchor"></a>Self-Managed 노드 그룹 설정</h3><p>AWS CDK 또는 Terraform으로 GPU 노드 그룹을 생성할 때, 노드 라벨과 테인트를 자동으로 적용하기 위해 <code>cloudinit_pre_nodeadm</code> 스크립트를 활용할 수 있습니다:</p>
+<pre><code class="hljs plaintext"># Terraform 예제
+cloudinit_pre_nodeadm = [
+  {
+    content_type = &quot;application/node.eks.aws&quot;
+    content      = &lt;&lt;-EOT
+      ---
+      apiVersion: node.eks.aws/v1alpha1
+      kind: NodeConfig
+      spec:
+        kubelet:
+          flags:
+            - &quot;--node-labels=nvidia.com/gpu=true&quot;
+            - &quot;--register-with-taints=nvidia.com/gpu=true:NoSchedule&quot;
+      EOT
+  }
+]</code></pre><p>이 구성을 통해:</p>
+<ol>
+<li><code>nvidia.com/gpu=true</code> 라벨이 노드에 적용됨</li>
+<li><code>nvidia.com/gpu=true:NoSchedule</code> 테인트로 인해 특별히 허용(toleration)을 설정하지 않은 일반 파드는 GPU 노드에 스케줄링되지 않음</li>
+</ol>
+<h2 id="nvidia-device-plugin-"><a href="#nvidia-device-plugin-" class="header-anchor"></a>NVIDIA Device Plugin 설정</h2><p>GPU 노드를 클러스터에 추가한 후에는 NVIDIA Device Plugin을 배포해야 합니다. 이 플러그인은 Kubernetes가 GPU 리소스를 인식하고 관리할 수 있게 해줍니다.</p>
+<pre><code class="hljs yaml"><span class="hljs-comment"># nvidia-device-plugin.yaml</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">DaemonSet</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-daemonset</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-system</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-ds</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-ds</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">nodeSelector:</span>
+        <span class="hljs-attr">nvidia.com/gpu:</span> <span class="hljs-string">&quot;true&quot;</span>  <span class="hljs-comment"># GPU 노드에만 배포</span>
+      <span class="hljs-attr">tolerations:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">key:</span> <span class="hljs-string">nvidia.com/gpu</span>
+        <span class="hljs-attr">operator:</span> <span class="hljs-string">Exists</span>
+        <span class="hljs-attr">effect:</span> <span class="hljs-string">NoSchedule</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">image:</span> <span class="hljs-string">nvcr.io/nvidia/k8s-device-plugin:v0.14.0</span>
+        <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-ctr</span>
+        <span class="hljs-attr">securityContext:</span>
+          <span class="hljs-attr">allowPrivilegeEscalation:</span> <span class="hljs-literal">false</span>
+          <span class="hljs-attr">capabilities:</span>
+            <span class="hljs-attr">drop:</span> [<span class="hljs-string">&quot;ALL&quot;</span>]
+        <span class="hljs-attr">volumeMounts:</span>
+          <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">device-plugin</span>
+            <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span>
+          <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">dev</span>
+            <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/dev</span>
+      <span class="hljs-attr">volumes:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">device-plugin</span>
+          <span class="hljs-attr">hostPath:</span>
+            <span class="hljs-attr">path:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">dev</span>
+          <span class="hljs-attr">hostPath:</span>
+            <span class="hljs-attr">path:</span> <span class="hljs-string">/dev</span></code></pre><p>플러그인을 적용하고 확인합니다:</p>
+<pre><code class="hljs bash">kubectl apply -f nvidia-device-plugin.yaml
+kubectl -n kube-system get pods -l name=nvidia-device-plugin-ds</code></pre><p>성공적으로 배포되면, GPU 노드에서 다음 명령어로 GPU 리소스가 인식되는지 확인할 수 있습니다:</p>
+<pre><code class="hljs bash">kubectl describe node &lt;gpu-node-name&gt; | grep nvidia.com/gpu
+<span class="hljs-comment"># 출력 예시: nvidia.com/gpu:        1</span></code></pre><h2 id="gpu--2"><a href="#gpu--2" class="header-anchor"></a>GPU 워크로드 배포 및 테스트</h2><p>이제 GPU 노드가 제대로 동작하는지 검증하기 위한 테스트 애플리케이션을 배포해 보겠습니다:</p>
+<pre><code class="hljs yaml"><span class="hljs-comment"># gpu-test.yaml</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">gpu-test-deployment</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">gpu-test</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">gpu-test</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">nodeSelector:</span>
+        <span class="hljs-attr">nvidia.com/gpu:</span> <span class="hljs-string">&quot;true&quot;</span>
+      <span class="hljs-attr">tolerations:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">key:</span> <span class="hljs-string">&quot;nvidia.com/gpu&quot;</span>
+        <span class="hljs-attr">operator:</span> <span class="hljs-string">&quot;Equal&quot;</span>
+        <span class="hljs-attr">value:</span> <span class="hljs-string">&quot;true&quot;</span>
+        <span class="hljs-attr">effect:</span> <span class="hljs-string">&quot;NoSchedule&quot;</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">cuda-container</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0</span>
+        <span class="hljs-attr">command:</span> [<span class="hljs-string">&quot;/bin/sh&quot;</span>, <span class="hljs-string">&quot;-c&quot;</span>, <span class="hljs-string">&quot;nvidia-smi &amp;&amp; sleep 3600&quot;</span>]
+        <span class="hljs-attr">resources:</span>
+          <span class="hljs-attr">limits:</span>
+            <span class="hljs-attr">nvidia.com/gpu:</span> <span class="hljs-string">&quot;1&quot;</span></code></pre><p>이 파드의 로그를 확인하면 <code>nvidia-smi</code> 명령어의 출력을 볼 수 있습니다:</p>
+<pre><code class="hljs bash">kubectl apply -f gpu-test.yaml
+kubectl logs -f deployment/gpu-test-deployment</code></pre><p>성공적인 출력 예시:</p>
+<pre><code class="hljs plaintext">Mon Mar 17 09:10:34 2025
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35.05              Driver Version: 560.35.05    CUDA Version: 12.6 |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name    Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                           |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla T4           On | 00000000:00:1E.0 Off |                    0 |
+| N/A   25C    P8     9W /   70W |      1MiB / 15360MiB |      0%      Default |
+|                           |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+</code></pre><p>이 출력은 파드가 NVIDIA Tesla T4 GPU에 성공적으로 액세스했음을 보여줍니다.</p>
+<h2 id="gpu-time-slicing-"><a href="#gpu-time-slicing-" class="header-anchor"></a>GPU Time-Slicing으로 자원 최적화</h2><p>GPU는 비용이 높은 리소스이므로 효율적인 활용이 중요합니다. NVIDIA Device Plugin의 Time-Slicing 기능을 사용하면 하나의 물리적 GPU를 여러 컨테이너에서 공유할 수 있습니다.</p>
+<h3 id="time-slicing-"><a href="#time-slicing-" class="header-anchor"></a>Time-Slicing 구성</h3><p>먼저 ConfigMap을 생성하여 Time-Slicing을 설정합니다:</p>
+<pre><code class="hljs yaml"><span class="hljs-comment"># gpu-timeslicing-config.yaml</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">ConfigMap</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-config</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-system</span>
+<span class="hljs-attr">data:</span>
+  <span class="hljs-attr">config.yaml:</span> <span class="hljs-string">|
+    version: v1
+    flags:
+      migStrategy: none
+    sharing:
+      timeSlicing:
+        resources:
+        - name: nvidia.com/gpu
+          replicas: 4  # 물리 GPU 1개를 가상으로 4개로 분할</span></code></pre><p>NVIDIA Device Plugin이 이 구성을 사용하도록 업데이트합니다:</p>
+<pre><code class="hljs yaml"><span class="hljs-comment"># nvidia-device-plugin-timeslicing.yaml</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">DaemonSet</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-daemonset</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-system</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-comment"># ... 이전 설정과 동일 ...</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-comment"># ... 이전 설정과 동일 ...</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">image:</span> <span class="hljs-string">nvcr.io/nvidia/k8s-device-plugin:v0.14.0</span>
+        <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-ctr</span>
+        <span class="hljs-attr">args:</span> [<span class="hljs-string">&quot;--config-file&quot;</span>, <span class="hljs-string">&quot;/config/config.yaml&quot;</span>]
+        <span class="hljs-comment"># ... 이전 설정과 동일 ...</span>
+        <span class="hljs-attr">volumeMounts:</span>
+          <span class="hljs-comment"># ... 이전 마운트와 동일 ...</span>
+          <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">config-volume</span>
+            <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/config</span>
+      <span class="hljs-attr">volumes:</span>
+        <span class="hljs-comment"># ... 이전 볼륨과 동일 ...</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">config-volume</span>
+          <span class="hljs-attr">configMap:</span>
+            <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia-device-plugin-config</span></code></pre><p>업데이트된 설정을 적용합니다:</p>
+<pre><code class="hljs bash">kubectl apply -f gpu-timeslicing-config.yaml
+kubectl apply -f nvidia-device-plugin-timeslicing.yaml</code></pre><h3 id="time-slicing--2"><a href="#time-slicing--2" class="header-anchor"></a>Time-Slicing 검증</h3><p>노드를 확인하면 이제 1개의 물리 GPU가 4개의 가상 GPU로 보고되는 것을 확인할 수 있습니다:</p>
+<pre><code class="hljs bash">kubectl describe node &lt;gpu-node-name&gt; | grep nvidia.com/gpu
+<span class="hljs-comment"># 출력 예시: nvidia.com/gpu:        4</span></code></pre><p>이제 여러 GPU 워크로드를 배포하여 테스트합니다:</p>
+<pre><code class="hljs bash">kubectl scale deployment/gpu-test-deployment --replicas=4
+kubectl get pods -o wide</code></pre><p>모든 파드가 동일한 GPU 노드에서 실행되고 있다면 Time-Slicing이 성공적으로 적용된 것입니다.</p>
+<h2 id="--20"><a href="#--20" class="header-anchor"></a>모니터링 및 운영 관리</h2><h3 id="dcgm-exporter-gpu-"><a href="#dcgm-exporter-gpu-" class="header-anchor"></a>DCGM Exporter로 GPU 메트릭 수집</h3><p>NVIDIA DCGM(Data Center GPU Manager) Exporter를 배포하여 Prometheus와 Grafana를 통해 GPU 메트릭을 모니터링할 수 있습니다:</p>
+<pre><code class="hljs yaml"><span class="hljs-comment"># dcgm-exporter.yaml</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">DaemonSet</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">dcgm-exporter</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-system</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">name:</span> <span class="hljs-string">dcgm-exporter</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">name:</span> <span class="hljs-string">dcgm-exporter</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">nodeSelector:</span>
+        <span class="hljs-attr">nvidia.com/gpu:</span> <span class="hljs-string">&quot;true&quot;</span>
+      <span class="hljs-attr">tolerations:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">key:</span> <span class="hljs-string">nvidia.com/gpu</span>
+        <span class="hljs-attr">operator:</span> <span class="hljs-string">Exists</span>
+        <span class="hljs-attr">effect:</span> <span class="hljs-string">NoSchedule</span>
+      <span class="hljs-attr">containers:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">dcgm-exporter</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">nvcr.io/nvidia/k8s-dcgm-exporter:3.1.7-3.1.7-ubuntu20.04</span>
+        <span class="hljs-attr">ports:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">metrics</span>
+          <span class="hljs-attr">containerPort:</span> <span class="hljs-number">9400</span>
+        <span class="hljs-attr">securityContext:</span>
+          <span class="hljs-attr">runAsNonRoot:</span> <span class="hljs-literal">false</span>
+          <span class="hljs-attr">runAsUser:</span> <span class="hljs-number">0</span>
+        <span class="hljs-attr">volumeMounts:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">device-plugin</span>
+          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span>
+      <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">device-plugin</span>
+        <span class="hljs-attr">hostPath:</span>
+          <span class="hljs-attr">path:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span></code></pre><h3 id="--21"><a href="#--21" class="header-anchor"></a>주요 모니터링 지표</h3><p>DCGM Exporter를 설정한 후 Prometheus와 Grafana로 다음과 같은 중요한 GPU 메트릭을 모니터링할 수 있습니다:</p>
+<ol>
+<li><strong>GPU 사용률</strong>: DCGM_FI_DEV_GPU_UTIL</li>
+<li><strong>메모리 사용량</strong>: DCGM_FI_DEV_FB_USED</li>
+<li><strong>온도</strong>: DCGM_FI_DEV_TEMPERATURE_GPU</li>
+<li><strong>전력 사용량</strong>: DCGM_FI_DEV_POWER_USAGE</li>
+<li><strong>메모리 대역폭</strong>: DCGM_FI_DEV_MEM_COPY_UTIL</li>
+</ol>
+<h2 id="--22"><a href="#--22" class="header-anchor"></a>성능 최적화 팁</h2><h3 id="cuda-"><a href="#cuda-" class="header-anchor"></a>CUDA 버전 호환성 확인</h3><p>애플리케이션의 CUDA 요구사항과 노드에 설치된 CUDA 버전의 호환성을 확인하세요. 현재 예시의 AL2023 NVIDIA AMI에는 CUDA 12.5가 포함되어 있습니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># 노드에서 CUDA 버전 확인</span>
+kubectl debug node/&lt;gpu-node-name&gt; -it --image=ubuntu:20.04
+<span class="hljs-built_in">chroot</span> /host
+/usr/local/cuda/bin/nvcc --version</code></pre><h3 id="time-slicing--3"><a href="#time-slicing--3" class="header-anchor"></a>Time-Slicing 최적화</h3><p>Time-Slicing은 GPU 자원을 효율적으로 공유할 수 있게 해주지만, 워크로드 특성에 맞게 설정해야 합니다:</p>
+<ol>
+<li><strong>추론 워크로드</strong>: 일반적으로 Time-Slicing에 적합</li>
+<li><strong>학습 워크로드</strong>: 전체 GPU 자원이 필요하므로 Time-Slicing을 사용하지 않는 것이 좋음</li>
+<li><strong>최적의 분할 비율</strong>: 워크로드의 메모리 요구사항과 처리량을 고려하여 결정</li>
+</ol>
+<h3 id="--23"><a href="#--23" class="header-anchor"></a>사용자 정의 리소스 유형 활용</h3><p>다양한 GPU 성능 요구사항을 가진 워크로드가 있다면, 사용자 정의 리소스 유형을 활용할 수 있습니다:</p>
+<pre><code class="hljs yaml"><span class="hljs-attr">sharing:</span>
+  <span class="hljs-attr">timeSlicing:</span>
+    <span class="hljs-attr">resources:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia.com/gpu</span>
+      <span class="hljs-attr">replicas:</span> <span class="hljs-number">2</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia.com/gpu-high-memory</span>
+      <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+      <span class="hljs-attr">timeSlicingProfile:</span> <span class="hljs-string">high-memory</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia.com/gpu-low-latency</span>
+      <span class="hljs-attr">replicas:</span> <span class="hljs-number">4</span>
+      <span class="hljs-attr">timeSlicingProfile:</span> <span class="hljs-string">low-latency</span></code></pre><h2 id="--24"><a href="#--24" class="header-anchor"></a>결론</h2><p>EKS 클러스터에 GPU 노드 그룹을 구성하고 NVIDIA Device Plugin을 설정하는 것은 AI/ML 워크로드를 위한 강력한 인프라를 구축하는 첫 단계입니다. 이 글에서 설명한 모범 사례를 따르면 다음과 같은 이점을 얻을 수 있습니다:</p>
+<ol>
+<li><strong>비용 최적화</strong>: Time-Slicing을 통한 GPU 리소스 활용도 증가</li>
+<li><strong>보안 강화</strong>: 테인트를 통한 GPU 노드 보호</li>
+<li><strong>운영 효율성</strong>: 자동화된 노드 라벨링 및 구성</li>
+<li><strong>성능 향상</strong>: 워크로드 특성에 맞는 GPU 리소스 할당</li>
+</ol>
+<p>Kubernetes와 EKS의 유연성, NVIDIA GPU의 강력한 성능, 그리고 Time-Slicing과 같은 최적화 기술을 결합하면 비용 효율적이고 확장성 있는 GPU 기반 인프라를 구축할 수 있습니다. 이는 현대 AI/ML 워크로드의 요구사항을 충족하는 데 이상적입니다.</p>
+<hr>
+<p>이 글이 EKS에서 GPU 워크로드를 실행하는 데 도움이 되었기를 바랍니다. 질문이나 의견이 있으시면 댓글로 남겨주세요!</p>
+<hr>
+<p><strong>참고 자료:</strong></p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin">NVIDIA Kubernetes Device Plugin GitHub</a></li>
+<li><a href="https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html">Amazon EKS 최적화 가속 AMI</a></li>
+<li><a href="https://github.com/NVIDIA/gpu-operator">NVIDIA GPU Operator</a></li>
+<li><a href="https://github.com/NVIDIA/dcgm-exporter">NVIDIA DCGM Exporter</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

@@ -332,7 +332,7 @@
         <a href="About.html" class="win98-button">About</a>
     </nav>
   </header>
-    <h1 id="eks-trafficdistribution-preferclose-az-"><a href="#eks-trafficdistribution-preferclose-az-" class="header-anchor"></a>EKS에서 trafficDistribution: PreferClose를 활용한 AZ 간 통신 최적화</h1><h2 id="--36"><a href="#--36" class="header-anchor"></a>목차</h2><ul>
+    <h1 id="eks-trafficdistribution-preferclose-az-"><a href="#eks-trafficdistribution-preferclose-az-" class="header-anchor"></a>EKS에서 trafficDistribution: PreferClose를 활용한 AZ 간 통신 최적화</h1><h2 id="--25"><a href="#--25" class="header-anchor"></a>목차</h2><ul>
 <li><a href="#%EA%B0%9C%EC%9A%94">개요</a></li>
 <li><a href="#%ED%86%A0%ED%8F%B4%EB%A1%9C%EC%A7%80-%EC%9D%B8%EC%8B%9D-%EB%9D%BC%EC%9A%B0%ED%8C%85-%EB%B0%9C%EC%A0%84-%EC%97%AD%EC%82%AC">토폴로지 인식 라우팅 발전 역사</a></li>
 <li><a href="#trafficdistribution-preferclose-%EC%86%8C%EA%B0%9C">trafficDistribution: PreferClose 소개</a></li>
@@ -342,9 +342,9 @@
 <li><a href="#%EC%A0%81%EC%9A%A9-%EA%B0%80%EC%9D%B4%EB%93%9C%EB%9D%BC%EC%9D%B8-%EB%B0%8F-%EA%B3%A0%EB%A0%A4%EC%82%AC%ED%95%AD">적용 가이드라인 및 고려사항</a></li>
 <li><a href="#%EA%B2%B0%EB%A1%A0">결론</a></li>
 </ul>
-<h2 id="--37"><a href="#--37" class="header-anchor"></a>개요</h2><p>Kubernetes 클러스터, 특히 AWS EKS와 같은 클라우드 환경에서는 여러 가용 영역(Availability Zone, AZ)에 걸쳐 워크로드가 배포됩니다. 서로 다른 AZ 간 통신은 추가적인 네트워크 비용과 지연 시간을 발생시키는데, 이를 최소화하기 위해 Kubernetes에서는 토폴로지 인식 트래픽 라우팅 기능을 제공합니다.</p>
+<h2 id="--26"><a href="#--26" class="header-anchor"></a>개요</h2><p>Kubernetes 클러스터, 특히 AWS EKS와 같은 클라우드 환경에서는 여러 가용 영역(Availability Zone, AZ)에 걸쳐 워크로드가 배포됩니다. 서로 다른 AZ 간 통신은 추가적인 네트워크 비용과 지연 시간을 발생시키는데, 이를 최소화하기 위해 Kubernetes에서는 토폴로지 인식 트래픽 라우팅 기능을 제공합니다.</p>
 <p>이 문서에서는 Kubernetes의 토폴로지 인식 라우팅 기능의 발전 과정과 최신 방식인 <code>trafficDistribution: PreferClose</code> 옵션을 EKS 환경에서 테스트한 결과를 공유합니다.</p>
-<h2 id="--38"><a href="#--38" class="header-anchor"></a>토폴로지 인식 라우팅 발전 역사</h2><p>Kubernetes에서 토폴로지 인식 라우팅 기능은 다음과 같이 발전해왔습니다:</p>
+<h2 id="--27"><a href="#--27" class="header-anchor"></a>토폴로지 인식 라우팅 발전 역사</h2><p>Kubernetes에서 토폴로지 인식 라우팅 기능은 다음과 같이 발전해왔습니다:</p>
 <div class="mermaid">timeline
     title Kubernetes 토폴로지 인식 라우팅 발전 과정
     v1.21 : Alpha 도입
@@ -361,7 +361,7 @@
     v1.28 : EndpointSlice hints 필드만 GA 목표
             어노테이션 및 휴리스틱은 GA 미포함
     v1.33 : trafficDistribution 필드 GA 예정
-            service.kubernetes.io/topology-mode 어노테이션 Deprecated</div><h3 id="--39"><a href="#--39" class="header-anchor"></a>주요 변화 요약</h3><ol>
+            service.kubernetes.io/topology-mode 어노테이션 Deprecated</div><h3 id="--28"><a href="#--28" class="header-anchor"></a>주요 변화 요약</h3><ol>
 <li><p><strong>v1.21 (알파)</strong>: &quot;Topology Aware Hints&quot;라는 이름으로 처음 도입</p>
 <ul>
 <li><code>TopologyAwareHints</code> 기능 게이트 필요</li>
@@ -394,13 +394,13 @@
 </ul>
 </li>
 </ol>
-<h2 id="trafficdistribution-preferclose-"><a href="#trafficdistribution-preferclose-" class="header-anchor"></a>trafficDistribution: PreferClose 소개</h2><h3 id="--40"><a href="#--40" class="header-anchor"></a>기능 소개</h3><p><code>trafficDistribution: PreferClose</code>는 Kubernetes Service 리소스의 필드로, 같은 AZ 내에서 우선적으로 트래픽을 분산시키는 기능을 제공합니다. 이를 통해 AZ 간 네트워크 통신을 최소화하여 지연 시간과 데이터 전송 비용을 줄일 수 있습니다.</p>
-<h3 id="--41"><a href="#--41" class="header-anchor"></a>동작 방식</h3><ol>
+<h2 id="trafficdistribution-preferclose-"><a href="#trafficdistribution-preferclose-" class="header-anchor"></a>trafficDistribution: PreferClose 소개</h2><h3 id="--29"><a href="#--29" class="header-anchor"></a>기능 소개</h3><p><code>trafficDistribution: PreferClose</code>는 Kubernetes Service 리소스의 필드로, 같은 AZ 내에서 우선적으로 트래픽을 분산시키는 기능을 제공합니다. 이를 통해 AZ 간 네트워크 통신을 최소화하여 지연 시간과 데이터 전송 비용을 줄일 수 있습니다.</p>
+<h3 id="--30"><a href="#--30" class="header-anchor"></a>동작 방식</h3><ol>
 <li>EndpointSlice 컨트롤러가 각 엔드포인트의 토폴로지 정보(가용 영역)를 힌트로 기록</li>
 <li>kube-proxy가 이 힌트를 활용하여 같은 AZ 내에서 우선적으로 트래픽 라우팅</li>
 <li>동일 AZ에 가용한 엔드포인트가 없는 경우에만 다른 AZ로 트래픽 라우팅</li>
 </ol>
-<h3 id="--42"><a href="#--42" class="header-anchor"></a>설정 방법</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
+<h3 id="--31"><a href="#--31" class="header-anchor"></a>설정 방법</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
 <span class="hljs-attr">kind:</span> <span class="hljs-string">Service</span>
 <span class="hljs-attr">metadata:</span>
   <span class="hljs-attr">name:</span> <span class="hljs-string">my-service</span>
@@ -421,7 +421,7 @@
   <span class="hljs-attr">selector:</span>
     <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
   <span class="hljs-attr">ports:</span>
-  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span></code></pre><h2 id="--43"><a href="#--43" class="header-anchor"></a>테스트 환경 구성</h2><h3 id="--44"><a href="#--44" class="header-anchor"></a>클러스터 환경</h3><p>테스트는 ap-northeast-2 리전의 EKS 클러스터에서 수행되었으며, 노드는 A존과 C존에 분산 배치되었습니다.</p>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span></code></pre><h2 id="--32"><a href="#--32" class="header-anchor"></a>테스트 환경 구성</h2><h3 id="--33"><a href="#--33" class="header-anchor"></a>클러스터 환경</h3><p>테스트는 ap-northeast-2 리전의 EKS 클러스터에서 수행되었으며, 노드는 A존과 C존에 분산 배치되었습니다.</p>
 <div class="mermaid">graph TD
     subgraph "EKS Cluster (ap-northeast-2)"
         subgraph "Availability Zone A"
@@ -435,7 +435,7 @@
             NodeC2["Node: ip-10-241-63-71"]
             NodeC3["Node: ip-10-241-63-246"]
         end
-    end</div><h3 id="--45"><a href="#--45" class="header-anchor"></a>테스트용 리소스 구성</h3><pre><code class="hljs yaml"><span class="hljs-comment"># 네임스페이스</span>
+    end</div><h3 id="--34"><a href="#--34" class="header-anchor"></a>테스트용 리소스 구성</h3><pre><code class="hljs yaml"><span class="hljs-comment"># 네임스페이스</span>
 <span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span>
 <span class="hljs-attr">kind:</span> <span class="hljs-string">Namespace</span>
 <span class="hljs-attr">metadata:</span>
@@ -559,7 +559,7 @@
             NodeC1 --- PodC1
             NodeC2 --- PodC2
         end
-    end</div><h2 id="--46"><a href="#--46" class="header-anchor"></a>테스트 시나리오 및 결과</h2><h3 id="-1-endpointslice-"><a href="#-1-endpointslice-" class="header-anchor"></a>시나리오 1: EndpointSlice 힌트 확인</h3><p>EndpointSlice에는 각 Pod의 AZ 정보가 힌트로 저장되어 있습니다.</p>
+    end</div><h2 id="--35"><a href="#--35" class="header-anchor"></a>테스트 시나리오 및 결과</h2><h3 id="-1-endpointslice-"><a href="#-1-endpointslice-" class="header-anchor"></a>시나리오 1: EndpointSlice 힌트 확인</h3><p>EndpointSlice에는 각 Pod의 AZ 정보가 힌트로 저장되어 있습니다.</p>
 <pre><code class="hljs bash">kubectl -n topo-test get endpointslices \
   -l kubernetes.io/service-name=test-app-svc \
   -o jsonpath=<span class="hljs-string">&#x27;{.items[*].endpoints[*].hints.forZones}&#x27;</span></code></pre><p>결과:</p>
@@ -634,7 +634,7 @@
     <span class="hljs-attr">app:</span> <span class="hljs-string">my-app</span>
   <span class="hljs-attr">ports:</span>
   <span class="hljs-bullet">-</span> <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
-  <span class="hljs-attr">trafficDistribution:</span> <span class="hljs-string">PreferClose</span>  <span class="hljs-comment"># v1.33에서 GA 예정</span></code></pre><h3 id="--47"><a href="#--47" class="header-anchor"></a>주요 차이점</h3><div class="mermaid">graph TD
+  <span class="hljs-attr">trafficDistribution:</span> <span class="hljs-string">PreferClose</span>  <span class="hljs-comment"># v1.33에서 GA 예정</span></code></pre><h3 id="--36"><a href="#--36" class="header-anchor"></a>주요 차이점</h3><div class="mermaid">graph TD
     A[토폴로지 인식 라우팅 방식] --> B["service.kubernetes.io/topology-mode: Auto"]
     A --> C["trafficDistribution: PreferClose"]
     
@@ -666,7 +666,7 @@
 </ul>
 </li>
 </ol>
-<h2 id="--48"><a href="#--48" class="header-anchor"></a>적용 가이드라인 및 고려사항</h2><h3 id="--49"><a href="#--49" class="header-anchor"></a>어떤 옵션을 사용해야 할까?</h3><div class="mermaid">flowchart TD
+<h2 id="--37"><a href="#--37" class="header-anchor"></a>적용 가이드라인 및 고려사항</h2><h3 id="--38"><a href="#--38" class="header-anchor"></a>어떤 옵션을 사용해야 할까?</h3><div class="mermaid">flowchart TD
     A[시작] --> B{쿠버네티스<br>버전은?}
     B -->|"v1.33 이상"| C["trafficDistribution: PreferClose<br>사용 권장"]
     B -->|"v1.27~v1.32"| D{"어떤 기능이<br>중요한가?"}
@@ -693,7 +693,7 @@
 </ul>
 </li>
 </ol>
-<h3 id="--50"><a href="#--50" class="header-anchor"></a>주의사항</h3><ol>
+<h3 id="--39"><a href="#--39" class="header-anchor"></a>주의사항</h3><ol>
 <li><p><strong>Pod 분포 관리</strong>:</p>
 <ul>
 <li><code>PreferClose</code>를 사용할 경우, 애플리케이션 Pod이 AZ 간에 적절하게 분산되도록 관리해야 합니다.</li>
@@ -718,7 +718,7 @@
 </ul>
 </li>
 </ol>
-<h2 id="--51"><a href="#--51" class="header-anchor"></a>결론</h2><p>EKS 환경에서 토폴로지 인식 라우팅 기능, 특히 <code>trafficDistribution: PreferClose</code> 옵션을 사용하면 다음과 같은 이점을 얻을 수 있습니다:</p>
+<h2 id="--40"><a href="#--40" class="header-anchor"></a>결론</h2><p>EKS 환경에서 토폴로지 인식 라우팅 기능, 특히 <code>trafficDistribution: PreferClose</code> 옵션을 사용하면 다음과 같은 이점을 얻을 수 있습니다:</p>
 <ol>
 <li><strong>네트워크 비용 최적화</strong>: AZ 간 데이터 전송 비용을 최소화할 수 있습니다.</li>
 <li><strong>지연 시간 감소</strong>: 같은 AZ 내에서의 통신은 지연 시간이 줄어듭니다.</li>
@@ -728,7 +728,7 @@
 <p>테스트 결과, <code>trafficDistribution: PreferClose</code> 옵션은 의도한 대로 정확하게 작동하며, 로컬 AZ 내에서 트래픽을 효과적으로 유지하는 것을 확인했습니다. 이는 특히 마이크로서비스 아키텍처에서 서비스 간 호출이 많은 경우 상당한 비용 절감과 성능 향상을 가져올 수 있습니다.</p>
 <p>쿠버네티스 v1.33에서는 <code>trafficDistribution: PreferClose</code>가 GA로 승격될 예정이므로, 장기적인 관점에서 새로운
 서비스에는 이 방식을 적용하는 것이 권장됩니다. 기존에 <code>topology-mode: Auto</code> 어노테이션을 사용 중인 서비스는 향후 v1.33 이후에 점진적으로 마이그레이션을 계획하는 것이 좋습니다.</p>
-<h2 id="--52"><a href="#--52" class="header-anchor"></a>참고 문헌</h2><ol>
+<h2 id="--41"><a href="#--41" class="header-anchor"></a>참고 문헌</h2><ol>
 <li><a href="https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/">Kubernetes 공식 문서: 토폴로지 인식 라우팅</a></li>
 <li><a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-network/2433-topology-aware-hints/README.md">KEP-2433: Topology Aware Hints</a></li>
 <li><a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.33.md">Kubernetes v1.33 Changelog</a></li>
