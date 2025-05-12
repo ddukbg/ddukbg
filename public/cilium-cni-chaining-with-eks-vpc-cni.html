@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기존 CNI 환경을 유지하며 eBPF 기능 확장하기: EKS에서의 CNI 체이닝 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>기존 CNI 환경을 유지하며 eBPF 기능 확장하기: EKS에서의 CNI 체이닝</h1>
+    <p><small>2025-05-12 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="-cni-ebpf-eks-cni-"><a href="#-cni-ebpf-eks-cni-" class="header-anchor"></a>기존 CNI 환경을 유지하며 eBPF 기능 확장하기: EKS에서의 CNI 체이닝</h1><h2 id="-"><a href="#-" class="header-anchor"></a>소개</h2><p>Kubernetes 환경에서 네트워크는 단순한 연결 이상의 중요한 역할을 합니다. <br>특히 대규모 마이크로서비스 아키텍처에서는 네트워크 관찰성(Observability)과 세밀한 네트워크 정책이 필수적입니다. <br>하지만 클라우드 제공업체의 기본 CNI(예: AWS VPC CNI)는 네트워크 연결성은 우수하지만, 고급 보안 기능이나 관찰성 측면에서는 한계를 가질 수 있습니다.<br>
+특히 이미 운영 중인 CNI를 변경하기 어려운 환경에서는, 기존 구조를 유지하면서 기능을 확장할 수 있는 접근이 필요합니다.</p>
+<p>이 글에서는 AWS EKS 환경에서 AWS VPC CNI, Cilium, Calico를 함께 활용하는 CNI 체이닝(Chaining) 구성에 대해 살펴보겠습니다. <br>특히 eBPF 기술을 기반으로 한 Cilium CNI 체이닝이 어떻게 강력한 네트워크 관찰성과 보안 기능을 제공하는지 알아보겠습니다.</p>
+<h2 id="cni-"><a href="#cni-" class="header-anchor"></a>CNI 체이닝이란?</h2><p>CNI(Container Network Interface)는 Kubernetes에서 컨테이너 네트워킹을 담당하는 표준 인터페이스입니다. <br>CNI 체이닝은 여러 CNI 플러그인을 순차적으로 결합하여 각 CNI의 장점을 활용하는 접근 방식입니다.</p>
+<div class="mermaid">flowchart TD
+    A[컨테이너] --> B[기본 CNI]
+    B --> C[보조 CNI 1]
+    C --> D[보조 CNI 2]
+    D --> E[최종 네트워크 구성]
+    
+    style B fill:#f9d770,stroke:#333,stroke-width:2px
+    style C fill:#7ce8ff,stroke:#333,stroke-width:2px
+    style D fill:#a5d6a7,stroke:#333,stroke-width:2px</div><h3 id="cni--2"><a href="#cni--2" class="header-anchor"></a>CNI 체이닝의 주요 이점</h3><ol>
+<li><strong>기능별 분리와 특화</strong>: 각 CNI가 자신의 전문 영역에 집중할 수 있습니다.</li>
+<li><strong>기존 인프라 활용</strong>: 현재 사용 중인 CNI를 교체하지 않고 확장할 수 있습니다.</li>
+<li><strong>점진적 마이그레이션</strong>: 기존 CNI를 유지하면서 새로운 기능을 추가할 수 있습니다.</li>
+<li><strong>다양한 기능 조합</strong>: 여러 CNI의 기능을 결합해 최적의 네트워킹 환경을 구성할 수 있습니다.</li>
+</ol>
+<h2 id="ebpf-cni-"><a href="#ebpf-cni-" class="header-anchor"></a>eBPF: CNI 체이닝을 가능하게 하는 핵심 기술</h2><p>eBPF는 Linux 커널에서 안전하게 프로그램을 실행할 수 있는 혁신적인 기술입니다. <br>Cilium, Calico, Weave Net 등 CNI 도구는 eBPF를 활용하여 패킷 필터링, 네트워크 모니터링, 보안 정책 적용 등 다양한 기능을 제공합니다.</p>
+<h3 id="ebpf-cni--2"><a href="#ebpf-cni--2" class="header-anchor"></a>eBPF가 CNI 체이닝에 가져오는 이점</h3><ol>
+<li><strong>커널 레벨 처리</strong>: 네트워크 스택 초기 단계에서 패킷을 처리하여 높은 성능 제공</li>
+<li><strong>세밀한 제어</strong>: 네트워크 흐름의 모든 측면을 프로그래밍 방식으로 제어 가능</li>
+<li><strong>동적 업데이트</strong>: 커널을 수정하거나 재부팅하지 않고도 네트워크 동작 변경 가능</li>
+<li><strong>낮은 오버헤드</strong>: 기존 네트워크 솔루션보다 효율적인 리소스 활용</li>
+</ol>
+<div class="mermaid">graph TD
+    A[네트워크 패킷] --> B[eBPF 프로그램]
+    B -->|필터링/수정| C[네트워크 스택]
+    B -->|메트릭 수집| D[관찰성 데이터]
+    B -->|정책 적용| E[보안 제어]
+    
+    style B fill:#ffcc99,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5</div><h2 id="aws-eks-cni-"><a href="#aws-eks-cni-" class="header-anchor"></a>AWS EKS에서의 멀티 CNI 아키텍처</h2><p>AWS EKS에서 멀티 CNI 아키텍처를 구현할 때 일반적으로 AWS VPC CNI를 기본으로 하고, Cilium과 Calico를 보조 CNI로 추가합니다.<br>이 조합은 강력하면서도 유연한 네트워크 스택을 제공합니다.</p>
+<div class="mermaid">graph TD
+    subgraph "EKS 클러스터"
+        subgraph "워커 노드"
+            A[Pod A] --- B[Pod B]
+            
+            subgraph "CNI 체이닝 레이어"
+                C["AWS VPC CNI (기본 네트워킹/IP 할당)"]
+                D["Cilium (eBPF 기반 관찰성)"]
+                E["Calico (네트워크 정책)"]
+                
+                C --> D --> E
+            end
+            
+            A & B --- C
+            
+            F["Hubble UI\n(관찰성 대시보드)"]
+        end
+    end
+    
+    G["AWS VPC"] --- C
+    F -.- D
+    
+    style C fill:#FF9900,stroke:#333,stroke-width:2px
+    style D fill:#61C3D6,stroke:#333,stroke-width:2px
+    style E fill:#0078C1,stroke:#333,stroke-width:2px
+    style F fill:#5D8EB8,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5</div><h3 id="-cni-"><a href="#-cni-" class="header-anchor"></a>각 CNI 컴포넌트의 역할</h3><h4 id="aws-vpc-cni"><a href="#aws-vpc-cni" class="header-anchor"></a>AWS VPC CNI</h4><p>AWS VPC CNI는 EKS의 기본 네트워킹 레이어로, AWS 인프라와의 통합을 담당합니다.</p>
+<ul>
+<li><strong>VPC IP 주소 할당</strong>: Pod에 직접 VPC IP 주소 할당</li>
+<li><strong>ENI 기반 네트워킹</strong>: AWS 네트워크 인터페이스 활용</li>
+<li><strong>AWS 보안 그룹 통합</strong>: AWS 보안 메커니즘과 연동</li>
+<li><strong>기본 제공 솔루션</strong>: EKS 클러스터에 기본 설치됨</li>
+</ul>
+<h4 id="cilium-ebpf-"><a href="#cilium-ebpf-" class="header-anchor"></a>Cilium (eBPF 기반 관찰성 레이어)</h4><p>Cilium은 eBPF 기술을 활용하여 네트워크 트래픽에 대한 깊은 통찰력을 제공합니다.</p>
+<ul>
+<li><strong>L3-L7 네트워크 가시성</strong>: HTTP, gRPC 등 애플리케이션 레벨 트래픽 모니터링</li>
+<li><strong>서비스 맵 시각화</strong>: Pod 간 통신 흐름 실시간 시각화</li>
+<li><strong>성능 메트릭 수집</strong>: 지연 시간, 처리량, 오류율 등 모니터링</li>
+<li><strong>동적 트러블슈팅</strong>: 네트워크 문제 실시간 분석</li>
+</ul>
+<h4 id="calico-"><a href="#calico-" class="header-anchor"></a>Calico (네트워크 정책 레이어)</h4><p>Calico는 강력한 네트워크 정책 집행과 고급 보안 기능을 제공합니다.</p>
+<ul>
+<li><strong>세밀한 네트워크 정책</strong>: 복잡한 멀티티어 애플리케이션 보호</li>
+<li><strong>제로 트러스트 네트워크</strong>: 명시적으로 허용된 통신만 가능</li>
+<li><strong>네트워크 분리</strong>: 논리적 경계를 통한 워크로드 격리</li>
+<li><strong>Policy API 호환성</strong>: Kubernetes NetworkPolicy API 완벽 지원</li>
+</ul>
+<h2 id="cni--3"><a href="#cni--3" class="header-anchor"></a>CNI 체이닝 구현 단계</h2><p>AWS EKS에서 AWS VPC CNI + Cilium + Calico 체이닝을 구현하는 단계별 과정을 살펴보겠습니다.</p>
+<h3 id="1-"><a href="#1-" class="header-anchor"></a>1. 사전 확인</h3><p>먼저 AWS VPC CNI 버전이 체이닝을 지원하는지 확인합니다. v1.11.2 이상을 권장합니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># VPC CNI 버전 확인</span>
+kubectl -n kube-system get ds aws-node -o jsonpath=<span class="hljs-string">&#x27;{.spec.template.spec.containers[0].image}&#x27;</span></code></pre><h3 id="2-helm-"><a href="#2-helm-" class="header-anchor"></a>2. Helm 저장소 추가</h3><p>Cilium 설치를 위한 Helm 저장소를 추가합니다.</p>
+<pre><code class="hljs bash">helm repo add cilium https://helm.cilium.io/
+helm repo update</code></pre><h3 id="3-cilium-"><a href="#3-cilium-" class="header-anchor"></a>3. Cilium 설치 (체이닝 모드)</h3><p>AWS VPC CNI와의 체이닝 모드로 Cilium을 설치합니다.</p>
+<pre><code class="hljs bash">helm install cilium cilium/cilium --version 1.17.3 \
+  --namespace kube-system \
+  --<span class="hljs-built_in">set</span> cni.chainingMode=aws-cni \
+  --<span class="hljs-built_in">set</span> cni.exclusive=<span class="hljs-literal">false</span> \
+  --<span class="hljs-built_in">set</span> routingMode=native \
+  --<span class="hljs-built_in">set</span> enableIPv4Masquerade=<span class="hljs-literal">false</span></code></pre><p>각 옵션의 의미는 다음과 같습니다:</p>
+<ul>
+<li><code>cni.chainingMode=aws-cni</code>: AWS VPC CNI와 체이닝 구성</li>
+<li><code>cni.exclusive=false</code>: 다른 CNI와 함께 사용 허용</li>
+<li><code>routingMode=native</code>: 기본 라우팅 사용</li>
+<li><code>enableIPv4Masquerade=false</code>: AWS VPC 라우팅과의 충돌 방지</li>
+</ul>
+<h3 id="4-hubble-"><a href="#4-hubble-" class="header-anchor"></a>4. Hubble 활성화</h3><p>네트워크 관찰성을 위한 Hubble 컴포넌트를 활성화합니다.</p>
+<pre><code class="hljs bash">helm upgrade cilium cilium/cilium \
+  --namespace kube-system \
+  --reuse-values \
+  --<span class="hljs-built_in">set</span> hubble.enabled=<span class="hljs-literal">true</span> \
+  --<span class="hljs-built_in">set</span> hubble.relay.enabled=<span class="hljs-literal">true</span> \
+  --<span class="hljs-built_in">set</span> hubble.ui.enabled=<span class="hljs-literal">true</span> \
+  --<span class="hljs-built_in">set</span> <span class="hljs-string">&quot;hubble.metrics.enabled={dns,drop,tcp,flow,port-distribution,icmp,http}&quot;</span></code></pre><h3 id="5-calico-"><a href="#5-calico-" class="header-anchor"></a>5. Calico 정책 설정 (선택사항)</h3><p>이미 Cilium의 네트워크 정책으로 충분할 수 있지만, 특정 사용 사례에서는 Calico의 정책 기능이 필요할 수 있습니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># Calico 설치 전 operator 설정</span>
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/tigera-operator.yaml
+
+<span class="hljs-comment"># 체이닝 모드로 Calico 설치</span>
+<span class="hljs-built_in">cat</span> &lt;&lt;<span class="hljs-string">EOF | kubectl apply -f -
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    containerIPForwarding: Enabled
+    ipPools: []
+  cni:
+    type: AmazonVPC
+EOF</span></code></pre><h2 id="ebpf-cilium-hubble-"><a href="#ebpf-cilium-hubble-" class="header-anchor"></a>eBPF 기반 Cilium Hubble로 네트워크 관찰성 향상</h2><p>Cilium의 Hubble은 eBPF 기술을 활용하여 Kubernetes 네트워크 트래픽에 대한 깊은 통찰력을 제공합니다. 이는 서비스 간 통신 패턴을 이해하고 네트워크 문제를 신속하게 진단하는 데 매우 유용합니다.</p>
+<h3 id="hubble-ui-"><a href="#hubble-ui-" class="header-anchor"></a>Hubble UI 설정</h3><p>Hubble UI에 접속하기 위한 포트포워딩을 설정합니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># Cilium CLI 설치</span>
+<span class="hljs-comment"># macOS</span>
+brew install cilium-cli
+
+<span class="hljs-comment"># Linux</span>
+curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz
+<span class="hljs-built_in">sudo</span> tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
+
+<span class="hljs-comment"># Hubble UI 접속</span>
+cilium hubble port-forward &amp;
+cilium hubble ui</code></pre><p>또는 kubectl을 사용한 방법:</p>
+<pre><code class="hljs bash">kubectl -n kube-system port-forward svc/hubble-relay 4245:80 &amp;
+kubectl -n kube-system port-forward svc/hubble-ui 12000:80 &amp;</code></pre><h3 id="hubble-"><a href="#hubble-" class="header-anchor"></a>Hubble의 강력한 시각화 기능</h3><div class="mermaid">graph LR
+    A[Pod A] -->|"HTTP GET /api/v1"| B[Service]
+    B --> C[Pod B]
+    B --> D[Pod C]
+    
+    style A fill:#6baed6,stroke:#333
+    style B fill:#9e9ac8,stroke:#333
+    style C fill:#74c476,stroke:#333
+    style D fill:#74c476,stroke:#333</div><p>Hubble UI는 다음과 같은 강력한 기능을 제공합니다:</p>
+<ol>
+<li><strong>서비스 맵</strong>: Pod 간 통신을 실시간으로 시각화</li>
+<li><strong>프로토콜 분석</strong>: HTTP, gRPC, DNS 등 상위 계층 프로토콜에 대한 통찰력</li>
+<li><strong>오류 감지</strong>: 네트워크 정책 위반, 연결 실패 등 시각화</li>
+<li><strong>필터링 및 검색</strong>: 특정 서비스, 네임스페이스, 상태코드 등으로 필터링</li>
+</ol>
+<h2 id="--2"><a href="#--2" class="header-anchor"></a>실제 운영 환경에서의 고려사항</h2><p>CNI 체이닝은 강력한 기능을 제공하지만, 운영 환경에 적용할 때 몇 가지 중요한 고려사항이 있습니다.</p>
+<h3 id="--3"><a href="#--3" class="header-anchor"></a>성능 영향</h3><p>eBPF는 매우 효율적이지만, 여러 CNI 레이어를 통과하는 것은 약간의 오버헤드를 발생시킬 수 있습니다:</p>
+<ul>
+<li><strong>레이턴시</strong>: 일반적으로 마이크로초 단위의 미미한 추가 지연</li>
+<li><strong>CPU 사용량</strong>: 모니터링과 정책 적용으로 인한 소폭 증가</li>
+<li><strong>메모리 사용</strong>: 각 CNI의 상태 정보 저장에 필요한 추가 메모리</li>
+</ul>
+<h3 id="--4"><a href="#--4" class="header-anchor"></a>업그레이드 및 호환성</h3><p>CNI 체이닝 환경에서는 각 구성 요소의 호환성을 주의 깊게 확인해야 합니다:</p>
+<ul>
+<li>AWS VPC CNI, Cilium, Calico 버전 간 호환성 유지</li>
+<li>Kubernetes 버전 업그레이드 시 CNI 설정 재검토</li>
+<li>CNI 업그레이드 시 단계적 롤아웃 권장</li>
+</ul>
+<h3 id="--5"><a href="#--5" class="header-anchor"></a>문제 해결 팁</h3><ol>
+<li><p><strong>CNI 설정 확인</strong>:</p>
+<pre><code class="hljs bash">kubectl get cm -n kube-system cni-config -o yaml</code></pre></li>
+<li><p><strong>Pod 네트워크 인터페이스 확인</strong>:</p>
+<pre><code class="hljs bash">kubectl debug &lt;pod-name&gt; -it -- ip addr</code></pre></li>
+<li><p><strong>Cilium 상태 확인</strong>:</p>
+<pre><code class="hljs bash">cilium status --<span class="hljs-built_in">wait</span></code></pre></li>
+<li><p><strong>네트워크 정책 검증</strong>:</p>
+<pre><code class="hljs bash">cilium policy get</code></pre></li>
+</ol>
+<h2 id="--6"><a href="#--6" class="header-anchor"></a>유스케이스: 실제 환경에서의 활용</h2><h3 id="--7"><a href="#--7" class="header-anchor"></a>마이크로서비스 아키텍처 관찰성</h3><p>수십 또는 수백 개의 마이크로서비스가 있는 환경에서는 서비스 간 통신 패턴을 이해하는 것이 중요합니다. <br>Cilium Hubble은 서비스 간 의존성과 통신 패턴을 시각화하여 다음과 같은 이점을 제공합니다:</p>
+<ul>
+<li><strong>서비스 매핑</strong>: 자동으로 서비스 간 통신 토폴로지 생성</li>
+<li><strong>병목 현상 식별</strong>: 과도한 트래픽이 발생하는 서비스 식별</li>
+<li><strong>이상 감지</strong>: 비정상적인 통신 패턴 감지</li>
+</ul>
+<h3 id="--8"><a href="#--8" class="header-anchor"></a>제로 트러스트 보안 구현</h3><p>모든 통신을 명시적으로 허용해야 하는 제로 트러스트 환경에서는 CNI 체이닝이 이상적입니다:</p>
+<ul>
+<li><strong>AWS VPC CNI</strong>: 기본 네트워킹 인프라 제공</li>
+<li><strong>Cilium</strong>: 통신 패턴 모니터링 및 이상 감지</li>
+<li><strong>Calico</strong>: 세밀한 네트워크 정책 적용</li>
+</ul>
+<h3 id="--9"><a href="#--9" class="header-anchor"></a>규제 준수 및 감사</h3><p>금융, 의료 등 규제가 엄격한 산업에서는 네트워크 활동에 대한 상세한 감사 로그가 필요합니다:</p>
+<ul>
+<li><strong>트래픽 로깅</strong>: 모든 네트워크 통신에 대한 상세 로그</li>
+<li><strong>정책 위반 알림</strong>: 허용되지 않은 통신 시도 감지</li>
+<li><strong>증거 수집</strong>: 규제 준수 감사를 위한 데이터 제공</li>
+</ul>
+<h2 id="--10"><a href="#--10" class="header-anchor"></a>결론</h2><p>EKS 환경에서 AWS VPC CNI, Cilium, Calico를 체이닝하는 아키텍처는 각 CNI의 강점을 결합합니다.</p>
+<p>이러한 CNI 체이닝은:</p>
+<ol>
+<li>AWS 인프라와의 원활한 통합 (AWS VPC CNI)</li>
+<li>강력한 관찰성과 트러블슈팅 기능 (Cilium/Hubble)</li>
+<li>세밀한 네트워크 정책 (Calico)</li>
+</ol>
+<p>을 결합하여 복잡한 마이크로서비스 환경에서도 각 CNI 만의 강점만을 사용할수 있습니다.</p>
+<p>특히 기존 CNI를 유지해야 하는 상황에서 네트워크 기능을 고도화하고자 한다면, CNI 체이닝은 실용적이고 강력한 대안이 될 수 있습니다.</p>
+<hr>
+<p><strong>참고 자료</strong></p>
+<ul>
+<li><a href="https://docs.cilium.io/en/stable/installation/cni-chaining/">Cilium CNI 체이닝 공식 문서</a></li>
+<li><a href="https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html">AWS EKS CNI 문서</a></li>
+<li><a href="https://ebpf.io/what-is-ebpf/">eBPF 기술 개요</a></li>
+<li><a href="https://github.com/cilium/hubble">Hubble 네트워크 관찰성 도구</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
