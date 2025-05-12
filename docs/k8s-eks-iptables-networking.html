@@ -349,9 +349,10 @@
     subgraph "K8s Service Communication"
         DNS[DNS Resolution<br>kube-dns 조회]
         IPTABLES[Service IP 변환<br>iptables DNAT]
+        CONNTRACK[Connection Tracking<br>nf_conntrack]
         ROUTING[Node 간 라우팅<br>ARP 테이블 조회]
         ENDPOINT[Pod 엔드포인트<br>최종 연결]
-        CONNTRACK[Connection Tracking<br>nf_conntrack]
+        
     end
     
     L7 --- DNS
@@ -360,9 +361,9 @@
     L3 --- ROUTING
     L2 --- ENDPOINT
     
-    style DNS fill:#f9f,stroke:#333,stroke-width:1px
-    style IPTABLES fill:#bbf,stroke:#333,stroke-width:1px
-    style CONNTRACK fill:#bfb,stroke:#333,stroke-width:1px</div><h2 id="eks-pod-"><a href="#eks-pod-" class="header-anchor"></a>EKS에서 Pod 네트워크 구성</h2><p>VPC CNI의 경우 L-IPAM(Local IP Address Manager)을 통해 worker node가 속한 subnet 대역으로 pod IP를 할당합니다. 이 경우 worker node의 secondary ip에 pod ip가 등록됩니다.</p>
+    style DNS fill:#f3f,stroke:#333,stroke-width:1px
+    style IPTABLES fill:#b3f,stroke:#333,stroke-width:1px
+    style CONNTRACK fill:#d3b,stroke:#333,stroke-width:1px</div><h2 id="eks-pod-"><a href="#eks-pod-" class="header-anchor"></a>EKS에서 Pod 네트워크 구성</h2><p>VPC CNI의 경우 L-IPAM(Local IP Address Manager)을 통해 worker node가 속한 subnet 대역으로 pod IP를 할당합니다. 이 경우 worker node의 secondary ip에 pod ip가 등록됩니다.</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># node1</span>
 [root@ip-10-119-27-208 /]# ip route | grep 10.119.25.114
 10.119.25.114 dev eni018f9e0450d scope <span class="hljs-built_in">link</span>

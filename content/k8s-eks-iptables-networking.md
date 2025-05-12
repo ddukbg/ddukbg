@@ -33,9 +33,10 @@ graph TB
     subgraph "K8s Service Communication"
         DNS[DNS Resolution<br>kube-dns 조회]
         IPTABLES[Service IP 변환<br>iptables DNAT]
+        CONNTRACK[Connection Tracking<br>nf_conntrack]
         ROUTING[Node 간 라우팅<br>ARP 테이블 조회]
         ENDPOINT[Pod 엔드포인트<br>최종 연결]
-        CONNTRACK[Connection Tracking<br>nf_conntrack]
+        
     end
     
     L7 --- DNS
@@ -44,9 +45,9 @@ graph TB
     L3 --- ROUTING
     L2 --- ENDPOINT
     
-    style DNS fill:#f9f,stroke:#333,stroke-width:1px
-    style IPTABLES fill:#bbf,stroke:#333,stroke-width:1px
-    style CONNTRACK fill:#bfb,stroke:#333,stroke-width:1px
+    style DNS fill:#f3f,stroke:#333,stroke-width:1px
+    style IPTABLES fill:#b3f,stroke:#333,stroke-width:1px
+    style CONNTRACK fill:#d3b,stroke:#333,stroke-width:1px
 ```
 
 ## EKS에서 Pod 네트워크 구성
