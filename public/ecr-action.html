@@ -332,7 +332,7 @@
         <a href="About.html" class="win98-button">About</a>
     </nav>
   </header>
-    <h1 id="amazon-ecr-action-eks-pod-identity-"><a href="#amazon-ecr-action-eks-pod-identity-" class="header-anchor"></a>Amazon ECR 로그인 Action에 EKS Pod Identity 지원 기능 추가하기</h1><h2 id="-"><a href="#-" class="header-anchor"></a>목차</h2><ul>
+    <h1 id="amazon-ecr-action-eks-pod-identity-"><a href="#amazon-ecr-action-eks-pod-identity-" class="header-anchor"></a>Amazon ECR 로그인 Action에 EKS Pod Identity 지원 기능 추가하기</h1><h2 id="--11"><a href="#--11" class="header-anchor"></a>목차</h2><ul>
 <li>개요</li>
 <li>배경 및 문제 상황</li>
 <li>Amazon EKS Pod Identity 소개</li>
@@ -342,27 +342,27 @@
 <li>PR 영향 및 적용 가이드</li>
 <li>결론</li>
 </ul>
-<h2 id="--2"><a href="#--2" class="header-anchor"></a>개요</h2><p>이 문서는 GitHub Actions의 <code>amazon-ecr-login</code> 액션에 Amazon EKS Pod Identity 지원 기능을 추가하는 과정과 그 배경에 대해 설명합니다. EKS Pod Identity는 Amazon EKS에서 실행되는 애플리케이션에 AWS 리소스 접근 권한을 관리하는 새로운 방법으로, 기존 IRSA(IAM Roles for Service Accounts)보다 간소화된 인증 경험을 제공합니다.</p>
+<h2 id="--12"><a href="#--12" class="header-anchor"></a>개요</h2><p>이 문서는 GitHub Actions의 <code>amazon-ecr-login</code> 액션에 Amazon EKS Pod Identity 지원 기능을 추가하는 과정과 그 배경에 대해 설명합니다. EKS Pod Identity는 Amazon EKS에서 실행되는 애플리케이션에 AWS 리소스 접근 권한을 관리하는 새로운 방법으로, 기존 IRSA(IAM Roles for Service Accounts)보다 간소화된 인증 경험을 제공합니다.</p>
 <p>이번 변경은 GitHub Issues <a href="https://github.com/aws-actions/amazon-ecr-login/issues/624">#624</a>와 <a href="https://github.com/aws-actions/amazon-ecr-login/issues/735">#735</a>에서 제기된 EKS Pod Identity 환경에서 <code>amazon-ecr-login</code> 액션이 정상적으로 작동하지 않는 문제를 해결합니다.</p>
-<h2 id="--3"><a href="#--3" class="header-anchor"></a>배경 및 문제 상황</h2><h3 id="--4"><a href="#--4" class="header-anchor"></a>문제 발생 상황</h3><p>다음과 같은 상황에서 <code>amazon-ecr-login</code> 액션 실행 시 오류가 발생합니다:</p>
+<h2 id="--13"><a href="#--13" class="header-anchor"></a>배경 및 문제 상황</h2><h3 id="--14"><a href="#--14" class="header-anchor"></a>문제 발생 상황</h3><p>다음과 같은 상황에서 <code>amazon-ecr-login</code> 액션 실행 시 오류가 발생합니다:</p>
 <ol>
 <li><strong>GitHub Actions 셀프 호스티드 러너를 EKS 클러스터에서 실행할 때</strong></li>
 <li><strong>EKS Pod Identity를 사용하여 서비스 계정을 설정했을 때</strong></li>
 <li><strong>GitHub Actions 워크플로우에서 <code>aws-actions/amazon-ecr-login</code> 액션을 사용할 때</strong></li>
 </ol>
-<h3 id="--5"><a href="#--5" class="header-anchor"></a>오류 메시지</h3><pre><code class="hljs plaintext">Run aws-actions/amazon-ecr-login@v2
+<h3 id="--15"><a href="#--15" class="header-anchor"></a>오류 메시지</h3><pre><code class="hljs plaintext">Run aws-actions/amazon-ecr-login@v2
   with:
     mask-password: true
     registry-type: private
     skip-logout: false
 Error: 169.254.170.23 is not a valid container metadata service hostname</code></pre><p>위 오류는 AWS SDK가 컨테이너 메타데이터 서비스를 잘못된 방식으로 접근하려고 시도할 때 발생합니다. EKS Pod Identity 환경에서는 다른 엔드포인트를 통해 AWS 자격 증명을 획득해야 하는데, <code>amazon-ecr-login</code> 액션이 이를 인식하지 못하는 것이 문제의 원인입니다.</p>
-<h3 id="--6"><a href="#--6" class="header-anchor"></a>기존 임시 해결책</h3><p>이 문제에 대한 임시 해결책으로 사용자들은 다음과 같이 환경 변수를 비워서 메타데이터 서비스 호출을 우회해야 했습니다:</p>
+<h3 id="--16"><a href="#--16" class="header-anchor"></a>기존 임시 해결책</h3><p>이 문제에 대한 임시 해결책으로 사용자들은 다음과 같이 환경 변수를 비워서 메타데이터 서비스 호출을 우회해야 했습니다:</p>
 <pre><code class="hljs yaml"><span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Login</span> <span class="hljs-string">to</span> <span class="hljs-string">Amazon</span> <span class="hljs-string">ECR</span>
   <span class="hljs-attr">id:</span> <span class="hljs-string">login-ecr</span>
   <span class="hljs-attr">uses:</span> <span class="hljs-string">aws-actions/amazon-ecr-login@v1</span>
   <span class="hljs-attr">env:</span>
     <span class="hljs-attr">AWS_CONTAINER_CREDENTIALS_FULL_URI:</span> <span class="hljs-string">&#x27;&#x27;</span></code></pre><p>이 방법은 임시적인 해결책일 뿐, 근본적인 문제 해결이 필요했습니다.</p>
-<h3 id="--7"><a href="#--7" class="header-anchor"></a>사용자 영향</h3><p>이 문제로 인해 사용자들은 다음과 같은 불편함을 겪었습니다:</p>
+<h3 id="--17"><a href="#--17" class="header-anchor"></a>사용자 영향</h3><p>이 문제로 인해 사용자들은 다음과 같은 불편함을 겪었습니다:</p>
 <ol>
 <li><strong>EKS Pod Identity와 IRSA를 동시에 유지해야 함</strong>: 다른 AWS 서비스에는 Pod Identity를 사용하면서도, ECR 로그인을 위해 IRSA 설정을 유지해야 했습니다.</li>
 <li><strong>추가 IAM 설정 복잡성</strong>: IRSA를 위한 별도의 IAM 설정과 관리가 필요했습니다.</li>
@@ -375,7 +375,7 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
 <li>IAM 역할 세션 태그(Session Tags) 지원</li>
 <li>클러스터 간 역할 재사용 용이성</li>
 </ul>
-<h3 id="--8"><a href="#--8" class="header-anchor"></a>작동 방식</h3><p>EKS Pod Identity는 다음과 같은 방식으로 작동합니다:</p>
+<h3 id="--18"><a href="#--18" class="header-anchor"></a>작동 방식</h3><p>EKS Pod Identity는 다음과 같은 방식으로 작동합니다:</p>
 <div class="mermaid">graph TD
     A[Pod 생성] --> B[EKS Pod Identity Webhook]
     B --> C[Pod 스펙 변경]
@@ -424,15 +424,15 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
 <td>EKS만 지원</td>
 </tr>
 </tbody></table>
-<h2 id="--9"><a href="#--9" class="header-anchor"></a>문제 분석 및 해결 방안</h2><h3 id="--10"><a href="#--10" class="header-anchor"></a>문제 원인</h3><p><code>amazon-ecr-login</code> 액션의 문제는 AWS SDK 자격 증명 공급자 체인에서 발생합니다. AWS SDK는 여러 공급자를 순차적으로 시도하는데, EKS Pod Identity 환경에서는 <code>AWS_CONTAINER_CREDENTIALS_FULL_URI</code> 환경 변수로 지정된, 유효한 HTTP 자격 증명 공급자를 사용해야 합니다.</p>
+<h2 id="--19"><a href="#--19" class="header-anchor"></a>문제 분석 및 해결 방안</h2><h3 id="--20"><a href="#--20" class="header-anchor"></a>문제 원인</h3><p><code>amazon-ecr-login</code> 액션의 문제는 AWS SDK 자격 증명 공급자 체인에서 발생합니다. AWS SDK는 여러 공급자를 순차적으로 시도하는데, EKS Pod Identity 환경에서는 <code>AWS_CONTAINER_CREDENTIALS_FULL_URI</code> 환경 변수로 지정된, 유효한 HTTP 자격 증명 공급자를 사용해야 합니다.</p>
 <p>그러나 액션의 기존 코드는 이 환경을 인식하지 못하고 컨테이너 메타데이터 서비스(IMDS)를 사용하려고 시도하여 오류가 발생했습니다.</p>
-<h3 id="--11"><a href="#--11" class="header-anchor"></a>해결 방안</h3><p>이 문제를 해결하기 위한 접근 방식은 다음과 같습니다:</p>
+<h3 id="--21"><a href="#--21" class="header-anchor"></a>해결 방안</h3><p>이 문제를 해결하기 위한 접근 방식은 다음과 같습니다:</p>
 <ol>
 <li><strong>EKS Pod Identity 환경 감지</strong>: <code>AWS_CONTAINER_CREDENTIALS_FULL_URI</code> 환경 변수가 설정되어 있는지 확인하여 Pod Identity 환경인지 감지</li>
 <li><strong>HTTP 자격 증명 공급자 사용</strong>: Pod Identity 환경에서는 <code>fromHttp()</code> 함수를 사용하여 HTTP 엔드포인트에서 자격 증명 획득</li>
 <li><strong>기존 인증 방식 유지</strong>: 다른 환경에서는 기존의 기본 자격 증명 공급자 체인 사용</li>
 </ol>
-<h2 id="--12"><a href="#--12" class="header-anchor"></a>구현 상세</h2><p>변경된 구현의 흐름은 다음과 같습니다:</p>
+<h2 id="--22"><a href="#--22" class="header-anchor"></a>구현 상세</h2><p>변경된 구현의 흐름은 다음과 같습니다:</p>
 <div class="mermaid">flowchart TD
     A[인증 시작] --> B{AWS_CONTAINER_CREDENTIALS_FULL_URI 환경 변수 존재?}
     B -->|예| C[Pod Identity 감지]
@@ -440,7 +440,7 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
     C --> E["fromHttp() 인증 사용"]
     D --> F["fromEnv(), fromProcess() 등 기존 인증 사용"]
     E --> G[성공: ECR 로그인]
-    F --> G</div><h3 id="--13"><a href="#--13" class="header-anchor"></a>코드 변경사항</h3><p>PR에서 수정된 주요 코드는 다음과 같습니다:</p>
+    F --> G</div><h3 id="--23"><a href="#--23" class="header-anchor"></a>코드 변경사항</h3><p>PR에서 수정된 주요 코드는 다음과 같습니다:</p>
 <pre><code class="hljs javascript"><span class="hljs-comment">// 자격 증명 제공자 결정 로직</span>
 <span class="hljs-keyword">if</span> (process.<span class="hljs-property">env</span>.<span class="hljs-property">AWS_CONTAINER_CREDENTIALS_FULL_URI</span>) {
   <span class="hljs-comment">// EKS Pod Identity 환경 감지</span>
@@ -451,7 +451,7 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
   core.<span class="hljs-title function_">debug</span>(<span class="hljs-string">&#x27;Using default credential provider chain for authentication&#x27;</span>);
   <span class="hljs-keyword">return</span> <span class="hljs-title function_">defaultProvider</span>();
 }</code></pre><p>이 변경으로 인해 액션은 환경을 자동으로 감지하고 적절한 자격 증명 제공자를 선택하게 되었습니다.</p>
-<h2 id="--14"><a href="#--14" class="header-anchor"></a>테스트 결과</h2><p>변경된 코드를 다양한 환경에서 테스트하여 기능이 의도한 대로 작동하는지 확인했습니다.</p>
+<h2 id="--24"><a href="#--24" class="header-anchor"></a>테스트 결과</h2><p>변경된 코드를 다양한 환경에서 테스트하여 기능이 의도한 대로 작동하는지 확인했습니다.</p>
 <h3 id="pod-identity-"><a href="#pod-identity-" class="header-anchor"></a>Pod Identity 환경 테스트</h3><p>EKS Pod Identity가 활성화된 환경에서의 테스트:</p>
 <pre><code class="hljs json"><span class="hljs-punctuation">{</span>
     <span class="hljs-attr">&quot;UserId&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;AROXXXXXX:eks-cluster-pod-identity&quot;</span><span class="hljs-punctuation">,</span>
@@ -486,7 +486,7 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
 </ul>
 </li>
 </ol>
-<h3 id="--15"><a href="#--15" class="header-anchor"></a>적용 가이드</h3><p>PR 병합 후에는 별도의 조치 없이 <code>amazon-ecr-login@v1</code> 액션을 사용하면 자동으로 EKS Pod Identity 환경을 감지하고 적절한 인증 방식을 사용합니다.</p>
+<h3 id="--25"><a href="#--25" class="header-anchor"></a>적용 가이드</h3><p>PR 병합 후에는 별도의 조치 없이 <code>amazon-ecr-login@v1</code> 액션을 사용하면 자동으로 EKS Pod Identity 환경을 감지하고 적절한 인증 방식을 사용합니다.</p>
 <pre><code class="hljs yaml"><span class="hljs-comment"># 기존 방식 (임시 해결책 필요)</span>
 <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Login</span> <span class="hljs-string">to</span> <span class="hljs-string">Amazon</span> <span class="hljs-string">ECR</span>
   <span class="hljs-attr">id:</span> <span class="hljs-string">login-ecr</span>
@@ -498,7 +498,7 @@ Error: 169.254.170.23 is not a valid container metadata service hostname</code><
 <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Login</span> <span class="hljs-string">to</span> <span class="hljs-string">Amazon</span> <span class="hljs-string">ECR</span>
   <span class="hljs-attr">id:</span> <span class="hljs-string">login-ecr</span>
   <span class="hljs-attr">uses:</span> <span class="hljs-string">aws-actions/amazon-ecr-login@v1</span>
-  <span class="hljs-comment"># 별도의 환경 변수 설정 불필요</span></code></pre><h2 id="--16"><a href="#--16" class="header-anchor"></a>결론</h2><p>이번 PR을 통해 GitHub Actions의 <code>amazon-ecr-login</code> 액션이 Amazon EKS Pod Identity 환경에서도 원활하게 작동할 수 있게 되었습니다. 이로써 EKS Pod Identity를 사용하는 사용자들도 별도의 임시 해결책 없이 GitHub Actions 워크플로우를 구성할 수 있게 되었습니다.</p>
+  <span class="hljs-comment"># 별도의 환경 변수 설정 불필요</span></code></pre><h2 id="--26"><a href="#--26" class="header-anchor"></a>결론</h2><p>이번 PR을 통해 GitHub Actions의 <code>amazon-ecr-login</code> 액션이 Amazon EKS Pod Identity 환경에서도 원활하게 작동할 수 있게 되었습니다. 이로써 EKS Pod Identity를 사용하는 사용자들도 별도의 임시 해결책 없이 GitHub Actions 워크플로우를 구성할 수 있게 되었습니다.</p>
 <p>이 개선은 다음과 같은 이점을 제공합니다:</p>
 <ol>
 <li><strong>인프라 단순화</strong>: EKS Pod Identity만으로 모든 AWS 서비스와의 인증을 처리할 수 있어 IRSA 설정 유지가 불필요</li>

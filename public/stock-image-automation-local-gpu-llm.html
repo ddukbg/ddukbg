@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로컬 GPU와 LLM을 활용한 스톡 이미지 생성 자동화 시스템 구축하기 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>로컬 GPU와 LLM을 활용한 스톡 이미지 생성 자동화 시스템 구축하기</h1>
+    <p><small>2025-06-01 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="About.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="-gpu-llm-"><a href="#-gpu-llm-" class="header-anchor"></a>로컬 GPU와 LLM을 활용한 스톡 이미지 생성 자동화 시스템 구축 경험기</h1><h2 id="--99"><a href="#--99" class="header-anchor"></a>목차</h2><ol>
+<li><a href="#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EB%B0%B0%EA%B2%BD">프로젝트 배경</a></li>
+<li><a href="#%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%84%A4%EA%B3%84">시스템 아키텍처 설계</a></li>
+<li><a href="#%ED%95%B5%EC%8B%AC-%EA%B5%AC%ED%98%84-%EC%82%AC%ED%95%AD">핵심 구현 사항</a></li>
+<li><a href="#%EB%8F%99%EC%A0%81-%ED%94%84%EB%A1%AC%ED%94%84%ED%8A%B8-%EC%83%9D%EC%84%B1%EC%9D%98-%ED%95%84%EC%9A%94%EC%84%B1%EA%B3%BC-%EA%B5%AC%ED%98%84">동적 프롬프트 생성의 필요성과 구현</a></li>
+<li><a href="#%EB%8B%A4%EC%A4%91-%EB%AA%A8%EB%8D%B8-%EC%A7%80%EC%9B%90-%EB%B0%8F-%ED%8F%B4%EB%B0%B1-%EC%A0%84%EB%9E%B5">다중 모델 지원 및 폴백 전략</a></li>
+<li><a href="#%EB%A1%9C%EC%BB%AC-vs-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EB%AA%A8%EB%8D%B8-%EC%84%A0%ED%83%9D-%EA%B0%80%EC%9D%B4%EB%93%9C">로컬 vs 클라우드 모델 선택 가이드</a></li>
+<li><a href="#%EC%8B%A4%EC%A0%9C-%EA%B5%AC%ED%98%84%EC%97%90%EC%84%9C-%EB%A7%88%EC%A3%BC%ED%95%9C-%EB%AC%B8%EC%A0%9C%EB%93%A4%EA%B3%BC-%ED%95%B4%EA%B2%B0%EC%B1%85">실제 구현에서 마주한 문제들과 해결책</a></li>
+<li><a href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%EA%B2%BD%ED%97%98">성능 최적화 경험</a></li>
+<li><a href="#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%ED%9A%8C%EA%B3%A0-%EB%B0%8F-%EA%B0%9C%EC%84%A0-%EB%B0%A9%ED%96%A5">프로젝트 회고 및 개선 방향</a></li>
+</ol>
+<h2 id="--100"><a href="#--100" class="header-anchor"></a>프로젝트 배경</h2><p>미리캔버스나 Adobe Stock 같은 플랫폼에서 사용할 수 있는 디자인 에셋을 대량으로 생성해서 부가적인 수익을 창출할수 있는 사실 알고계시나요? 하지만 이미지 생성에 사용되는 API 비용은 많은 부담요소입니다. 그래서 저는 부담 없이 작업하고 싶었고, 로컬 GPU 자원을 최대한 활용해보고 싶었습니다. 그래서 여러 이미지 생성 모델을 통합하고, 프롬프트 생성부터 메타데이터 관리까지 전체 파이프라인을 자동화하는 시스템을 만들어보았습니다.</p>
+<h2 id="--101"><a href="#--101" class="header-anchor"></a>시스템 아키텍처 설계</h2><p>전체 시스템을 다음과 같은 구조로 설계했습니다:</p>
+<div class="mermaid">graph TD
+    A[사용자 입력] --> B{프롬프트 모드 선택}
+    B --> |랜덤| C[사전 정의 템플릿 조합]
+    B --> |키워드| D[키워드 기반 확장]
+    B --> |동적| E[Ollama LLM 생성]
+    
+    C & D & E --> F[프롬프트 정제]
+    F --> G{이미지 생성 모델 선택}
+    
+    G --> |로컬| H[로컬 GPU 모델]
+    G --> |API| I[클라우드 API 모델]
+    
+    H --> J[SDXL + Refiner]
+    H --> K[Flux.1 Schnell]
+    
+    I --> L[DALL-E 3]
+    I --> M[Google Gemini/Imagen]
+    
+    J & K & L & M --> N[이미지 후처리]
+    N --> O[메타데이터 생성]
+    O --> P[파일 저장 및 관리]
+    
+    style A fill:#e1f5fe
+    style H fill:#c8e6c9
+    style I fill:#ffccbc
+    style P fill:#f3e5f5</div><h2 id="--102"><a href="#--102" class="header-anchor"></a>핵심 구현 사항</h2><h3 id="--103"><a href="#--103" class="header-anchor"></a>모듈화된 구조 설계</h3><p>각 기능을 독립적인 함수로 분리하여 유지보수와 확장이 용이하도록 구현했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-comment"># 프롬프트 생성 모듈</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_prompt</span>(<span class="hljs-params">base_idea=<span class="hljs-literal">None</span></span>):
+    <span class="hljs-string">&quot;&quot;&quot;키워드 기반 또는 랜덤 프롬프트 생성&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># 구현 내용...</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_dynamic_prompt_with_ollama</span>():
+    <span class="hljs-string">&quot;&quot;&quot;Ollama를 활용한 동적 프롬프트 생성&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># 구현 내용...</span>
+
+<span class="hljs-comment"># 이미지 생성 모듈</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_image_with_local</span>(<span class="hljs-params">prompt_data</span>):
+    <span class="hljs-string">&quot;&quot;&quot;로컬 SDXL 모델 활용&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># 구현 내용...</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_image_with_flux</span>(<span class="hljs-params">prompt_data</span>):
+    <span class="hljs-string">&quot;&quot;&quot;로컬 Flux 모델 활용&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># 구현 내용...</span>
+
+<span class="hljs-comment"># 후처리 모듈</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">process_image</span>(<span class="hljs-params">image, prompt_data, format_type</span>):
+    <span class="hljs-string">&quot;&quot;&quot;이미지 후처리 및 메타데이터 생성&quot;&quot;&quot;</span>
+    <span class="hljs-comment"># 구현 내용...</span></code></pre><h3 id="--104"><a href="#--104" class="header-anchor"></a>설정 기반 유연성 확보</h3><p>환경 변수와 설정을 통해 다양한 환경에서 동작할 수 있도록 구현했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-comment"># 환경별 설정</span>
+OPENAI_API_KEY = os.getenv(<span class="hljs-string">&quot;OPENAI_API_KEY&quot;</span>)
+GOOGLE_API_KEY = os.getenv(<span class="hljs-string">&quot;GOOGLE_API_KEY&quot;</span>)
+OLLAMA_API_URL = <span class="hljs-string">&quot;http://localhost:11434/api/generate&quot;</span>
+OLLAMA_MODEL = <span class="hljs-string">&quot;qwen2.5:14b&quot;</span>  <span class="hljs-comment"># 설정 가능한 모델</span>
+
+<span class="hljs-comment"># 라이브러리 선택적 import로 의존성 문제 해결</span>
+<span class="hljs-keyword">try</span>:
+    <span class="hljs-keyword">from</span> rembg <span class="hljs-keyword">import</span> remove
+    REMBG_AVAILABLE = <span class="hljs-literal">True</span>
+<span class="hljs-keyword">except</span> ImportError:
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;경고: 배경 제거 기능이 비활성화됩니다.&quot;</span>)
+    REMBG_AVAILABLE = <span class="hljs-literal">False</span></code></pre><h2 id="--105"><a href="#--105" class="header-anchor"></a>동적 프롬프트 생성의 필요성과 구현</h2><h3 id="--106"><a href="#--106" class="header-anchor"></a>왜 동적 프롬프트가 필요한가?</h3><p>기존의 랜덤 조합이나 키워드 기반 프롬프트 생성 방식은 다음과 같은 한계가 있었습니다:</p>
+<ol>
+<li><strong>제한된 창의성</strong>: 사전 정의된 템플릿 조합으로는 참신한 아이디어 생성이 어려움</li>
+<li><strong>반복적인 결과</strong>: 비슷한 패턴의 이미지가 계속 생성됨</li>
+<li><strong>맥락 이해 부족</strong>: 단순 키워드 조합으로는 복합적인 개념 표현이 어려움</li>
+</ol>
+<h3 id="--107"><a href="#--107" class="header-anchor"></a>실제 구현 방식</h3><p>Ollama LLM을 활용하여 구조화된 JSON 형식으로 프롬프트를 생성하도록 구현했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_dynamic_prompt_with_ollama</span>():
+    master_prompt = <span class="hljs-string">f&quot;&quot;&quot;
+You are a creative assistant specialized in generating ideas for design assets.
+Your task is to generate ONE creative concept for a design asset.
+
+Output the result ONLY in JSON format with the following exact keys:
+{{
+  &quot;korean_description&quot;: &quot;&lt;생성된 에셋 아이디어에 대한 간결한 한글 설명&gt;&quot;,
+  &quot;english_image_prompt&quot;: &quot;&lt;Detailed English prompt for image generation&gt;&quot;,
+  &quot;tags&quot;: [&quot;&lt;List of 5-7 relevant Korean and English tags&gt;&quot;]
+}}
+
+Generate a new, creative concept now.
+&quot;&quot;&quot;</span>
+    
+    <span class="hljs-keyword">try</span>:
+        payload = {
+            <span class="hljs-string">&quot;model&quot;</span>: OLLAMA_MODEL,
+            <span class="hljs-string">&quot;prompt&quot;</span>: master_prompt,
+            <span class="hljs-string">&quot;format&quot;</span>: <span class="hljs-string">&quot;json&quot;</span>,
+            <span class="hljs-string">&quot;stream&quot;</span>: <span class="hljs-literal">False</span>
+        }
+        response = requests.post(OLLAMA_API_URL, json=payload, timeout=<span class="hljs-number">120</span>)
+        
+        <span class="hljs-comment"># JSON 파싱 및 검증 로직</span>
+        parsed_result = json.loads(response.json().get(<span class="hljs-string">&quot;response&quot;</span>))
+        
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">&quot;prompt&quot;</span>: parsed_result.get(<span class="hljs-string">&quot;english_image_prompt&quot;</span>),
+            <span class="hljs-string">&quot;korean_prompt_base&quot;</span>: parsed_result.get(<span class="hljs-string">&quot;korean_description&quot;</span>),
+            <span class="hljs-string">&quot;tags&quot;</span>: parsed_result.get(<span class="hljs-string">&quot;tags&quot;</span>, [])
+        }
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-comment"># 실패 시 기본 프롬프트 생성기로 폴백</span>
+        <span class="hljs-keyword">return</span> generate_prompt()</code></pre><h3 id="--108"><a href="#--108" class="header-anchor"></a>동적 프롬프트 생성 예시</h3><p><strong>입력</strong>: &quot;새로운 디자인 에셋 아이디어를 만들어줘&quot;</p>
+<p><strong>Ollama 출력</strong>:</p>
+<pre><code class="hljs json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;korean_description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;우주 정거장에서 바라본 지구의 일출 풍경&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;english_image_prompt&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Spectacular sunrise over Earth as seen from space station window, cinematic lighting, detailed planet surface, realistic space environment, high contrast, professional space photography style&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;tags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;우주&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;지구&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;일출&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;space&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;earth&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;sunrise&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;cinematic&quot;</span><span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span></code></pre><p>이처럼 단순한 키워드 조합으로는 만들어내기 어려운 창의적이고 구체적인 프롬프트를 생성할 수 있었습니다.</p>
+<h2 id="--109"><a href="#--109" class="header-anchor"></a>다중 모델 지원 및 폴백 전략</h2><h3 id="--110"><a href="#--110" class="header-anchor"></a>구현한 폴백 시스템</h3><p>각 모델이 실패할 경우를 대비해 단계적 폴백 시스템을 구현했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">test_image_generation</span>(<span class="hljs-params">count=<span class="hljs-number">1</span>, model=<span class="hljs-string">&quot;local&quot;</span>, user_prompt=<span class="hljs-literal">None</span>, prompt_mode=<span class="hljs-string">&quot;random&quot;</span></span>):
+    <span class="hljs-comment"># 모델별 실행 및 폴백 로직</span>
+    <span class="hljs-keyword">if</span> selected_model == <span class="hljs-string">&quot;gemini&quot;</span> <span class="hljs-keyword">and</span> GOOGLE_API_KEY:
+        image, prompt_data = generate_image_with_gemini(prompt_data)
+        <span class="hljs-keyword">if</span> image <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>: 
+            actual_model_used = <span class="hljs-string">&quot;dalle&quot;</span>
+    <span class="hljs-keyword">elif</span> selected_model == <span class="hljs-string">&quot;dalle&quot;</span> <span class="hljs-keyword">and</span> OPENAI_API_KEY:
+        image, prompt_data = generate_image_with_dalle(prompt_data)
+        <span class="hljs-keyword">if</span> image <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>: 
+            actual_model_used = <span class="hljs-string">&quot;random&quot;</span>
+    <span class="hljs-keyword">elif</span> selected_model == <span class="hljs-string">&quot;local&quot;</span>:
+        <span class="hljs-keyword">if</span> DIFFUSERS_AVAILABLE:
+            image, prompt_data = generate_image_with_local(prompt_data)
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-comment"># 라이브러리 미설치 시 API 모델로 대체</span>
+            <span class="hljs-keyword">if</span> OPENAI_API_KEY: 
+                actual_model_used = <span class="hljs-string">&quot;dalle&quot;</span>
+                image, prompt_data = generate_image_with_dalle(prompt_data)
+    <span class="hljs-comment"># 최종 실패 시 랜덤 색상 이미지 생성 (완전한 실패 방지)</span>
+    <span class="hljs-keyword">else</span>:
+        color = (random.randint(<span class="hljs-number">200</span>, <span class="hljs-number">255</span>), random.randint(<span class="hljs-number">200</span>, <span class="hljs-number">255</span>), random.randint(<span class="hljs-number">200</span>, <span class="hljs-number">255</span>))
+        image = Image.new(<span class="hljs-string">&#x27;RGB&#x27;</span>, (<span class="hljs-number">1024</span>, <span class="hljs-number">1024</span>), color=color)</code></pre><h3 id="gpu--3"><a href="#gpu--3" class="header-anchor"></a>GPU 메모리 최적화</h3><p>로컬 GPU를 사용할 때 메모리 효율성을 위해 다음과 같이 구현했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_image_with_local</span>(<span class="hljs-params">prompt_data</span>):
+    <span class="hljs-comment"># 장치 및 데이터 타입 자동 감지</span>
+    <span class="hljs-keyword">if</span> torch.cuda.is_available():
+        device = torch.device(<span class="hljs-string">&quot;cuda&quot;</span>)
+        torch_dtype = torch.float16  <span class="hljs-comment"># GPU 메모리 절약</span>
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;🚀 CUDA 가속 (float16) 사용&quot;</span>)
+    <span class="hljs-keyword">elif</span> <span class="hljs-built_in">hasattr</span>(torch.backends, <span class="hljs-string">&quot;mps&quot;</span>) <span class="hljs-keyword">and</span> torch.backends.mps.is_available():
+        device = torch.device(<span class="hljs-string">&quot;mps&quot;</span>)
+        torch_dtype = torch.float16  <span class="hljs-comment"># Mac GPU 지원</span>
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;🚀 MPS 가속 (float16) 사용&quot;</span>)
+    <span class="hljs-keyword">else</span>:
+        device = torch.device(<span class="hljs-string">&quot;cpu&quot;</span>)
+        torch_dtype = torch.float32
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;⚠️ CPU 사용 (속도 저하 예상)&quot;</span>)
+    
+    <span class="hljs-comment"># 메모리 사용량 최적화를 위한 설정</span>
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        base_model_id, 
+        torch_dtype=torch_dtype, 
+        variant=<span class="hljs-string">&quot;fp16&quot;</span>,  <span class="hljs-comment"># 절반 정밀도 모델 사용</span>
+        use_safetensors=<span class="hljs-literal">True</span>
+    )</code></pre><h2 id="-vs-"><a href="#-vs-" class="header-anchor"></a>로컬 vs 클라우드 모델 선택 가이드</h2><p>실제 사용 경험을 바탕으로 각 모델의 특성을 정리했습니다:</p>
+<h3 id="--111"><a href="#--111" class="header-anchor"></a>로컬 모델 사용을 권장하는 경우</h3><p><strong>장점:</strong></p>
+<ul>
+<li>무제한 생성 (API 비용 없음)</li>
+<li>데이터 프라이버시 보장</li>
+<li>네트워크 연결 불필요</li>
+<li>커스터마이징 가능</li>
+</ul>
+<p><strong>적합한 상황:</strong></p>
+<ul>
+<li>대량 이미지 생성이 필요한 경우</li>
+<li>예산이 제한적인 개인/소규모 프로젝트</li>
+<li>데이터 보안이 중요한 프로젝트</li>
+<li>실험적인 작업이 많은 경우</li>
+</ul>
+<h3 id="-api-"><a href="#-api-" class="header-anchor"></a>클라우드 API 모델을 권장하는 경우</h3><p><strong>장점:</strong></p>
+<ul>
+<li>빠른 생성 속도</li>
+<li>높은 품질과 일관성</li>
+<li>인프라 관리 불필요</li>
+<li>최신 모델 지속 업데이트</li>
+</ul>
+<p><strong>적합한 상황:</strong></p>
+<ul>
+<li>빠른 프로토타이핑이 필요한 경우</li>
+<li>높은 품질이 우선인 상업적 프로젝트</li>
+<li>GPU 하드웨어가 없는 환경</li>
+<li>소량의 고품질 이미지가 필요한 경우</li>
+</ul>
+<h3 id="--112"><a href="#--112" class="header-anchor"></a>실제 성능 비교 (개인 경험)</h3><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>로컬 SDXL</th>
+<th>로컬 Flux</th>
+<th>DALL-E 3</th>
+<th>Google Gemini</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>생성 속도</td>
+<td>40-60초</td>
+<td>15-20초</td>
+<td>10-15초</td>
+<td>8-12초</td>
+</tr>
+<tr>
+<td>품질</td>
+<td>좋음</td>
+<td>매우 좋음</td>
+<td>우수</td>
+<td>우수</td>
+</tr>
+<tr>
+<td>비용</td>
+<td>전기료만</td>
+<td>전기료만</td>
+<td>$0.04/장</td>
+<td>무료 (제한적)</td>
+</tr>
+<tr>
+<td>커스터마이징</td>
+<td>높음</td>
+<td>중간</td>
+<td>낮음</td>
+<td>낮음</td>
+</tr>
+</tbody></table>
+<p><em>테스트 환경: RTX 3060 12GB, 16GB RAM</em></p>
+<h2 id="--113"><a href="#--113" class="header-anchor"></a>실제 구현에서 마주한 문제들과 해결책</h2><h3 id="1-gpu-"><a href="#1-gpu-" class="header-anchor"></a>1. GPU 메모리 부족 문제</h3><p><strong>문제</strong>: SDXL + Refiner 모델 동시 로딩 시 12GB GPU 메모리 초과</p>
+<p><strong>해결책</strong>: </p>
+<pre><code class="hljs python"><span class="hljs-comment"># 단계별 메모리 관리</span>
+base_model = load_base_model()
+latents = base_model.generate()
+<span class="hljs-keyword">del</span> base_model  <span class="hljs-comment"># 베이스 모델 메모리 해제</span>
+torch.cuda.empty_cache()  <span class="hljs-comment"># GPU 캐시 정리</span>
+
+refiner_model = load_refiner_model()
+final_image = refiner_model.refine(latents)</code></pre><h3 id="2-ollama-json-"><a href="#2-ollama-json-" class="header-anchor"></a>2. Ollama JSON 파싱 실패</h3><p><strong>문제</strong>: LLM이 때로는 유효하지 않은 JSON을 반환</p>
+<p><strong>해결책</strong>:</p>
+<pre><code class="hljs python"><span class="hljs-keyword">try</span>:
+    parsed_result = json.loads(generated_json_str)
+<span class="hljs-keyword">except</span> json.JSONDecodeError <span class="hljs-keyword">as</span> json_err:
+    logging.error(<span class="hljs-string">f&quot;JSON 파싱 실패: <span class="hljs-subst">{json_err}</span>&quot;</span>)
+    <span class="hljs-comment"># 정규식으로 JSON 부분만 추출 시도</span>
+    json_match = re.search(<span class="hljs-string">r&#x27;\{.*\}&#x27;</span>, generated_json_str, re.DOTALL)
+    <span class="hljs-keyword">if</span> json_match:
+        parsed_result = json.loads(json_match.group())
+    <span class="hljs-keyword">else</span>:
+        <span class="hljs-comment"># 완전 실패 시 기본 프롬프트 생성기로 폴백</span>
+        <span class="hljs-keyword">return</span> generate_prompt()</code></pre><h3 id="3--4"><a href="#3--4" class="header-anchor"></a>3. 다양한 이미지 해상도 대응</h3><p><strong>문제</strong>: 플랫폼별로 요구하는 최소 해상도가 다름</p>
+<p><strong>해결책</strong>:</p>
+<pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">process_image</span>(<span class="hljs-params">image, prompt_data, format_type</span>):
+    target_min_resolution = <span class="hljs-number">2500</span>  <span class="hljs-comment"># 미리캔버스 기준</span>
+    width, height = image.size
+    
+    <span class="hljs-keyword">if</span> width &lt; target_min_resolution <span class="hljs-keyword">or</span> height &lt; target_min_resolution:
+        scale = <span class="hljs-built_in">max</span>(target_min_resolution / width, target_min_resolution / height)
+        new_width = <span class="hljs-built_in">int</span>(width * scale)
+        new_height = <span class="hljs-built_in">int</span>(height * scale)
+        <span class="hljs-comment"># Lanczos 리샘플링으로 품질 유지</span>
+        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)</code></pre><h2 id="--114"><a href="#--114" class="header-anchor"></a>성능 최적화 경험</h2><h3 id="--115"><a href="#--115" class="header-anchor"></a>배치 처리 최적화</h3><p>여러 이미지를 연속 생성할 때 모델 로딩 시간을 줄이기 위해 싱글톤 패턴을 검토했지만, 메모리 관리의 복잡성 때문에 단순한 방식을 유지했습니다:</p>
+<pre><code class="hljs python"><span class="hljs-comment"># 각 이미지 생성 시마다 모델 로딩 (단순하지만 안전)</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_image_with_local</span>(<span class="hljs-params">prompt_data</span>):
+    pipe = StableDiffusionXLPipeline.from_pretrained(...)
+    image = pipe(prompt_data[<span class="hljs-string">&quot;prompt&quot;</span>])
+    <span class="hljs-keyword">return</span> image</code></pre><h3 id="--116"><a href="#--116" class="header-anchor"></a>네트워크 요청 최적화</h3><p>API 모델 사용 시 속도 제한을 고려한 대기 시간 추가:</p>
+<pre><code class="hljs python"><span class="hljs-comment"># API 모델 사용 후 대기</span>
+<span class="hljs-keyword">if</span> actual_model_used <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> (<span class="hljs-string">&quot;local&quot;</span>, <span class="hljs-string">&quot;flux&quot;</span>) <span class="hljs-keyword">and</span> i &lt; count - <span class="hljs-number">1</span>:
+    wait_time = random.randint(<span class="hljs-number">2</span>, <span class="hljs-number">5</span>)
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;⏱️ <span class="hljs-subst">{wait_time}</span>초 대기 중...&quot;</span>)
+    time.sleep(wait_time)</code></pre><h2 id="--117"><a href="#--117" class="header-anchor"></a>프로젝트 회고 및 개선 방향</h2><h3 id="--118"><a href="#--118" class="header-anchor"></a>만족스러웠던 점</h3><ol>
+<li><strong>비용 효율성</strong>: 로컬 GPU 활용으로 API 비용 없이 대량 생성 가능</li>
+<li><strong>유연성</strong>: 다양한 모델과 프롬프트 모드 지원으로 다양한 시나리오 대응</li>
+<li><strong>자동화</strong>: 프롬프트 생성부터 메타데이터 관리까지 전체 파이프라인 자동화</li>
+</ol>
+<h3 id="--119"><a href="#--119" class="header-anchor"></a>아쉬웠던 점과 개선 방향</h3><ol>
+<li><p><strong>속도</strong>: 로컬 모델의 생성 속도가 API 모델 대비 느림</p>
+<ul>
+<li><strong>개선 방안</strong>: 더 빠른 GPU나 모델 병렬 처리 검토</li>
+</ul>
+</li>
+<li><p><strong>품질 일관성</strong>: 프롬프트에 따른 품질 편차</p>
+<ul>
+<li><strong>개선 방안</strong>: 프롬프트 품질 검증 로직 추가</li>
+</ul>
+</li>
+<li><p><strong>에러 처리</strong>: 예상치 못한 상황에서의 에러 처리 부족</p>
+<ul>
+<li><strong>개선 방안</strong>: 더 세밀한 예외 처리와 로깅 시스템 구축</li>
+</ul>
+</li>
+</ol>
+<h3 id="--120"><a href="#--120" class="header-anchor"></a>향후 계획</h3><ol>
+<li><strong>웹 인터페이스 개발</strong>: 명령줄이 아닌 웹 기반 인터페이스</li>
+<li><strong>품질 평가 시스템</strong>: 생성된 이미지의 품질을 자동 평가하는 모듈</li>
+<li><strong>데이터베이스 연동</strong>: 생성된 이미지와 메타데이터를 체계적으로 관리</li>
+<li><strong>ControlNet 통합</strong>: 더 정밀한 이미지 생성을 위한 ControlNet 지원</li>
+</ol>
+<hr>
+<p>이 프로젝트를 통해 로컬 GPU와 다양한 AI 모델을 효과적으로 조합하여 실용적인 자동화 시스템을 구축할 수 있었습니다. 완벽하지는 않지만, 실제 사용 가능한 수준의 결과물을 얻을 수 있었고, 무엇보다 비용 부담 없이 다양한 실험을 할 수 있었던 점이 큰 수확이었습니다. </p>
+<p>혹시 비슷한 프로젝트를 진행하시는 분들께 작은 도움이 되길 바라며, 더 좋은 아이디어나 개선 방안이 있으시면 언제든 공유해 주시면 감사하겠습니다.</p>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
