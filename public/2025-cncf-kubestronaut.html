@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNCF Kubestronaut 도전 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars on body */
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Limit window width */
+      margin: 0 auto; /* Center the window */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>CNCF Kubestronaut 도전</h1>
+    <p><small>2025-07-05 9:00 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="cncf-kubestronaut"><a href="#cncf-kubestronaut" class="header-anchor"></a>CNCF Kubestronaut</h1><blockquote>
+<p>안녕하세요! 이 글은 CNCF의 인증 프로그램인 Kubestronaut에 대한 종합적인 정보를 제공합니다. 쿠버네티스와 클라우드 네이티브 기술의 전문성을 인정받고 싶은 모든 분들께 도움이 되기를 바라며, 혹시 부족한 부분이나 개선할 점이 있다면 언제든 피드백 부탁드립니다.</p>
+</blockquote>
+<h2 id="--121"><a href="#--121" class="header-anchor"></a>들어가며</h2><p>클라우드 네이티브 기술이 현대 IT 인프라의 핵심이 된 지금, 쿠버네티스 전문성을 체계적으로 인증받을 수 있는 프로그램이 바로 <strong>CNCF Kubestronaut</strong>입니다. 단순히 하나의 자격증을 취득하는 것이 아니라, 쿠버네티스 생태계 전반에 대한 깊이 있는 이해와 실무 능력을 종합적으로 검증받는 프리미엄 인증 프로그램입니다.</p>
+<p>2025년 현재, Kubestronaut는 전 세계 쿠버네티스 커뮤니티에서 많은 엔지니어들이 시도하는 인증으로 자리잡았습니다.</p>
+<h2 id="kubestronaut-"><a href="#kubestronaut-" class="header-anchor"></a>Kubestronaut란 무엇인가?</h2><h3 id="--122"><a href="#--122" class="header-anchor"></a>프로그램 개요</h3><p><strong>CNCF Kubestronaut</strong>는 Cloud Native Computing Foundation(CNCF)에서 주관하는 최상위 인증 프로그램으로, 쿠버네티스 관련 모든 공식 인증을 완주한 개인에게 부여되는 특별한 타이틀입니다. 이는 단순한 자격증 취득을 넘어서, 쿠버네티스 생태계의 다양한 영역에서 전문성을 인정받았음을 의미합니다.</p>
+<h3 id="-5-"><a href="#-5-" class="header-anchor"></a>필요한 인증 (5개)</h3><p>Kubestronaut 타이틀을 획득하기 위해서는 다음 5개의 CNCF 쿠버네티스 인증을 <strong>모두</strong> 취득하고 <strong>모든 인증이 유효한 상태</strong>를 유지해야 합니다:</p>
+<div class="mermaid">graph TD
+    A[Kubestronaut] --> B[KCNA]
+    A --> C[CKA]
+    A --> D[CKAD]
+    A --> E[CKS]
+    A --> F[KCSA]
+    
+    B --> B1[Kubernetes and Cloud Native Associate<br/>기초 이론 인증]
+    C --> C1[Certified Kubernetes Administrator<br/>클러스터 관리자 인증]
+    D --> D1[Certified Kubernetes Application Developer<br/>애플리케이션 개발자 인증]
+    E --> E1[Certified Kubernetes Security Specialist<br/>보안 전문가 인증]
+    F --> F1[Kubernetes and Cloud Native Security Associate<br/>보안 기초 이론 인증]
+    
+    style A fill:#f9d71c,stroke:#333,stroke-width:3px
+    style B fill:#e1f5fe,stroke:#333,stroke-width:2px
+    style C fill:#e8f5e8,stroke:#333,stroke-width:2px
+    style D fill:#fff3e0,stroke:#333,stroke-width:2px
+    style E fill:#fce4ec,stroke:#333,stroke-width:2px
+    style F fill:#f3e5f5,stroke:#333,stroke-width:2px</div><h4 id="1-kcna-kubernetes-and-cloud-native-associate-"><a href="#1-kcna-kubernetes-and-cloud-native-associate-" class="header-anchor"></a>1. KCNA (Kubernetes and Cloud Native Associate)</h4><ul>
+<li><strong>난이도</strong>: 입문 수준</li>
+<li><strong>시험 시간</strong>: 90분</li>
+<li><strong>문제 유형</strong>: 60개 객관식</li>
+<li><strong>합격 점수</strong>: 75%</li>
+<li><strong>유효 기간</strong>: 3년</li>
+<li><strong>내용</strong>: 쿠버네티스와 클라우드 네이티브 생태계의 기초 개념</li>
+</ul>
+<h4 id="2-cka-certified-kubernetes-administrator-"><a href="#2-cka-certified-kubernetes-administrator-" class="header-anchor"></a>2. CKA (Certified Kubernetes Administrator)</h4><ul>
+<li><strong>난이도</strong>: 중급-고급</li>
+<li><strong>시험 시간</strong>: 2시간</li>
+<li><strong>문제 유형</strong>: 15-20개 실습 문제</li>
+<li><strong>합격 점수</strong>: 66%</li>
+<li><strong>유효 기간</strong>: 3년</li>
+<li><strong>내용</strong>: 쿠버네티스 클러스터 설치, 구성, 관리, 트러블슈팅</li>
+</ul>
+<h4 id="3-ckad-certified-kubernetes-application-developer-"><a href="#3-ckad-certified-kubernetes-application-developer-" class="header-anchor"></a>3. CKAD (Certified Kubernetes Application Developer)</h4><ul>
+<li><strong>난이도</strong>: 중급</li>
+<li><strong>시험 시간</strong>: 2시간</li>
+<li><strong>문제 유형</strong>: 15-20개 실습 문제</li>
+<li><strong>합격 점수</strong>: 66%</li>
+<li><strong>유효 기간</strong>: 3년</li>
+<li><strong>내용</strong>: 쿠버네티스 환경에서 애플리케이션 설계, 빌드, 배포</li>
+</ul>
+<h4 id="4-cks-certified-kubernetes-security-specialist-"><a href="#4-cks-certified-kubernetes-security-specialist-" class="header-anchor"></a>4. CKS (Certified Kubernetes Security Specialist)</h4><ul>
+<li><strong>난이도</strong>: 고급</li>
+<li><strong>시험 시간</strong>: 2시간</li>
+<li><strong>문제 유형</strong>: 15-16개 실습 문제</li>
+<li><strong>합격 점수</strong>: 67%</li>
+<li><strong>유효 기간</strong>: 2년</li>
+<li><strong>전제 조건</strong>: 유효한 CKA 인증 필수</li>
+<li><strong>내용</strong>: 쿠버네티스 보안 설정, 취약점 관리, 보안 모니터링</li>
+</ul>
+<h4 id="5-kcsa-kubernetes-and-cloud-native-security-associate-"><a href="#5-kcsa-kubernetes-and-cloud-native-security-associate-" class="header-anchor"></a>5. KCSA (Kubernetes and Cloud Native Security Associate)</h4><ul>
+<li><strong>난이도</strong>: 중급</li>
+<li><strong>시험 시간</strong>: 90분</li>
+<li><strong>문제 유형</strong>: 60개 객관식</li>
+<li><strong>합격 점수</strong>: 75%</li>
+<li><strong>유효 기간</strong>: 3년</li>
+<li><strong>내용</strong>: 클라우드 네이티브 보안 원칙, 4C 보안 모델, 보안 도구</li>
+</ul>
+<h3 id="kubestronaut--2"><a href="#kubestronaut--2" class="header-anchor"></a>Kubestronaut 혜택</h3><p>Kubestronaut 타이틀을 획득하면 다음과 같은 독점적인 혜택을 평생 누릴 수 있습니다:</p>
+<h4 id="-kubestronaut-"><a href="#-kubestronaut-" class="header-anchor"></a>🧥 독점 Kubestronaut 재킷</h4><ul>
+<li>전 세계적으로 인정받는 Kubestronaut만의 특별한 재킷</li>
+<li>5번째 인증 취득 후 30일 내 CNCF에서 개별 연락</li>
+<li>사이즈 선택 및 배송 지원 (관세는 개인 부담)</li>
+<li><strong>평생 단 1회만 제공</strong></li>
+</ul>
+<h4 id="-credly-"><a href="#-credly-" class="header-anchor"></a>🏆 Credly 디지털 배지</h4><ul>
+<li>LinkedIn 프로필 및 이력서에 활용 가능한 공식 배지</li>
+<li>전문성을 시각적으로 어필할 수 있는 검증된 자격 증명</li>
+</ul>
+<h4 id="--123"><a href="#--123" class="header-anchor"></a>💬 전용 커뮤니티 액세스</h4><ul>
+<li><strong>Kubestronaut 전용 Slack 채널</strong>: 전 세계 최고 수준 전문가들과의 네트워킹</li>
+<li><strong>전용 메일링 리스트</strong>: 최신 기술 동향 및 독점 정보 공유</li>
+<li>기술 토론, 커리어 상담, 협업 기회 제공</li>
+</ul>
+<h4 id="--124"><a href="#--124" class="header-anchor"></a>💰 할인 혜택</h4><ul>
+<li><strong>연간 5개 인증시험 50% 할인 쿠폰</strong>: 본인 사용 또는 타인에게 선물 가능</li>
+<li><strong>CNCF 이벤트 25% 할인</strong>: 연간 3회까지 적용 가능 (KubeCon, CloudNativeCon 등)</li>
+</ul>
+<h2 id="--125"><a href="#--125" class="header-anchor"></a>각 인증별 상세 정보</h2><h3 id="kcna-"><a href="#kcna-" class="header-anchor"></a>KCNA: 클라우드 네이티브 여정의 시작</h3><p>KCNA는 쿠버네티스와 클라우드 네이티브 생태계에 대한 <strong>기초 지식을 검증</strong>하는 입문 수준의 인증입니다. 개발자, 시스템 관리자, 학생 등 누구나 접근할 수 있도록 설계되었습니다.</p>
+<h4 id="--126"><a href="#--126" class="header-anchor"></a>주요 학습 영역</h4><ul>
+<li><strong>쿠버네티스 기초</strong> (46%): 아키텍처, 컴포넌트, API 기본 개념</li>
+<li><strong>컨테이너 오케스트레이션</strong> (22%): 컨테이너 기술, 스케줄링, 라이프사이클</li>
+<li><strong>클라우드 네이티브 아키텍처</strong> (16%): 마이크로서비스, 서비스메시, 서버리스</li>
+<li><strong>클라우드 네이티브 관찰성</strong> (8%): 모니터링, 로깅, 추적</li>
+<li><strong>클라우드 네이티브 애플리케이션 배포</strong> (8%): CI/CD, GitOps, 배포 전략</li>
+</ul>
+<h3 id="cka-"><a href="#cka-" class="header-anchor"></a>CKA: 쿠버네티스 관리의 핵심</h3><p>CKA는 <strong>쿠버네티스 클러스터를 설치, 구성, 관리</strong>할 수 있는 실무 능력을 검증하는 실습 기반 인증입니다. 시스템 관리자, DevOps 엔지니어, 플랫폼 엔지니어에게 필수적인 인증입니다.</p>
+<h4 id="--127"><a href="#--127" class="header-anchor"></a>주요 학습 영역</h4><ul>
+<li><strong>클러스터 아키텍처, 설치 및 구성</strong> (25%): kubeadm 클러스터 구축, 고가용성 설정</li>
+<li><strong>워크로드 및 스케줄링</strong> (15%): Pod, Deployment, DaemonSet, 스케줄링 정책</li>
+<li><strong>서비스 및 네트워킹</strong> (20%): Service, Ingress, NetworkPolicy, DNS</li>
+<li><strong>스토리지</strong> (10%): PV, PVC, StorageClass, 백업/복구</li>
+<li><strong>트러블슈팅</strong> (30%): 클러스터 진단, 로그 분석, 성능 최적화</li>
+</ul>
+<h3 id="ckad-"><a href="#ckad-" class="header-anchor"></a>CKAD: 애플리케이션 개발의 전문성</h3><p>CKAD는 <strong>쿠버네티스 환경에서 애플리케이션을 설계, 빌드, 배포</strong>할 수 있는 능력을 검증하는 개발자 중심의 인증입니다.</p>
+<h4 id="--128"><a href="#--128" class="header-anchor"></a>주요 학습 영역</h4><ul>
+<li><strong>애플리케이션 설계 및 빌드</strong> (20%): 멀티 컨테이너 패턴, 이미지 빌드</li>
+<li><strong>애플리케이션 배포</strong> (20%): Deployment 전략, Helm, Kustomize</li>
+<li><strong>애플리케이션 관찰성 및 유지보수</strong> (15%): Health Check, 로깅, 디버깅</li>
+<li><strong>애플리케이션 환경, 구성 및 보안</strong> (25%): ConfigMap, Secret, RBAC</li>
+<li><strong>서비스 및 네트워킹</strong> (20%): Service 타입, Ingress, NetworkPolicy</li>
+</ul>
+<h3 id="cks-"><a href="#cks-" class="header-anchor"></a>CKS: 보안 전문가의 증명</h3><p>CKS는 <strong>쿠버네티스 보안을 전문적으로 구현</strong>할 수 있는 고급 능력을 검증하는 최고 난이도의 실습 인증입니다. <strong>유효한 CKA 인증이 전제조건</strong>입니다.</p>
+<h4 id="--129"><a href="#--129" class="header-anchor"></a>주요 학습 영역</h4><ul>
+<li><strong>클러스터 설정</strong> (10%): CIS 벤치마크, 보안 설정</li>
+<li><strong>클러스터 강화</strong> (15%): RBAC, 네트워크 정책, AppArmor</li>
+<li><strong>시스템 강화</strong> (15%): 최소 권한, 호스트 보안</li>
+<li><strong>마이크로서비스 취약점 최소화</strong> (20%): Pod Security, OPA Gatekeeper</li>
+<li><strong>공급망 보안</strong> (20%): 이미지 스캐닝, 서명 검증</li>
+<li><strong>모니터링, 로깅 및 런타임 보안</strong> (20%): Falco, 감사 로그, 이상 탐지</li>
+</ul>
+<h3 id="kcsa-"><a href="#kcsa-" class="header-anchor"></a>KCSA: 보안 이론의 기초</h3><p>KCSA는 <strong>클라우드 네이티브 보안 원칙과 모범 사례</strong>에 대한 이론적 지식을 검증하는 객관식 인증입니다.</p>
+<h4 id="--130"><a href="#--130" class="header-anchor"></a>주요 학습 영역</h4><ul>
+<li><strong>클라우드 네이티브 보안 기초</strong> (14%): 4C 보안 모델, 위협 모델링</li>
+<li><strong>클라우드 네이티브 아키텍처</strong> (22%): 제로 트러스트, 서비스메시 보안</li>
+<li><strong>플랫폼 보안</strong> (16%): 컨테이너 런타임, 이미지 보안</li>
+<li><strong>규정 준수 및 거버넌스</strong> (18%): 정책 관리, 감사</li>
+<li><strong>위협 탐지 및 대응</strong> (20%): 모니터링, 인시던트 대응</li>
+<li><strong>보안 테스팅</strong> (10%): 취약점 스캐닝, 침투 테스트</li>
+</ul>
+<h2 id="--131"><a href="#--131" class="header-anchor"></a>비용 및 구매 옵션</h2><h3 id="-2025-"><a href="#-2025-" class="header-anchor"></a>공식 가격 정책 (2025년 기준)</h3><h4 id="--132"><a href="#--132" class="header-anchor"></a>개별 인증 가격</h4><table>
+<thead>
+<tr>
+<th>인증</th>
+<th>정가 (USD)</th>
+<th>재시험 (USD)</th>
+<th>유효기간</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>KCNA</td>
+<td>$250</td>
+<td>$125</td>
+<td>3년</td>
+</tr>
+<tr>
+<td>CKA</td>
+<td>$450</td>
+<td>$225</td>
+<td>3년</td>
+</tr>
+<tr>
+<td>CKAD</td>
+<td>$450</td>
+<td>$225</td>
+<td>3년</td>
+</tr>
+<tr>
+<td>CKS</td>
+<td>$450</td>
+<td>$225</td>
+<td>2년</td>
+</tr>
+<tr>
+<td>KCSA</td>
+<td>$250</td>
+<td>$125</td>
+<td>3년</td>
+</tr>
+<tr>
+<td><strong>총합</strong></td>
+<td><strong>$1,850</strong></td>
+<td><strong>$925</strong></td>
+<td>-</td>
+</tr>
+</tbody></table>
+<h4 id="kubestronaut-bundle-"><a href="#kubestronaut-bundle-" class="header-anchor"></a>Kubestronaut Bundle (추천)</h4><ul>
+<li><strong>Bundle 가격</strong>: $2,495 (개별 구매 대비 약 26% 할인)</li>
+<li><strong>포함 사항</strong>: 5개 인증 + 각 인증당 1회 무료 재시험</li>
+<li><strong>유효기간</strong>: 구매일로부터 1년 (시험 응시 기한)</li>
+<li><strong>추가 혜택</strong>: 50% 할인 쿠폰 5개 제공</li>
+</ul>
+<h3 id="--133"><a href="#--133" class="header-anchor"></a>할인 혜택</h3><h4 id="--134"><a href="#--134" class="header-anchor"></a>정기 할인 프로모션</h4><ul>
+<li><strong>조기 등록 할인</strong>: 특정 기간 중 15-20% 할인</li>
+<li><strong>시즌 할인</strong>: 연말연시, 여름 시즌 특별 할인</li>
+<li><strong>커뮤니티 할인</strong>: CNCF 멤버십 보유 시 추가 할인</li>
+</ul>
+<h4 id="--135"><a href="#--135" class="header-anchor"></a>특별 할인 대상</h4><ul>
+<li><strong>학생 할인</strong>: 50% 할인 (유효한 학생증 및 이메일 필요)</li>
+<li><strong>실업자 지원</strong>: 무료 바우처 프로그램 (별도 신청)</li>
+<li><strong>개발도상국 할인</strong>: 지역별 차등 가격 적용</li>
+</ul>
+<h2 id="--136"><a href="#--136" class="header-anchor"></a>시험 준비 및 응시 정보</h2><h3 id="--137"><a href="#--137" class="header-anchor"></a>시험 환경</h3><h4 id="--138"><a href="#--138" class="header-anchor"></a>온라인 프록터링 시험</h4><ul>
+<li><strong>시험 플랫폼</strong>: PSI Secure Browser</li>
+<li><strong>감독 방식</strong>: 실시간 원격 감독</li>
+<li><strong>신분 확인</strong>: 정부 발급 사진이 있는 신분증 필수</li>
+<li><strong>환경 요구사항</strong>: 조용하고 잘 밝혀진 개인 공간</li>
+</ul>
+<h4 id="--139"><a href="#--139" class="header-anchor"></a>기술적 요구사항</h4><ul>
+<li><strong>인터넷 연결</strong>: 안정적인 광대역 연결 (최소 1Mbps 업로드/다운로드)</li>
+<li><strong>웹캠</strong>: HD 화질의 웹캠 필수</li>
+<li><strong>마이크</strong>: 명확한 음질의 마이크</li>
+<li><strong>브라우저</strong>: Chrome 또는 Chromium 기반 브라우저</li>
+</ul>
+<h3 id="--140"><a href="#--140" class="header-anchor"></a>시험 예약 및 진행</h3><h4 id="--141"><a href="#--141" class="header-anchor"></a>예약 과정</h4><ol>
+<li><strong>Linux Foundation 계정 생성</strong></li>
+<li><strong>시험 구매 또는 바우처 등록</strong></li>
+<li><strong>PSI 플랫폼에서 시험 예약</strong></li>
+<li><strong>시험 전 시스템 체크</strong> (24시간 전까지)</li>
+</ol>
+<h4 id="--142"><a href="#--142" class="header-anchor"></a>시험 당일 절차</h4><ol>
+<li><strong>30분 전 체크인 시작</strong></li>
+<li><strong>신분증 확인 및 환경 점검</strong></li>
+<li><strong>시험 시작 및 진행</strong></li>
+<li><strong>결과 확인</strong> (실습 시험: 24시간 내, 객관식: 즉시)</li>
+</ol>
+<h2 id="--143"><a href="#--143" class="header-anchor"></a>학습 리소스 및 권장 자료</h2><h3 id="--144"><a href="#--144" class="header-anchor"></a>공식 학습 자료</h3><h4 id="linux-foundation-"><a href="#linux-foundation-" class="header-anchor"></a>Linux Foundation 공식 강의</h4><ul>
+<li><strong>LFS258</strong>: Kubernetes Fundamentals</li>
+<li><strong>LFS458</strong>: Kubernetes Administration</li>
+<li><strong>LFS465</strong>: Software Supply Chain Security</li>
+<li><strong>LFS262</strong>: Implementing DevSecOps</li>
+</ul>
+<h4 id="--145"><a href="#--145" class="header-anchor"></a>무료 리소스</h4><ul>
+<li><strong>Kubernetes 공식 문서</strong>: <a href="https://kubernetes.io/docs/">kubernetes.io</a></li>
+<li><strong>CNCF 교육 자료</strong>: 웨비나, 백서, 케이스 스터디</li>
+<li><strong>GitHub</strong>: 오픈소스 학습 자료 및 실습 코드</li>
+</ul>
+<h3 id="--146"><a href="#--146" class="header-anchor"></a>추천 서적</h3><h4 id="--147"><a href="#--147" class="header-anchor"></a>기초 이론서</h4><ul>
+<li><strong>&quot;Kubernetes in Action&quot;</strong> - Marko Lukša (한국어 번역본 가능)</li>
+<li><strong>&quot;Kubernetes: Up and Running&quot;</strong> - Kelsey Hightower</li>
+<li><strong>&quot;The Kubernetes Book&quot;</strong> - Nigel Poulton</li>
+</ul>
+<h4 id="--148"><a href="#--148" class="header-anchor"></a>시험 준비서</h4><ul>
+<li><strong>&quot;Certified Kubernetes Administrator Study Guide&quot;</strong> - Benjamin Muschko</li>
+<li><strong>&quot;Certified Kubernetes Application Developer Study Guide&quot;</strong> - Benjamin Muschko</li>
+<li><strong>&quot;Certified Kubernetes Security Specialist Study Guide&quot;</strong> - Benjamin Muschko</li>
+</ul>
+<h3 id="--149"><a href="#--149" class="header-anchor"></a>온라인 교육 플랫폼</h3><h4 id="--150"><a href="#--150" class="header-anchor"></a>전문 교육 플랫폼</h4><ul>
+<li><strong>KodeKloud</strong>: 실습 환경 제공, 한국어 자막 지원</li>
+<li><strong>A Cloud Guru</strong>: 종합적인 클라우드 교육</li>
+<li><strong>Whizlabs</strong>: 시험 문제은행 특화</li>
+<li><strong>Udemy</strong>: 다양한 강사의 강의 선택 가능</li>
+</ul>
+<h4 id="--151"><a href="#--151" class="header-anchor"></a>실습 환경</h4><ul>
+<li><strong>Killer Shell</strong>: 실제 시험 환경과 유사한 연습</li>
+<li><strong>Katacoda</strong>: 브라우저 기반 실습 환경</li>
+<li><strong>Play with Kubernetes</strong>: 무료 실습 클러스터</li>
+</ul>
+<h2 id="--152"><a href="#--152" class="header-anchor"></a>커뮤니티 및 네트워킹</h2><h3 id="--153"><a href="#--153" class="header-anchor"></a>한국 커뮤니티</h3><h4 id="--154"><a href="#--154" class="header-anchor"></a>주요 커뮤니티</h4><ul>
+<li><strong>CNCF Korea</strong>: 공식 한국 챕터, 정기 밋업 및 워크샵</li>
+<li><strong>Kubernetes Korea</strong>: Slack 채널 및 스터디 그룹</li>
+<li><strong>Cloud Native Computing Seoul</strong>: 월간 기술 모임</li>
+<li><strong>DevOps Korea</strong>: 데브옵스 및 클라우드 네이티브 기술 공유</li>
+</ul>
+<h4 id="--155"><a href="#--155" class="header-anchor"></a>온라인 커뮤니티</h4><ul>
+<li><strong>카카오톡 오픈채팅</strong>: 실시간 질의응답 및 정보 공유</li>
+<li><strong>Facebook 그룹</strong>: 한국 쿠버네티스 사용자 그룹</li>
+<li><strong>LinkedIn</strong>: 전문가 네트워킹 및 채용 정보</li>
+</ul>
+<h3 id="--156"><a href="#--156" class="header-anchor"></a>글로벌 커뮤니티</h3><h4 id="cncf-"><a href="#cncf-" class="header-anchor"></a>CNCF 공식 채널</h4><ul>
+<li><strong>CNCF Slack</strong>: 전 세계 전문가들과의 직접 소통</li>
+<li><strong>Kubernetes SIG</strong>: 특별 관심 그룹 참여</li>
+<li><strong>CNCF YouTube</strong>: 기술 발표 및 교육 콘텐츠</li>
+</ul>
+<h4 id="--157"><a href="#--157" class="header-anchor"></a>주요 컨퍼런스</h4><ul>
+<li><strong>KubeCon + CloudNativeCon</strong>: 연 2회 (북미, 유럽)</li>
+<li><strong>KubeCon + CloudNativeCon China</strong>: 아시아 지역 최대 행사</li>
+<li><strong>Kubernetes Community Days</strong>: 지역별 커뮤니티 이벤트</li>
+</ul>
+<h2 id="golden-kubestronaut-"><a href="#golden-kubestronaut-" class="header-anchor"></a>Golden Kubestronaut (참고 정보)</h2><p>2025년부터 새롭게 도입된 <strong>Golden Kubestronaut</strong>는 CNCF의 모든 인증(현재 14개)을 완주한 최상위 전문가를 위한 특별 프로그램입니다. Kubestronaut 5개 인증에 추가로 PCA, ICA, CCA, CAPA, CGOA, CBA, OTCA, KCA, LFCS 인증이 필요하며, <strong>평생 타이틀</strong>과 함께 백팩, 비니, 연간 KubeCon 50% 할인 등의 프리미엄 혜택을 제공합니다.</p>
+<h2 id="--158"><a href="#--158" class="header-anchor"></a>타이틀 유지 및 갱신</h2><h3 id="--159"><a href="#--159" class="header-anchor"></a>유지 조건</h3><p>Kubestronaut 타이틀을 유지하기 위해서는 <strong>5개 인증이 모두 유효한 상태</strong>를 유지해야 합니다:</p>
+<ul>
+<li><strong>타이틀 유지</strong>: 첫 번째 인증이 만료되는 해의 말까지 타이틀 유지</li>
+<li><strong>갱신 기회</strong>: 매년 10월 만료 예정자에게 갱신 안내 발송</li>
+<li><strong>타이틀 복구</strong>: 타이틀을 잃은 후 다시 5개 인증을 모두 갱신하면 복구 가능 (재킷은 재지급 안됨)</li>
+</ul>
+<h3 id="--160"><a href="#--160" class="header-anchor"></a>갱신 혜택</h3><p>Kubestronaut 타이틀을 유지하는 동안 <strong>매년 1월</strong>에 다음 혜택을 받습니다:</p>
+<ul>
+<li>새로운 50% 할인 쿠폰 5개</li>
+<li>CNCF 이벤트 할인 쿠폰 갱신</li>
+<li>전용 커뮤니티 지속 접근</li>
+</ul>
+<h3 id="--161"><a href="#--161" class="header-anchor"></a>네트워킹 효과</h3><h4 id="--162"><a href="#--162" class="header-anchor"></a>전문가 네트워크</h4><ul>
+<li><strong>전 세계 전문가</strong>: Kubestronaut 전용 커뮤니티를 통한 글로벌 네트워킹</li>
+<li><strong>기술 동향</strong>: 최신 기술 트렌드 및 베스트 프랙티스 공유</li>
+<li><strong>협업 기회</strong>: 오픈소스 프로젝트 및 기술 이니셔티브 참여</li>
+</ul>
+<h4 id="--163"><a href="#--163" class="header-anchor"></a>이벤트 및 컨퍼런스</h4><ul>
+<li><strong>우선 접근</strong>: KubeCon 등 주요 컨퍼런스 조기 등록 및 할인</li>
+<li><strong>스피커 기회</strong>: 기술 컨퍼런스 발표자로 초청 기회 증가</li>
+<li><strong>멘토링</strong>: 후배 개발자 및 신입 전문가 멘토링 기회</li>
+</ul>
+<h2 id="-faq-"><a href="#-faq-" class="header-anchor"></a>자주 묻는 질문 (FAQ)</h2><h3 id="--164"><a href="#--164" class="header-anchor"></a>인증 관련</h3><p><strong>Q: 특정 순서로 인증을 취득해야 하나요?</strong>
+A: 공식적인 순서는 없지만, CKS는 유효한 CKA가 전제조건입니다. 일반적으로 KCNA → CKA → CKAD → KCSA → CKS 순서를 권장합니다.</p>
+<p><strong>Q: 모든 인증이 동시에 유효해야 하나요?</strong>
+A: 네, Kubestronaut 타이틀을 유지하려면 5개 인증이 모두 유효 상태여야 합니다.</p>
+<p><strong>Q: 재킷을 여러 번 받을 수 있나요?</strong>
+A: 아니요, Kubestronaut 재킷은 평생 단 한 번만 제공됩니다.</p>
+<h3 id="--165"><a href="#--165" class="header-anchor"></a>시험 관련</h3><p><strong>Q: 시험을 한국어로 볼 수 있나요?</strong>
+A: 모든 CNCF 시험은 영어로만 제공됩니다.</p>
+<p><strong>Q: 재시험 정책은 어떻게 되나요?</strong>
+A: Bundle 구매 시 각 시험당 1회 무료 재시험이 포함됩니다. 추가 재시험은 정가의 50%로 구매 가능합니다.</p>
+<p><strong>Q: 시험 환경에서 외부 자료를 참고할 수 있나요?</strong>
+A: 실습 시험(CKA, CKAD, CKS)에서는 Kubernetes 공식 문서만 참고 가능합니다.</p>
+<h2 id="--166"><a href="#--166" class="header-anchor"></a>결론</h2><p>CNCF Kubestronaut는 단순한 자격증 컬렉션이 아닌 K8s 생태계에 대해 빠르게 이해할수 있는 프로그램이라고 생각합니다.
+과거와 다르게 실제 문제 유형도 많이 바뀌게 되면서, 더욱 실무자들에게도 많은 도움이 되고 있습니다.</p>
+<p>저는 2025년 현재 KCNA를 보유하고 과거 CKA 자격이 만료되었기에, 올해 Kubestronaut에 도전할 생각입니다.</p>
+<h2 id="--167"><a href="#--167" class="header-anchor"></a>참고 자료</h2><h3 id="--168"><a href="#--168" class="header-anchor"></a>공식 자료</h3><ul>
+<li><a href="https://www.cncf.io/training/kubestronaut/">CNCF Kubestronaut Program</a> - 공식 프로그램 페이지</li>
+<li><a href="https://www.cncf.io/training/certification/">CNCF Training &amp; Certification</a> - 전체 인증 정보</li>
+<li><a href="https://training.linuxfoundation.org/">Linux Foundation Training</a> - 교육 및 시험 플랫폼</li>
+</ul>
+<h3 id="--169"><a href="#--169" class="header-anchor"></a>학습 리소스</h3><ul>
+<li><a href="https://kubernetes.io/docs/">Kubernetes Official Documentation</a> - 공식 문서</li>
+<li><a href="https://landscape.cncf.io/">CNCF Landscape</a> - 클라우드 네이티브 생태계 지도</li>
+<li>[Kubestronaut FAQ](<a href="https://www.cncf.io/training/kubestronaut/kubestronaut">https://www.cncf.io/training/kubestronaut/kubestronaut</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

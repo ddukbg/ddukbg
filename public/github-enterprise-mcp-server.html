@@ -351,7 +351,7 @@
 <p>등의 작업을 수행할 수 있습니다.</p>
 <h2 id="-github-enterprise-mcp-"><a href="#-github-enterprise-mcp-" class="header-anchor"></a>개인 프로젝트: GitHub Enterprise MCP 서버</h2><p>공식 GitHub MCP 서버가 출시되기 전, 저는 GitHub Enterprise 환경에서 사용할 수 있는 MCP 서버를 직접 개발했습니다. 
 <br>이 프로젝트는 <a href="https://github.com/containerelic/github-enterprise-mcp">github-enterprise-mcp</a>라는 이름으로 공개되어 있습니다.</p>
-<h3 id="--52"><a href="#--52" class="header-anchor"></a>프로젝트 배경</h3><p>GitHub Enterprise 환경에서 AI 코딩 어시스턴트를 효과적으로 활용하기 위해서는 엔터프라이즈 API에 접근할 수 있는 MCP 서버가 필요했습니다. <br>당시 공식 GitHub MCP 서버가 없었기 때문에, Node.js를 기반으로 자체 구현을 시작했습니다.</p>
+<h3 id="--84"><a href="#--84" class="header-anchor"></a>프로젝트 배경</h3><p>GitHub Enterprise 환경에서 AI 코딩 어시스턴트를 효과적으로 활용하기 위해서는 엔터프라이즈 API에 접근할 수 있는 MCP 서버가 필요했습니다. <br>당시 공식 GitHub MCP 서버가 없었기 때문에, Node.js를 기반으로 자체 구현을 시작했습니다.</p>
 <p>이 프로젝트의 주요 목표는:</p>
 <ol>
 <li>GitHub Enterprise Server API와의 완벽한 통합</li>
@@ -359,7 +359,7 @@
 <li>엔터프라이즈 환경에 필요한 확장 기능 지원</li>
 <li>보안 및 권한 관리 강화</li>
 </ol>
-<h3 id="--53"><a href="#--53" class="header-anchor"></a>주요 기능</h3><div class="mermaid">graph TD
+<h3 id="--85"><a href="#--85" class="header-anchor"></a>주요 기능</h3><div class="mermaid">graph TD
     A[GitHub Enterprise MCP] --> B[저장소 관리]
     A --> C[이슈/PR 관리]
     A --> D[사용자 관리]
@@ -382,7 +382,7 @@
 <li><strong>GitHub Actions</strong>: 워크플로우 목록 조회, 실행 기록 관리, 워크플로우 트리거</li>
 <li><strong>엔터프라이즈 기능</strong>: 라이센스 정보 조회, 엔터프라이즈 시스템 통계 확인</li>
 </ul>
-<h3 id="--54"><a href="#--54" class="header-anchor"></a>구현 방식</h3><p>GitHub Enterprise MCP 서버는 Node.js와 TypeScript를 사용하여 개발되었으며, 다음과 같은 기술적 특징을 가지고 있습니다:</p>
+<h3 id="--86"><a href="#--86" class="header-anchor"></a>구현 방식</h3><p>GitHub Enterprise MCP 서버는 Node.js와 TypeScript를 사용하여 개발되었으며, 다음과 같은 기술적 특징을 가지고 있습니다:</p>
 <ol>
 <li><strong>모듈화된 구조</strong>: 각 기능 영역별로 분리된 모듈 구조로 유지보수성 향상</li>
 <li><strong>확장 가능한 설계</strong>: 새로운 GitHub API 엔드포인트 추가가 용이한 구조</li>
@@ -448,19 +448,19 @@
 <td>40+</td>
 </tr>
 </tbody></table>
-<h3 id="--55"><a href="#--55" class="header-anchor"></a>공식 서버의 장점</h3><ul>
+<h3 id="--87"><a href="#--87" class="header-anchor"></a>공식 서버의 장점</h3><ul>
 <li>Go 언어 기반으로 더 뛰어난 성능</li>
 <li>더 많은 도구와 기능 지원</li>
 <li>더 활발한 유지보수와 업데이트</li>
 <li>도구 세트(toolsets) 개념을 통한 유연한 구성</li>
 </ul>
-<h3 id="--56"><a href="#--56" class="header-anchor"></a>내 프로젝트의 차별점(제 프로젝트는 허술합니다..)</h3><ul>
+<h3 id="--88"><a href="#--88" class="header-anchor"></a>내 프로젝트의 차별점(제 프로젝트는 허술합니다..)</h3><ul>
 <li>GitHub Enterprise 환경에 특화된 기능</li>
 <li>Node.js 생태계 친화적</li>
 <li>엔터프라이즈 통계 및 관리 도구 강화</li>
 <li>한국어 인터페이스 기본 지원</li>
 </ul>
-<h2 id="--57"><a href="#--57" class="header-anchor"></a>설치 및 사용 방법</h2><h3 id="docker-"><a href="#docker-" class="header-anchor"></a>Docker를 사용한 설치</h3><pre><code class="hljs bash"><span class="hljs-comment"># Docker 이미지 빌드</span>
+<h2 id="--89"><a href="#--89" class="header-anchor"></a>설치 및 사용 방법</h2><h3 id="docker-"><a href="#docker-" class="header-anchor"></a>Docker를 사용한 설치</h3><pre><code class="hljs bash"><span class="hljs-comment"># Docker 이미지 빌드</span>
 docker build -t github-enterprise-mcp .
 
 <span class="hljs-comment"># Docker 컨테이너 실행</span>
@@ -475,7 +475,7 @@ docker run -p 3000:3000 \
       <span class="hljs-attr">&quot;url&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;http://localhost:3000/sse&quot;</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span></code></pre><h3 id="--58"><a href="#--58" class="header-anchor"></a>사용 예시</h3><p>Cursor나 Claude와 같은 AI 도구에서 다음과 같이 MCP 도구를 호출할 수 있습니다:</p>
+<span class="hljs-punctuation">}</span></code></pre><h3 id="--90"><a href="#--90" class="header-anchor"></a>사용 예시</h3><p>Cursor나 Claude와 같은 AI 도구에서 다음과 같이 MCP 도구를 호출할 수 있습니다:</p>
 <pre><code class="hljs plaintext"># 저장소 정보 조회
 mcp_github_enterprise_get_repository(owner=&quot;octocat&quot;, repo=&quot;hello-world&quot;)
 
@@ -489,11 +489,11 @@ mcp_github_enterprise_create_issue(
 )
 
 # PR 검토
-mcp_github_enterprise_list_pull_requests(owner=&quot;octocat&quot;, repo=&quot;hello-world&quot;, state=&quot;open&quot;)</code></pre><h2 id="--59"><a href="#--59" class="header-anchor"></a>프로젝트를 통해 배운 점</h2><h3 id="1--2"><a href="#1--2" class="header-anchor"></a>1. 표준화와 상호운용성의 중요성</h3><p>MCP는 AI와 외부 시스템 간의 표준화된 인터페이스를 제공함으로써 다양한 AI 도구들이 동일한 방식으로 GitHub과 상호작용할 수 있게 합니다. <br>이런 표준화가 생태계 발전에 얼마나 중요한지 실감했습니다.</p>
-<h3 id="2-"><a href="#2-" class="header-anchor"></a>2. 엔터프라이즈 환경의 특수성</h3><p>GitHub.com과 GitHub Enterprise는 비슷하지만 중요한 차이점이 있습니다. <br>엔터프라이즈 환경에서는 라이센스 관리, 사용자 관리, 시스템 통계 등 추가적인 기능이 필요하며, 이를 위한 특별한 고려사항이 있습니다.</p>
-<h2 id="--60"><a href="#--60" class="header-anchor"></a>결론</h2><p>MCP와 같은 프로토콜은 AI가 단순한 텍스트 생성을 넘어 실제 개발 환경과 상호작용하는 데 필수적인 요소가 되고 있습니다.<br> 앞으로도 AI와 개발 도구 간의 통합은 더욱 깊어질 것이며, 이는 개발자 생산성과 코드 품질 향상에 큰 기여를 할 것입니다.</p>
+mcp_github_enterprise_list_pull_requests(owner=&quot;octocat&quot;, repo=&quot;hello-world&quot;, state=&quot;open&quot;)</code></pre><h2 id="--91"><a href="#--91" class="header-anchor"></a>프로젝트를 통해 배운 점</h2><h3 id="1--4"><a href="#1--4" class="header-anchor"></a>1. 표준화와 상호운용성의 중요성</h3><p>MCP는 AI와 외부 시스템 간의 표준화된 인터페이스를 제공함으로써 다양한 AI 도구들이 동일한 방식으로 GitHub과 상호작용할 수 있게 합니다. <br>이런 표준화가 생태계 발전에 얼마나 중요한지 실감했습니다.</p>
+<h3 id="2--4"><a href="#2--4" class="header-anchor"></a>2. 엔터프라이즈 환경의 특수성</h3><p>GitHub.com과 GitHub Enterprise는 비슷하지만 중요한 차이점이 있습니다. <br>엔터프라이즈 환경에서는 라이센스 관리, 사용자 관리, 시스템 통계 등 추가적인 기능이 필요하며, 이를 위한 특별한 고려사항이 있습니다.</p>
+<h2 id="--92"><a href="#--92" class="header-anchor"></a>결론</h2><p>MCP와 같은 프로토콜은 AI가 단순한 텍스트 생성을 넘어 실제 개발 환경과 상호작용하는 데 필수적인 요소가 되고 있습니다.<br> 앞으로도 AI와 개발 도구 간의 통합은 더욱 깊어질 것이며, 이는 개발자 생산성과 코드 품질 향상에 큰 기여를 할 것입니다.</p>
 <p>저는 Devops 엔지니어로서 개발자 분들에 비해 코딩 실력이 현저히 부족합니다.<br> 새로운 기술 트렌드를 파악하고 직접 구현해보는 경험은 매우 가치 있었으며, 이런 사이드 프로젝트를 통해 얻은 지식은 일상 업무에도 많은 도움이 되고 있습니다.</p>
-<h2 id="--61"><a href="#--61" class="header-anchor"></a>참고 자료</h2><ul>
+<h2 id="--93"><a href="#--93" class="header-anchor"></a>참고 자료</h2><ul>
 <li><a href="https://github.com/containerelic/github-enterprise-mcp">개인 GitHub Enterprise MCP 프로젝트</a></li>
 <li><a href="https://github.com/github/github-mcp-server">공식 GitHub MCP 서버</a></li>
 <li><a href="https://modelcontextprotocol.io/introduction">Model Context Protocol 공식 문서</a></li>
