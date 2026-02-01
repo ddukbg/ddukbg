@@ -329,12 +329,12 @@
     <p><small>2025-05-12 9:00 AM</small></p>
     <nav class="nav-links">
       <a href="index.html" class="win98-button">Home</a>
-        <a href="about.html" class="win98-button">About</a>
+        <a href="About.html" class="win98-button">About</a>
     </nav>
   </header>
-    <h1 id="-eks-iptables"><a href="#-eks-iptables" class="header-anchor"></a>쿠버네티스 서비스 네트워크 통신 분석: EKS와 iptables</h1><h2 id="--94"><a href="#--94" class="header-anchor"></a>배경</h2><p>EKS Pod 간 네트워크 통신 시 서비스 endpoint에서 pod이 빠지더라도 기존 TCP 세션을 통해 연결이 유지되는 현상을 확인했습니다. Pod에서 서비스 도메인을 통해 다른 pod에 요청을 보낼 때 어떤 네트워크 구간을 거치는지 확인하기 위해 내부 통신을 상세히 분석해 보았습니다.</p>
-<h2 id="--95"><a href="#--95" class="header-anchor"></a>목적</h2><p>Pod에서 다른 pod의 service domain으로 질의를 할 시에 실제로 어떻게 TCP 연결이 되는지 확인하기 위함입니다.</p>
-<h2 id="--96"><a href="#--96" class="header-anchor"></a>구성 개요</h2><p>실제 통신은 복잡한 단계를 거치지만, 이해를 위해 추상화하여 구성도를 작성했습니다. 일반적인 웹 통신 레이어(OSI 7계층)와 비교하면 다음과 같습니다:</p>
+    <h1 id="-eks-iptables"><a href="#-eks-iptables" class="header-anchor"></a>쿠버네티스 서비스 네트워크 통신 분석: EKS와 iptables</h1><h2 id="--111"><a href="#--111" class="header-anchor"></a>배경</h2><p>EKS Pod 간 네트워크 통신 시 서비스 endpoint에서 pod이 빠지더라도 기존 TCP 세션을 통해 연결이 유지되는 현상을 확인했습니다. Pod에서 서비스 도메인을 통해 다른 pod에 요청을 보낼 때 어떤 네트워크 구간을 거치는지 확인하기 위해 내부 통신을 상세히 분석해 보았습니다.</p>
+<h2 id="--112"><a href="#--112" class="header-anchor"></a>목적</h2><p>Pod에서 다른 pod의 service domain으로 질의를 할 시에 실제로 어떻게 TCP 연결이 되는지 확인하기 위함입니다.</p>
+<h2 id="--113"><a href="#--113" class="header-anchor"></a>구성 개요</h2><p>실제 통신은 복잡한 단계를 거치지만, 이해를 위해 추상화하여 구성도를 작성했습니다. 일반적인 웹 통신 레이어(OSI 7계층)와 비교하면 다음과 같습니다:</p>
 <div class="mermaid">graph TB
     subgraph "OSI Model"
         L7[Layer 7 - Application]
@@ -484,14 +484,14 @@ ipv4     2 udp      17 5 src=10.116.47.21 dst=172.20.0.10 sport=40060 dport=53 s
 <li>Node 간 통신은 VPC 네트워크 인프라를 통해 이루어집니다</li>
 <li>Node에서 Pod으로의 라우팅은 Node의 로컬 라우팅 테이블에 의해 처리됩니다</li>
 </ol>
-<h2 id="--97"><a href="#--97" class="header-anchor"></a>결론</h2><ol>
+<h2 id="--114"><a href="#--114" class="header-anchor"></a>결론</h2><ol>
 <li>쿠버네티스 Service는 가상의 IP(ClusterIP)를 제공하며, 실제 트래픽은 iptables 규칙에 의해 Pod으로 라우팅됩니다.</li>
 <li>EKS의 VPC CNI는 Pod에 VPC 서브넷 대역의 IP를 할당하여, Pod 간 통신이 VPC 네트워크 레벨에서 직접 이루어질 수 있게 합니다.</li>
 <li>Service endpoint에서 Pod이 제거되더라도 기존 TCP 연결은 nf_conntrack에 의해 유지됩니다.</li>
 <li>Headless Service를 사용하면 DNS가 Service IP 대신 Pod IP를 직접 반환하므로, iptables DNAT 과정을 생략할 수 있어 성능 향상이 가능합니다.</li>
 </ol>
 <p>위 분석을 통해 EKS 환경에서의 Pod 네트워크 통신 원리와 Service를 통한 트래픽 라우팅 과정을 이해할 수 있습니다.</p>
-<h2 id="--98"><a href="#--98" class="header-anchor"></a>참고 문서</h2><ul>
+<h2 id="--115"><a href="#--115" class="header-anchor"></a>참고 문서</h2><ul>
 <li><a href="https://github.com/aws/amazon-vpc-cni-k8s/blob/master/docs/cni-proposal.md">AWS VPC CNI 설계 문서</a></li>
 <li><a href="https://ibiza.tistory.com/29">Kubernetes Service와 iptables 설정</a></li>
 <li><a href="https://www.kernel.org/doc/Documentation/networking/nf_conntrack-sysctl.txt">nf_conntrack 커널 문서</a></li>
