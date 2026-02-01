@@ -12,7 +12,9 @@
       font-size: 11px;
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Prevent scrollbars on body */
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     .win98-container {
       padding: 15px;
@@ -27,8 +29,9 @@
       display: flex;
       flex-direction: column;
       min-width: 300px;
-      max-width: 800px; /* Limit window width */
-      margin: 0 auto; /* Center the window */
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
     }
     .win98-titlebar {
       background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
@@ -281,6 +284,32 @@
       border-bottom: 1px solid #ffffff;
       box-shadow: none;
     }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
   
     /* StyleMD watermark */
     .stylemd-watermark {
@@ -329,7 +358,7 @@
     <p><small>2025-05-12 9:00 AM</small></p>
     <nav class="nav-links">
       <a href="index.html" class="win98-button">Home</a>
-        <a href="About.html" class="win98-button">About</a>
+        <a href="about.html" class="win98-button">About</a>
     </nav>
   </header>
     <h1 id="-cni-ebpf-eks-cni-"><a href="#-cni-ebpf-eks-cni-" class="header-anchor"></a>기존 CNI 환경을 유지하며 eBPF 기능 확장하기: EKS에서의 CNI 체이닝</h1><h2 id="--50"><a href="#--50" class="header-anchor"></a>소개</h2><p>Kubernetes 환경에서 네트워크는 단순한 연결 이상의 중요한 역할을 합니다. <br>특히 대규모 마이크로서비스 아키텍처에서는 네트워크 관찰성(Observability)과 세밀한 네트워크 정책이 필수적입니다. <br>하지만 클라우드 제공업체의 기본 CNI(예: AWS VPC CNI)는 네트워크 연결성은 우수하지만, 고급 보안 기능이나 관찰성 측면에서는 한계를 가질 수 있습니다.<br>

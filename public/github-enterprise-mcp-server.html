@@ -12,7 +12,9 @@
       font-size: 11px;
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Prevent scrollbars on body */
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     .win98-container {
       padding: 15px;
@@ -27,8 +29,9 @@
       display: flex;
       flex-direction: column;
       min-width: 300px;
-      max-width: 800px; /* Limit window width */
-      margin: 0 auto; /* Center the window */
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
     }
     .win98-titlebar {
       background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
@@ -281,6 +284,32 @@
       border-bottom: 1px solid #ffffff;
       box-shadow: none;
     }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
   
     /* StyleMD watermark */
     .stylemd-watermark {
@@ -329,7 +358,7 @@
     <p><small>2025-05-08 9:00 AM</small></p>
     <nav class="nav-links">
       <a href="index.html" class="win98-button">Home</a>
-        <a href="About.html" class="win98-button">About</a>
+        <a href="about.html" class="win98-button">About</a>
     </nav>
   </header>
     <h1 id="github-enterprise-mcp-"><a href="#github-enterprise-mcp-" class="header-anchor"></a>GitHub Enterprise MCP 서버 구현 해보기</h1><h2 id="mcp-model-context-protocol-"><a href="#mcp-model-context-protocol-" class="header-anchor"></a>MCP(Model Context Protocol)란 무엇인가?</h2><p>최근 AI 기술의 발전으로 코딩 어시스턴트와 같은 도구들이 개발자 생산성을 크게 향상시키고 있습니다. 그러나 AI 모델이 실시간 데이터에 접근하거나 실제 시스템과 상호작용하는 데는 여전히 제약이 있었습니다. 이런 제약을 해결하기 위해 등장한 것이 <strong>Model Context Protocol(MCP)</strong> 입니다.</p>
