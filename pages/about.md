@@ -6,7 +6,7 @@ slug: "about"
 # About Me
 
 **김용우**  
-*DevOps Engineer*  
+*DevSecOps Engineer*  
 **System Status:** 🟢 ONLINE
 
 ---
@@ -19,13 +19,14 @@ title Career Timeline
 dateFormat YYYY-MM
 axisFormat %b %Y
 section Career
-CoinOne     :active, 2021-12, 2025-05
+Ustockplus    :active, 2025-07, 2026-02
+CoinOne     :done, 2021-12, 2025-06
 Shinhan DS    :done, 2021-04, 2021-12
 T-Max A&C       :done, 2019-11, 2021-04
 ```
 
 
-저는 현재 **DevOps 엔지니어**로 활동 중이며,  
+저는 현재 **DevSecOps 엔지니어**로 활동 중이며,  
 저비용·고효율 실현을 위해 끊임없이 고민하고 노력하고 있습니다.
 
 ---
