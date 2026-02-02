@@ -1,6 +1,6 @@
 ---
 title: "개인 프로젝트: GitHub Enterprise MCP 서버"
-date: "2025-05-08"
+date: "2025-05-08 07:58:00"
 description: "GitHub Enterprise MCP 서버를 직접 구현 해보기"
 ---
 # GitHub Enterprise MCP 서버 구현 해보기

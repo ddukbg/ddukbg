@@ -1,6 +1,6 @@
 ---
 title: "EKS 클러스터에 GPU 노드 그룹 설정하기"
-date: "2025-05-08"
+date: "2025-05-08 19:14:00"
 description: "EKS 클러스터에 GPU 노드 그룹 설정 가이드: 노드 그룹 구성부터 Time-Slicing까지"
 ---
 

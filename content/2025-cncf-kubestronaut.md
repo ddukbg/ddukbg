@@ -1,6 +1,6 @@
 ---
 title: "CNCF Kubestronaut 도전"
-date: "2025-07-05"
+date: "2025-07-05 07:59:00"
 description: "CNCF 쿠버네티스 인증, Kubestronaut 프로그램"
 ---
 

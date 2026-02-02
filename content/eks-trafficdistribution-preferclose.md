@@ -1,6 +1,6 @@
 ---
 title: "EKS AZ 간 통신 최적화"
-date: "2025-05-05"
+date: "2025-05-05 08:13:00"
 description: "EKS에서 trafficDistribution: PreferClose를 활용한 AZ 간 통신 최적화"
 ---
 

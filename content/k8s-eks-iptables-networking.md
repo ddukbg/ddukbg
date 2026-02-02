@@ -1,6 +1,6 @@
 ---
 title: "EKS 환경의 ClusterIP 트래픽 라우팅과 nf_conntrack 동작 이해"
-date: "2025-05-12"
+date: "2025-05-12 03:41:00"
 description: "ClusterIP 기반 서비스 통신이 iptables와 nf_conntrack 모듈로 어떻게 유지되고 관리되는지 심층 분석합니다."
 ---
 

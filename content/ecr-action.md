@@ -1,6 +1,6 @@
 ---
 title: "EKS Pod Identity 환경에서 Amazon ECR Login Action 사용하기"
-date: "2025-05-06"
+date: "2025-05-06 14:02:00"
 description: "Amazon ECR 로그인 Action에 EKS Pod Identity 지원 기능 추가하기"
 ---
 

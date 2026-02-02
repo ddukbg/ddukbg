@@ -1,6 +1,6 @@
 ---
 title: "Amazon Managed Service for Prometheus 비용 최적화 여정"
-date: "2025-05-06"
+date: "2025-05-06 23:03:00"
 description: "Amazon Managed Service for Prometheus 비용 최적화 여정: 메트릭 기반 접근법"
 ---
 # Amazon Managed Service for Prometheus 비용 최적화 여정: 메트릭 기반 접근법

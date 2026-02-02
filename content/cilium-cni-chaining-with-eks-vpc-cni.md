@@ -1,6 +1,6 @@
 ---
 title: "기존 CNI 환경을 유지하며 eBPF 기능 확장하기: EKS에서의 CNI 체이닝"
-date: "2025-05-12"
+date: "2025-05-12 22:30:00"
 description: "AWS VPC CNI 환경에서 Cilium과 Calico를 체이닝하여 eBPF 기반의 네트워크 관찰성과 보안 기능을 확장하는 방법"
 ---
 
