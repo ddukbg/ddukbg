@@ -1,6 +1,6 @@
 ---
 title: "Kube-proxy 없이 살아가기: Cilium을 활용한 성능 최적화와 구성 가이드"
-date: 2025-08-14
+date: 2025-08-14 14:30:00
 slug: cilium-kube-proxy-free
 ---
 
