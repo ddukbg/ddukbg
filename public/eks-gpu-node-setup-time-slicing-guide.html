@@ -362,7 +362,7 @@
     </nav>
   </header>
     <h1 id="eks-gpu-time-slicing-"><a href="#eks-gpu-time-slicing-" class="header-anchor"></a>EKS 클러스터에 GPU 노드 그룹 설정 가이드: 노드 그룹 구성부터 Time-Slicing까지</h1><p><img src="!%5Bimage%5D(https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/nvidia-gpu.png)" alt="NVIDIA 테슬라 T4 GPU 정보"></p>
-<h2 id="--76"><a href="#--76" class="header-anchor"></a>목차</h2><ol>
+<h2 id="--78"><a href="#--78" class="header-anchor"></a>목차</h2><ol>
 <li><a href="#%EC%86%8C%EA%B0%9C">소개</a></li>
 <li><a href="#%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EA%B0%9C%EC%9A%94">아키텍처 개요</a></li>
 <li><a href="#gpu-%EB%85%B8%EB%93%9C-%EA%B7%B8%EB%A3%B9-%EA%B5%AC%EC%84%B1">GPU 노드 그룹 구성</a></li>
@@ -373,9 +373,9 @@
 <li><a href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%ED%8C%81">성능 최적화 팁</a></li>
 <li><a href="#%EA%B2%B0%EB%A1%A0">결론</a></li>
 </ol>
-<h2 id="--77"><a href="#--77" class="header-anchor"></a>소개</h2><p>기계 학습, 딥 러닝, 컴퓨터 비전 및 기타 연산 집약적 워크로드를 실행하려면 강력한 GPU 리소스가 필수적입니다. Amazon EKS(Elastic Kubernetes Service)는 GPU 가속 워크로드를 위한 탁월한 플랫폼을 제공하지만, 이러한 고가의 리소스를 효율적으로 활용하려면 적절한 구성과 최적화가 필요합니다.</p>
+<h2 id="--79"><a href="#--79" class="header-anchor"></a>소개</h2><p>기계 학습, 딥 러닝, 컴퓨터 비전 및 기타 연산 집약적 워크로드를 실행하려면 강력한 GPU 리소스가 필수적입니다. Amazon EKS(Elastic Kubernetes Service)는 GPU 가속 워크로드를 위한 탁월한 플랫폼을 제공하지만, 이러한 고가의 리소스를 효율적으로 활용하려면 적절한 구성과 최적화가 필요합니다.</p>
 <p>이 글에서는 EKS 클러스터에 GPU 노드 그룹을 설정하는 방법부터 NVIDIA Device Plugin 배포, GPU 노드 보호를 위한 테인트(taint) 적용, 그리고 하나의 물리적 GPU를 여러 워크로드에서 공유할 수 있는 Time-Slicing 기술까지 전 과정을 단계별로 설명합니다.</p>
-<h2 id="--78"><a href="#--78" class="header-anchor"></a>아키텍처 개요</h2><p>EKS 클러스터에서 GPU 워크로드를 지원하는 완전한 아키텍처는 다음과 같은 구성 요소로 이루어집니다:</p>
+<h2 id="--80"><a href="#--80" class="header-anchor"></a>아키텍처 개요</h2><p>EKS 클러스터에서 GPU 워크로드를 지원하는 완전한 아키텍처는 다음과 같은 구성 요소로 이루어집니다:</p>
 <ol>
 <li><strong>GPU 노드 그룹</strong>: NVIDIA 드라이버가 사전 설치된 Amazon EKS 최적화 AMI를 사용</li>
 <li><strong>NVIDIA Device Plugin</strong>: Kubernetes에서 컨테이너가 GPU에 접근할 수 있도록 지원</li>
@@ -596,7 +596,7 @@ kubectl apply -f nvidia-device-plugin-timeslicing.yaml</code></pre><h3 id="time-
 <span class="hljs-comment"># 출력 예시: nvidia.com/gpu:        4</span></code></pre><p>이제 여러 GPU 워크로드를 배포하여 테스트합니다:</p>
 <pre><code class="hljs bash">kubectl scale deployment/gpu-test-deployment --replicas=4
 kubectl get pods -o wide</code></pre><p>모든 파드가 동일한 GPU 노드에서 실행되고 있다면 Time-Slicing이 성공적으로 적용된 것입니다.</p>
-<h2 id="--79"><a href="#--79" class="header-anchor"></a>모니터링 및 운영 관리</h2><h3 id="dcgm-exporter-gpu-"><a href="#dcgm-exporter-gpu-" class="header-anchor"></a>DCGM Exporter로 GPU 메트릭 수집</h3><p>NVIDIA DCGM(Data Center GPU Manager) Exporter를 배포하여 Prometheus와 Grafana를 통해 GPU 메트릭을 모니터링할 수 있습니다:</p>
+<h2 id="--81"><a href="#--81" class="header-anchor"></a>모니터링 및 운영 관리</h2><h3 id="dcgm-exporter-gpu-"><a href="#dcgm-exporter-gpu-" class="header-anchor"></a>DCGM Exporter로 GPU 메트릭 수집</h3><p>NVIDIA DCGM(Data Center GPU Manager) Exporter를 배포하여 Prometheus와 Grafana를 통해 GPU 메트릭을 모니터링할 수 있습니다:</p>
 <pre><code class="hljs yaml"><span class="hljs-comment"># dcgm-exporter.yaml</span>
 <span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
 <span class="hljs-attr">kind:</span> <span class="hljs-string">DaemonSet</span>
@@ -633,7 +633,7 @@ kubectl get pods -o wide</code></pre><p>모든 파드가 동일한 GPU 노드에
       <span class="hljs-attr">volumes:</span>
       <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">device-plugin</span>
         <span class="hljs-attr">hostPath:</span>
-          <span class="hljs-attr">path:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span></code></pre><h3 id="--80"><a href="#--80" class="header-anchor"></a>주요 모니터링 지표</h3><p>DCGM Exporter를 설정한 후 Prometheus와 Grafana로 다음과 같은 중요한 GPU 메트릭을 모니터링할 수 있습니다:</p>
+          <span class="hljs-attr">path:</span> <span class="hljs-string">/var/lib/kubelet/device-plugins</span></code></pre><h3 id="--82"><a href="#--82" class="header-anchor"></a>주요 모니터링 지표</h3><p>DCGM Exporter를 설정한 후 Prometheus와 Grafana로 다음과 같은 중요한 GPU 메트릭을 모니터링할 수 있습니다:</p>
 <ol>
 <li><strong>GPU 사용률</strong>: DCGM_FI_DEV_GPU_UTIL</li>
 <li><strong>메모리 사용량</strong>: DCGM_FI_DEV_FB_USED</li>
@@ -641,7 +641,7 @@ kubectl get pods -o wide</code></pre><p>모든 파드가 동일한 GPU 노드에
 <li><strong>전력 사용량</strong>: DCGM_FI_DEV_POWER_USAGE</li>
 <li><strong>메모리 대역폭</strong>: DCGM_FI_DEV_MEM_COPY_UTIL</li>
 </ol>
-<h2 id="--81"><a href="#--81" class="header-anchor"></a>성능 최적화 팁</h2><h3 id="cuda-"><a href="#cuda-" class="header-anchor"></a>CUDA 버전 호환성 확인</h3><p>애플리케이션의 CUDA 요구사항과 노드에 설치된 CUDA 버전의 호환성을 확인하세요. 현재 예시의 AL2023 NVIDIA AMI에는 CUDA 12.5가 포함되어 있습니다.</p>
+<h2 id="--83"><a href="#--83" class="header-anchor"></a>성능 최적화 팁</h2><h3 id="cuda-"><a href="#cuda-" class="header-anchor"></a>CUDA 버전 호환성 확인</h3><p>애플리케이션의 CUDA 요구사항과 노드에 설치된 CUDA 버전의 호환성을 확인하세요. 현재 예시의 AL2023 NVIDIA AMI에는 CUDA 12.5가 포함되어 있습니다.</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># 노드에서 CUDA 버전 확인</span>
 kubectl debug node/&lt;gpu-node-name&gt; -it --image=ubuntu:20.04
 <span class="hljs-built_in">chroot</span> /host
@@ -651,7 +651,7 @@ kubectl debug node/&lt;gpu-node-name&gt; -it --image=ubuntu:20.04
 <li><strong>학습 워크로드</strong>: 전체 GPU 자원이 필요하므로 Time-Slicing을 사용하지 않는 것이 좋음</li>
 <li><strong>최적의 분할 비율</strong>: 워크로드의 메모리 요구사항과 처리량을 고려하여 결정</li>
 </ol>
-<h3 id="--82"><a href="#--82" class="header-anchor"></a>사용자 정의 리소스 유형 활용</h3><p>다양한 GPU 성능 요구사항을 가진 워크로드가 있다면, 사용자 정의 리소스 유형을 활용할 수 있습니다:</p>
+<h3 id="--84"><a href="#--84" class="header-anchor"></a>사용자 정의 리소스 유형 활용</h3><p>다양한 GPU 성능 요구사항을 가진 워크로드가 있다면, 사용자 정의 리소스 유형을 활용할 수 있습니다:</p>
 <pre><code class="hljs yaml"><span class="hljs-attr">sharing:</span>
   <span class="hljs-attr">timeSlicing:</span>
     <span class="hljs-attr">resources:</span>
@@ -662,7 +662,7 @@ kubectl debug node/&lt;gpu-node-name&gt; -it --image=ubuntu:20.04
       <span class="hljs-attr">timeSlicingProfile:</span> <span class="hljs-string">high-memory</span>
     <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">nvidia.com/gpu-low-latency</span>
       <span class="hljs-attr">replicas:</span> <span class="hljs-number">4</span>
-      <span class="hljs-attr">timeSlicingProfile:</span> <span class="hljs-string">low-latency</span></code></pre><h2 id="--83"><a href="#--83" class="header-anchor"></a>결론</h2><p>EKS 클러스터에 GPU 노드 그룹을 구성하고 NVIDIA Device Plugin을 설정하는 것은 AI/ML 워크로드를 위한 강력한 인프라를 구축하는 첫 단계입니다. 이 글에서 설명한 모범 사례를 따르면 다음과 같은 이점을 얻을 수 있습니다:</p>
+      <span class="hljs-attr">timeSlicingProfile:</span> <span class="hljs-string">low-latency</span></code></pre><h2 id="--85"><a href="#--85" class="header-anchor"></a>결론</h2><p>EKS 클러스터에 GPU 노드 그룹을 구성하고 NVIDIA Device Plugin을 설정하는 것은 AI/ML 워크로드를 위한 강력한 인프라를 구축하는 첫 단계입니다. 이 글에서 설명한 모범 사례를 따르면 다음과 같은 이점을 얻을 수 있습니다:</p>
 <ol>
 <li><strong>비용 최적화</strong>: Time-Slicing을 통한 GPU 리소스 활용도 증가</li>
 <li><strong>보안 강화</strong>: 테인트를 통한 GPU 노드 보호</li>

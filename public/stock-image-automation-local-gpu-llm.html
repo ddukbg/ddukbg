@@ -361,7 +361,7 @@
         <a href="about.html" class="win98-button">About</a>
     </nav>
   </header>
-    <h1 id="-gpu-llm-"><a href="#-gpu-llm-" class="header-anchor"></a>로컬 GPU와 LLM을 활용한 스톡 이미지 생성 자동화 시스템 구축 경험기</h1><h2 id="--148"><a href="#--148" class="header-anchor"></a>목차</h2><ol>
+    <h1 id="-gpu-llm-"><a href="#-gpu-llm-" class="header-anchor"></a>로컬 GPU와 LLM을 활용한 스톡 이미지 생성 자동화 시스템 구축 경험기</h1><h2 id="--150"><a href="#--150" class="header-anchor"></a>목차</h2><ol>
 <li><a href="#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EB%B0%B0%EA%B2%BD">프로젝트 배경</a></li>
 <li><a href="#%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%84%A4%EA%B3%84">시스템 아키텍처 설계</a></li>
 <li><a href="#%ED%95%B5%EC%8B%AC-%EA%B5%AC%ED%98%84-%EC%82%AC%ED%95%AD">핵심 구현 사항</a></li>
@@ -372,8 +372,8 @@
 <li><a href="#%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%EA%B2%BD%ED%97%98">성능 최적화 경험</a></li>
 <li><a href="#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%ED%9A%8C%EA%B3%A0-%EB%B0%8F-%EA%B0%9C%EC%84%A0-%EB%B0%A9%ED%96%A5">프로젝트 회고 및 개선 방향</a></li>
 </ol>
-<h2 id="--149"><a href="#--149" class="header-anchor"></a>프로젝트 배경</h2><p>미리캔버스나 Adobe Stock 같은 플랫폼에서 사용할 수 있는 디자인 에셋을 대량으로 생성해서 부가적인 수익을 창출할수 있는 사실 알고계시나요? 하지만 이미지 생성에 사용되는 API 비용은 많은 부담요소입니다. 그래서 저는 부담 없이 작업하고 싶었고, 로컬 GPU 자원을 최대한 활용해보고 싶었습니다. 그래서 여러 이미지 생성 모델을 통합하고, 프롬프트 생성부터 메타데이터 관리까지 전체 파이프라인을 자동화하는 시스템을 만들어보았습니다.</p>
-<h2 id="--150"><a href="#--150" class="header-anchor"></a>시스템 아키텍처 설계</h2><p>전체 시스템을 다음과 같은 구조로 설계했습니다:</p>
+<h2 id="--151"><a href="#--151" class="header-anchor"></a>프로젝트 배경</h2><p>미리캔버스나 Adobe Stock 같은 플랫폼에서 사용할 수 있는 디자인 에셋을 대량으로 생성해서 부가적인 수익을 창출할수 있는 사실 알고계시나요? 하지만 이미지 생성에 사용되는 API 비용은 많은 부담요소입니다. 그래서 저는 부담 없이 작업하고 싶었고, 로컬 GPU 자원을 최대한 활용해보고 싶었습니다. 그래서 여러 이미지 생성 모델을 통합하고, 프롬프트 생성부터 메타데이터 관리까지 전체 파이프라인을 자동화하는 시스템을 만들어보았습니다.</p>
+<h2 id="--152"><a href="#--152" class="header-anchor"></a>시스템 아키텍처 설계</h2><p>전체 시스템을 다음과 같은 구조로 설계했습니다:</p>
 <div class="mermaid">graph TD
     A[사용자 입력] --> B{프롬프트 모드 선택}
     B --> |랜덤| C[사전 정의 템플릿 조합]
@@ -399,7 +399,7 @@
     style A fill:#e1f5fe
     style H fill:#c8e6c9
     style I fill:#ffccbc
-    style P fill:#f3e5f5</div><h2 id="--151"><a href="#--151" class="header-anchor"></a>핵심 구현 사항</h2><h3 id="--152"><a href="#--152" class="header-anchor"></a>모듈화된 구조 설계</h3><p>각 기능을 독립적인 함수로 분리하여 유지보수와 확장이 용이하도록 구현했습니다:</p>
+    style P fill:#f3e5f5</div><h2 id="--153"><a href="#--153" class="header-anchor"></a>핵심 구현 사항</h2><h3 id="--154"><a href="#--154" class="header-anchor"></a>모듈화된 구조 설계</h3><p>각 기능을 독립적인 함수로 분리하여 유지보수와 확장이 용이하도록 구현했습니다:</p>
 <pre><code class="hljs python"><span class="hljs-comment"># 프롬프트 생성 모듈</span>
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_prompt</span>(<span class="hljs-params">base_idea=<span class="hljs-literal">None</span></span>):
     <span class="hljs-string">&quot;&quot;&quot;키워드 기반 또는 랜덤 프롬프트 생성&quot;&quot;&quot;</span>
@@ -421,7 +421,7 @@
 <span class="hljs-comment"># 후처리 모듈</span>
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">process_image</span>(<span class="hljs-params">image, prompt_data, format_type</span>):
     <span class="hljs-string">&quot;&quot;&quot;이미지 후처리 및 메타데이터 생성&quot;&quot;&quot;</span>
-    <span class="hljs-comment"># 구현 내용...</span></code></pre><h3 id="--153"><a href="#--153" class="header-anchor"></a>설정 기반 유연성 확보</h3><p>환경 변수와 설정을 통해 다양한 환경에서 동작할 수 있도록 구현했습니다:</p>
+    <span class="hljs-comment"># 구현 내용...</span></code></pre><h3 id="--155"><a href="#--155" class="header-anchor"></a>설정 기반 유연성 확보</h3><p>환경 변수와 설정을 통해 다양한 환경에서 동작할 수 있도록 구현했습니다:</p>
 <pre><code class="hljs python"><span class="hljs-comment"># 환경별 설정</span>
 OPENAI_API_KEY = os.getenv(<span class="hljs-string">&quot;OPENAI_API_KEY&quot;</span>)
 GOOGLE_API_KEY = os.getenv(<span class="hljs-string">&quot;GOOGLE_API_KEY&quot;</span>)
@@ -434,13 +434,13 @@ OLLAMA_MODEL = <span class="hljs-string">&quot;qwen2.5:14b&quot;</span>  <span c
     REMBG_AVAILABLE = <span class="hljs-literal">True</span>
 <span class="hljs-keyword">except</span> ImportError:
     <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;경고: 배경 제거 기능이 비활성화됩니다.&quot;</span>)
-    REMBG_AVAILABLE = <span class="hljs-literal">False</span></code></pre><h2 id="--154"><a href="#--154" class="header-anchor"></a>동적 프롬프트 생성의 필요성과 구현</h2><h3 id="--155"><a href="#--155" class="header-anchor"></a>왜 동적 프롬프트가 필요한가?</h3><p>기존의 랜덤 조합이나 키워드 기반 프롬프트 생성 방식은 다음과 같은 한계가 있었습니다:</p>
+    REMBG_AVAILABLE = <span class="hljs-literal">False</span></code></pre><h2 id="--156"><a href="#--156" class="header-anchor"></a>동적 프롬프트 생성의 필요성과 구현</h2><h3 id="--157"><a href="#--157" class="header-anchor"></a>왜 동적 프롬프트가 필요한가?</h3><p>기존의 랜덤 조합이나 키워드 기반 프롬프트 생성 방식은 다음과 같은 한계가 있었습니다:</p>
 <ol>
 <li><strong>제한된 창의성</strong>: 사전 정의된 템플릿 조합으로는 참신한 아이디어 생성이 어려움</li>
 <li><strong>반복적인 결과</strong>: 비슷한 패턴의 이미지가 계속 생성됨</li>
 <li><strong>맥락 이해 부족</strong>: 단순 키워드 조합으로는 복합적인 개념 표현이 어려움</li>
 </ol>
-<h3 id="--156"><a href="#--156" class="header-anchor"></a>실제 구현 방식</h3><p>Ollama LLM을 활용하여 구조화된 JSON 형식으로 프롬프트를 생성하도록 구현했습니다:</p>
+<h3 id="--158"><a href="#--158" class="header-anchor"></a>실제 구현 방식</h3><p>Ollama LLM을 활용하여 구조화된 JSON 형식으로 프롬프트를 생성하도록 구현했습니다:</p>
 <pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_dynamic_prompt_with_ollama</span>():
     master_prompt = <span class="hljs-string">f&quot;&quot;&quot;
 You are a creative assistant specialized in generating ideas for design assets.
@@ -475,14 +475,14 @@ Generate a new, creative concept now.
         }
     <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
         <span class="hljs-comment"># 실패 시 기본 프롬프트 생성기로 폴백</span>
-        <span class="hljs-keyword">return</span> generate_prompt()</code></pre><h3 id="--157"><a href="#--157" class="header-anchor"></a>동적 프롬프트 생성 예시</h3><p><strong>입력</strong>: &quot;새로운 디자인 에셋 아이디어를 만들어줘&quot;</p>
+        <span class="hljs-keyword">return</span> generate_prompt()</code></pre><h3 id="--159"><a href="#--159" class="header-anchor"></a>동적 프롬프트 생성 예시</h3><p><strong>입력</strong>: &quot;새로운 디자인 에셋 아이디어를 만들어줘&quot;</p>
 <p><strong>Ollama 출력</strong>:</p>
 <pre><code class="hljs json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">&quot;korean_description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;우주 정거장에서 바라본 지구의 일출 풍경&quot;</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">&quot;english_image_prompt&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Spectacular sunrise over Earth as seen from space station window, cinematic lighting, detailed planet surface, realistic space environment, high contrast, professional space photography style&quot;</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">&quot;tags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;우주&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;지구&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;일출&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;space&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;earth&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;sunrise&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;cinematic&quot;</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span></code></pre><p>이처럼 단순한 키워드 조합으로는 만들어내기 어려운 창의적이고 구체적인 프롬프트를 생성할 수 있었습니다.</p>
-<h2 id="--158"><a href="#--158" class="header-anchor"></a>다중 모델 지원 및 폴백 전략</h2><h3 id="--159"><a href="#--159" class="header-anchor"></a>구현한 폴백 시스템</h3><p>각 모델이 실패할 경우를 대비해 단계적 폴백 시스템을 구현했습니다:</p>
+<h2 id="--160"><a href="#--160" class="header-anchor"></a>다중 모델 지원 및 폴백 전략</h2><h3 id="--161"><a href="#--161" class="header-anchor"></a>구현한 폴백 시스템</h3><p>각 모델이 실패할 경우를 대비해 단계적 폴백 시스템을 구현했습니다:</p>
 <pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">test_image_generation</span>(<span class="hljs-params">count=<span class="hljs-number">1</span>, model=<span class="hljs-string">&quot;local&quot;</span>, user_prompt=<span class="hljs-literal">None</span>, prompt_mode=<span class="hljs-string">&quot;random&quot;</span></span>):
     <span class="hljs-comment"># 모델별 실행 및 폴백 로직</span>
     <span class="hljs-keyword">if</span> selected_model == <span class="hljs-string">&quot;gemini&quot;</span> <span class="hljs-keyword">and</span> GOOGLE_API_KEY:
@@ -527,7 +527,7 @@ Generate a new, creative concept now.
         variant=<span class="hljs-string">&quot;fp16&quot;</span>,  <span class="hljs-comment"># 절반 정밀도 모델 사용</span>
         use_safetensors=<span class="hljs-literal">True</span>
     )</code></pre><h2 id="-vs-"><a href="#-vs-" class="header-anchor"></a>로컬 vs 클라우드 모델 선택 가이드</h2><p>실제 사용 경험을 바탕으로 각 모델의 특성을 정리했습니다:</p>
-<h3 id="--160"><a href="#--160" class="header-anchor"></a>로컬 모델 사용을 권장하는 경우</h3><p><strong>장점:</strong></p>
+<h3 id="--162"><a href="#--162" class="header-anchor"></a>로컬 모델 사용을 권장하는 경우</h3><p><strong>장점:</strong></p>
 <ul>
 <li>무제한 생성 (API 비용 없음)</li>
 <li>데이터 프라이버시 보장</li>
@@ -555,7 +555,7 @@ Generate a new, creative concept now.
 <li>GPU 하드웨어가 없는 환경</li>
 <li>소량의 고품질 이미지가 필요한 경우</li>
 </ul>
-<h3 id="--161"><a href="#--161" class="header-anchor"></a>실제 성능 비교 (개인 경험)</h3><table>
+<h3 id="--163"><a href="#--163" class="header-anchor"></a>실제 성능 비교 (개인 경험)</h3><table>
 <thead>
 <tr>
 <th>항목</th>
@@ -595,7 +595,7 @@ Generate a new, creative concept now.
 </tr>
 </tbody></table>
 <p><em>테스트 환경: RTX 3060 12GB, 16GB RAM</em></p>
-<h2 id="--162"><a href="#--162" class="header-anchor"></a>실제 구현에서 마주한 문제들과 해결책</h2><h3 id="1-gpu-"><a href="#1-gpu-" class="header-anchor"></a>1. GPU 메모리 부족 문제</h3><p><strong>문제</strong>: SDXL + Refiner 모델 동시 로딩 시 12GB GPU 메모리 초과</p>
+<h2 id="--164"><a href="#--164" class="header-anchor"></a>실제 구현에서 마주한 문제들과 해결책</h2><h3 id="1-gpu-"><a href="#1-gpu-" class="header-anchor"></a>1. GPU 메모리 부족 문제</h3><p><strong>문제</strong>: SDXL + Refiner 모델 동시 로딩 시 12GB GPU 메모리 초과</p>
 <p><strong>해결책</strong>: </p>
 <pre><code class="hljs python"><span class="hljs-comment"># 단계별 메모리 관리</span>
 base_model = load_base_model()
@@ -627,22 +627,22 @@ final_image = refiner_model.refine(latents)</code></pre><h3 id="2-ollama-json-">
         new_width = <span class="hljs-built_in">int</span>(width * scale)
         new_height = <span class="hljs-built_in">int</span>(height * scale)
         <span class="hljs-comment"># Lanczos 리샘플링으로 품질 유지</span>
-        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)</code></pre><h2 id="--163"><a href="#--163" class="header-anchor"></a>성능 최적화 경험</h2><h3 id="--164"><a href="#--164" class="header-anchor"></a>배치 처리 최적화</h3><p>여러 이미지를 연속 생성할 때 모델 로딩 시간을 줄이기 위해 싱글톤 패턴을 검토했지만, 메모리 관리의 복잡성 때문에 단순한 방식을 유지했습니다:</p>
+        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)</code></pre><h2 id="--165"><a href="#--165" class="header-anchor"></a>성능 최적화 경험</h2><h3 id="--166"><a href="#--166" class="header-anchor"></a>배치 처리 최적화</h3><p>여러 이미지를 연속 생성할 때 모델 로딩 시간을 줄이기 위해 싱글톤 패턴을 검토했지만, 메모리 관리의 복잡성 때문에 단순한 방식을 유지했습니다:</p>
 <pre><code class="hljs python"><span class="hljs-comment"># 각 이미지 생성 시마다 모델 로딩 (단순하지만 안전)</span>
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_image_with_local</span>(<span class="hljs-params">prompt_data</span>):
     pipe = StableDiffusionXLPipeline.from_pretrained(...)
     image = pipe(prompt_data[<span class="hljs-string">&quot;prompt&quot;</span>])
-    <span class="hljs-keyword">return</span> image</code></pre><h3 id="--165"><a href="#--165" class="header-anchor"></a>네트워크 요청 최적화</h3><p>API 모델 사용 시 속도 제한을 고려한 대기 시간 추가:</p>
+    <span class="hljs-keyword">return</span> image</code></pre><h3 id="--167"><a href="#--167" class="header-anchor"></a>네트워크 요청 최적화</h3><p>API 모델 사용 시 속도 제한을 고려한 대기 시간 추가:</p>
 <pre><code class="hljs python"><span class="hljs-comment"># API 모델 사용 후 대기</span>
 <span class="hljs-keyword">if</span> actual_model_used <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> (<span class="hljs-string">&quot;local&quot;</span>, <span class="hljs-string">&quot;flux&quot;</span>) <span class="hljs-keyword">and</span> i &lt; count - <span class="hljs-number">1</span>:
     wait_time = random.randint(<span class="hljs-number">2</span>, <span class="hljs-number">5</span>)
     <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;⏱️ <span class="hljs-subst">{wait_time}</span>초 대기 중...&quot;</span>)
-    time.sleep(wait_time)</code></pre><h2 id="--166"><a href="#--166" class="header-anchor"></a>프로젝트 회고 및 개선 방향</h2><h3 id="--167"><a href="#--167" class="header-anchor"></a>만족스러웠던 점</h3><ol>
+    time.sleep(wait_time)</code></pre><h2 id="--168"><a href="#--168" class="header-anchor"></a>프로젝트 회고 및 개선 방향</h2><h3 id="--169"><a href="#--169" class="header-anchor"></a>만족스러웠던 점</h3><ol>
 <li><strong>비용 효율성</strong>: 로컬 GPU 활용으로 API 비용 없이 대량 생성 가능</li>
 <li><strong>유연성</strong>: 다양한 모델과 프롬프트 모드 지원으로 다양한 시나리오 대응</li>
 <li><strong>자동화</strong>: 프롬프트 생성부터 메타데이터 관리까지 전체 파이프라인 자동화</li>
 </ol>
-<h3 id="--168"><a href="#--168" class="header-anchor"></a>아쉬웠던 점과 개선 방향</h3><ol>
+<h3 id="--170"><a href="#--170" class="header-anchor"></a>아쉬웠던 점과 개선 방향</h3><ol>
 <li><p><strong>속도</strong>: 로컬 모델의 생성 속도가 API 모델 대비 느림</p>
 <ul>
 <li><strong>개선 방안</strong>: 더 빠른 GPU나 모델 병렬 처리 검토</li>
@@ -659,7 +659,7 @@ final_image = refiner_model.refine(latents)</code></pre><h3 id="2-ollama-json-">
 </ul>
 </li>
 </ol>
-<h3 id="--169"><a href="#--169" class="header-anchor"></a>향후 계획</h3><ol>
+<h3 id="--171"><a href="#--171" class="header-anchor"></a>향후 계획</h3><ol>
 <li><strong>웹 인터페이스 개발</strong>: 명령줄이 아닌 웹 기반 인터페이스</li>
 <li><strong>품질 평가 시스템</strong>: 생성된 이미지의 품질을 자동 평가하는 모듈</li>
 <li><strong>데이터베이스 연동</strong>: 생성된 이미지와 메타데이터를 체계적으로 관리</li>
