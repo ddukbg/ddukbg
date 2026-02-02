@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nginx Ingress에서 Gateway API(HTTPRoute)로 이관하기: 실전 마이그레이션 가이드 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>Nginx Ingress에서 Gateway API(HTTPRoute)로 이관하기: 실전 마이그레이션 가이드</h1>
+    <p><small>2025-11-12 4:20 PM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="nginx-ingress-gateway-api-httproute-"><a href="#nginx-ingress-gateway-api-httproute-" class="header-anchor"></a>Nginx Ingress에서 Gateway API(HTTPRoute)로 이관하기</h1><blockquote>
+<p>요약: “Nginx Ingress가 당장 ‘갑자기’ 사라진다”기보다는, <strong>Kubernetes 네트워킹 표준이 Ingress → Gateway API로 이동</strong>하고 있고, 일부 배포판/조합에서는 <strong>Ingress 컨트롤러 유지보수·정책 변화·운영 부담</strong>이 커지면서 Gateway API 기반으로의 전환이 점점 더 합리적인 선택이 되고 있습니다.</p>
+<p>이 글은 <strong>NGINX Ingress(ingress-nginx) 사용 클러스터</strong>를 기준으로, <strong>Gateway API(Gateway/HTTPRoute)</strong> 로 안전하게 이관하는 실전 가이드입니다.</p>
+</blockquote>
+<hr>
+<h2 id="0-gateway-api-"><a href="#0-gateway-api-" class="header-anchor"></a>0) 왜 Gateway API인가?</h2><p>Ingress는 “간단한 HTTP 라우팅”에는 좋지만, 다음과 같은 한계가 있습니다.</p>
+<ul>
+<li><strong>표현력 부족</strong>: 세밀한 라우팅(헤더/메서드/쿼리), 트래픽 분할, 정책 적용 등은 컨트롤러별 annotation에 의존</li>
+<li><strong>역할 분리 어려움</strong>: 네트워크 플랫폼 팀(게이트웨이 운영)과 앱 팀(라우팅 선언) 경계가 애매</li>
+<li><strong>표준화 부족</strong>: controller마다 annotation/CRD가 달라 이관이 어려움</li>
+</ul>
+<p>Gateway API는 이를 개선합니다.</p>
+<ul>
+<li><strong>표준 CRD</strong>: <code>GatewayClass</code>, <code>Gateway</code>, <code>HTTPRoute</code>, <code>ReferenceGrant</code> 등</li>
+<li><strong>역할 분리</strong>: 플랫폼 팀은 <code>Gateway</code>/LB/인증서, 앱 팀은 <code>HTTPRoute</code></li>
+<li><strong>확장성</strong>: 정책(Policy) 리소스, 트래픽 분할, 멀티 게이트웨이 시나리오에 유리</li>
+</ul>
+<hr>
+<h2 id="1-ingress-"><a href="#1-ingress-" class="header-anchor"></a>1) 현재 Ingress 리소스/기능 인벤토리 만들기</h2><p>이관 전에 “우리가 무엇을 쓰고 있는지”를 먼저 명확히 해야 합니다.</p>
+<h3 id="1-1-ingress-"><a href="#1-1-ingress-" class="header-anchor"></a>1-1. Ingress 목록</h3><pre><code class="hljs bash">kubectl get ingress -A
+kubectl get ingress -A -o yaml &gt; all-ingress.yaml</code></pre><h3 id="1-2-nginx-ingress-annotation-"><a href="#1-2-nginx-ingress-annotation-" class="header-anchor"></a>1-2. NGINX Ingress 주요 annotation 사용 여부 점검</h3><p>예:</p>
+<ul>
+<li><code>nginx.ingress.kubernetes.io/rewrite-target</code></li>
+<li><code>nginx.ingress.kubernetes.io/ssl-redirect</code></li>
+<li><code>nginx.ingress.kubernetes.io/proxy-body-size</code></li>
+<li><code>nginx.ingress.kubernetes.io/canary</code>, <code>canary-weight</code></li>
+<li><code>nginx.ingress.kubernetes.io/auth-*</code> (basic, oauth2-proxy)</li>
+</ul>
+<p>이 annotation들이 Gateway API에서 <strong>어떤 표준/확장 기능으로 치환되는지</strong>가 핵심입니다.</p>
+<hr>
+<h2 id="2-gateway-api-crd-controller-"><a href="#2-gateway-api-crd-controller-" class="header-anchor"></a>2) Gateway API 설치 (CRD + Controller)</h2><p>Gateway API는 CRD만 설치한다고 동작하지 않습니다. <strong>Gateway API를 구현하는 컨트롤러</strong>가 필요합니다.</p>
+<h3 id="--118"><a href="#--118" class="header-anchor"></a>선택지 예시</h3><ul>
+<li><strong>NGINX Gateway Fabric</strong> (NGINX 기반 Gateway API)</li>
+<li><strong>Cilium Gateway API</strong> (Cilium/eBPF 스택과 결합)</li>
+<li><strong>Envoy Gateway</strong> (Envoy 기반)</li>
+<li><strong>Istio</strong> (Gateway API 지원)</li>
+<li>클라우드 LB 컨트롤러(예: AWS Load Balancer Controller)는 Ingress/EKS ALB 중심이므로 조합/요구사항에 따라 판단</li>
+</ul>
+<blockquote>
+<p>여기서는 “개념과 매니페스트 구조”를 기준으로 설명합니다. 실제 컨트롤러 설치 방식(Helm 값 등)은 사용 솔루션에 맞춰 적용하세요.</p>
+</blockquote>
+<hr>
+<h2 id="3-ingress-httproute-"><a href="#3-ingress-httproute-" class="header-anchor"></a>3) Ingress → HTTPRoute 매핑 규칙</h2><h3 id="3-1-ingress-"><a href="#3-1-ingress-" class="header-anchor"></a>3-1. Ingress의 핵심 요소</h3><ul>
+<li>Host (<code>spec.rules.host</code>)</li>
+<li>Path (<code>spec.rules.http.paths</code>)</li>
+<li>Backend Service/Port</li>
+<li>TLS (<code>spec.tls</code>)</li>
+</ul>
+<h3 id="3-2-gateway-api-"><a href="#3-2-gateway-api-" class="header-anchor"></a>3-2. Gateway API의 핵심 요소</h3><ul>
+<li><code>GatewayClass</code>: 어떤 컨트롤러가 관리하는지</li>
+<li><code>Gateway</code>: 실제 “진입점”(Listener: HTTP/HTTPS, port, hostname)</li>
+<li><code>HTTPRoute</code>: 라우팅 규칙(호스트/경로/헤더/백엔드)</li>
+</ul>
+<hr>
+<h2 id="4-ingress-httproute-"><a href="#4-ingress-httproute-" class="header-anchor"></a>4) 예제: 단순 Ingress를 HTTPRoute로 바꾸기</h2><h3 id="-ingress-"><a href="#-ingress-" class="header-anchor"></a>기존 Ingress 예시</h3><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">networking.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Ingress</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">app</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">app</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">ingressClassName:</span> <span class="hljs-string">nginx</span>
+  <span class="hljs-attr">rules:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">host:</span> <span class="hljs-string">app.example.com</span>
+    <span class="hljs-attr">http:</span>
+      <span class="hljs-attr">paths:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/api</span>
+        <span class="hljs-attr">pathType:</span> <span class="hljs-string">Prefix</span>
+        <span class="hljs-attr">backend:</span>
+          <span class="hljs-attr">service:</span>
+            <span class="hljs-attr">name:</span> <span class="hljs-string">app-svc</span>
+            <span class="hljs-attr">port:</span>
+              <span class="hljs-attr">number:</span> <span class="hljs-number">80</span>
+  <span class="hljs-attr">tls:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">hosts:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">app.example.com</span>
+    <span class="hljs-attr">secretName:</span> <span class="hljs-string">app-tls</span></code></pre><h3 id="gateway-httproute-"><a href="#gateway-httproute-" class="header-anchor"></a>Gateway + HTTPRoute로 전환</h3><h4 id="-1-gatewayclass-"><a href="#-1-gatewayclass-" class="header-anchor"></a>(1) GatewayClass (플랫폼 팀 영역)</h4><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">gateway.networking.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">GatewayClass</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">my-gwclass</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">controllerName:</span> <span class="hljs-string">example.io/gateway-controller</span></code></pre><blockquote>
+<p><code>controllerName</code>은 사용하는 Gateway 컨트롤러 문서에 맞춰야 합니다.</p>
+</blockquote>
+<h4 id="-2-gateway-"><a href="#-2-gateway-" class="header-anchor"></a>(2) Gateway (플랫폼 팀 영역)</h4><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">gateway.networking.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Gateway</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">edge</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">gateway</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">gatewayClassName:</span> <span class="hljs-string">my-gwclass</span>
+  <span class="hljs-attr">listeners:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">https</span>
+    <span class="hljs-attr">protocol:</span> <span class="hljs-string">HTTPS</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">443</span>
+    <span class="hljs-attr">hostname:</span> <span class="hljs-string">app.example.com</span>
+    <span class="hljs-attr">tls:</span>
+      <span class="hljs-attr">mode:</span> <span class="hljs-string">Terminate</span>
+      <span class="hljs-attr">certificateRefs:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">kind:</span> <span class="hljs-string">Secret</span>
+        <span class="hljs-attr">name:</span> <span class="hljs-string">app-tls</span>
+        <span class="hljs-attr">namespace:</span> <span class="hljs-string">app</span></code></pre><p><strong>주의:</strong> 다른 네임스페이스의 Secret을 참조하려면 컨트롤러/정책에 따라 <code>ReferenceGrant</code>가 필요할 수 있습니다.</p>
+<h4 id="-3-referencegrant-"><a href="#-3-referencegrant-" class="header-anchor"></a>(3) ReferenceGrant (필요 시)</h4><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">gateway.networking.k8s.io/v1beta1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">ReferenceGrant</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">allow-gateway-to-app-tls</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">app</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">from:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">group:</span> <span class="hljs-string">gateway.networking.k8s.io</span>
+    <span class="hljs-attr">kind:</span> <span class="hljs-string">Gateway</span>
+    <span class="hljs-attr">namespace:</span> <span class="hljs-string">gateway</span>
+  <span class="hljs-attr">to:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">group:</span> <span class="hljs-string">&quot;&quot;</span>
+    <span class="hljs-attr">kind:</span> <span class="hljs-string">Secret</span></code></pre><h4 id="-4-httproute-"><a href="#-4-httproute-" class="header-anchor"></a>(4) HTTPRoute (앱 팀 영역)</h4><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">gateway.networking.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">HTTPRoute</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">app-route</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">app</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">parentRefs:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">edge</span>
+    <span class="hljs-attr">namespace:</span> <span class="hljs-string">gateway</span>
+  <span class="hljs-attr">hostnames:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">app.example.com</span>
+  <span class="hljs-attr">rules:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">matches:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span>
+        <span class="hljs-attr">type:</span> <span class="hljs-string">PathPrefix</span>
+        <span class="hljs-attr">value:</span> <span class="hljs-string">/api</span>
+    <span class="hljs-attr">backendRefs:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app-svc</span>
+      <span class="hljs-attr">port:</span> <span class="hljs-number">80</span></code></pre><hr>
+<h2 id="5-nginx-annotation-"><a href="#5-nginx-annotation-" class="header-anchor"></a>5) 자주 쓰는 NGINX annotation 대체 전략</h2><h3 id="5-1-ssl-redirect"><a href="#5-1-ssl-redirect" class="header-anchor"></a>5-1. SSL Redirect</h3><ul>
+<li>NGINX: <code>nginx.ingress.kubernetes.io/ssl-redirect: &quot;true&quot;</code></li>
+<li>Gateway API: 보통 HTTPS listener만 열고 HTTP listener는 301 redirect 정책(컨트롤러별)로 처리</li>
+</ul>
+<p><strong>패턴</strong></p>
+<ul>
+<li><code>Gateway</code>에 <code>HTTP(80)</code> + <code>HTTPS(443)</code> 둘 다 Listener를 만들고</li>
+<li>HTTP는 Redirect 정책으로 HTTPS로 이동</li>
+</ul>
+<blockquote>
+<p>Redirect는 표준화 진행 중인 영역이거나 컨트롤러별 Policy로 제공됩니다.</p>
+</blockquote>
+<h3 id="5-2-rewrite-target"><a href="#5-2-rewrite-target" class="header-anchor"></a>5-2. Rewrite Target</h3><ul>
+<li>NGINX: <code>rewrite-target: /$1</code> 등</li>
+<li>Gateway API: <code>URLRewrite</code> 필터로 처리(지원 컨트롤러일 때)</li>
+</ul>
+<pre><code class="hljs yaml"><span class="hljs-attr">filters:</span>
+<span class="hljs-bullet">-</span> <span class="hljs-attr">type:</span> <span class="hljs-string">URLRewrite</span>
+  <span class="hljs-attr">urlRewrite:</span>
+    <span class="hljs-attr">path:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">ReplacePrefixMatch</span>
+      <span class="hljs-attr">replacePrefixMatch:</span> <span class="hljs-string">/</span></code></pre><h3 id="5-3-canary-traffic-split"><a href="#5-3-canary-traffic-split" class="header-anchor"></a>5-3. Canary / Traffic Split</h3><ul>
+<li>NGINX canary annotation</li>
+<li>Gateway API: <code>backendRefs</code>에 <code>weight</code>로 트래픽 분할</li>
+</ul>
+<pre><code class="hljs yaml"><span class="hljs-attr">backendRefs:</span>
+<span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app-svc</span>
+  <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
+  <span class="hljs-attr">weight:</span> <span class="hljs-number">90</span>
+<span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app-svc-canary</span>
+  <span class="hljs-attr">port:</span> <span class="hljs-number">80</span>
+  <span class="hljs-attr">weight:</span> <span class="hljs-number">10</span></code></pre><hr>
+<h2 id="6-"><a href="#6-" class="header-anchor"></a>6) 운영 관점 체크리스트</h2><h3 id="6-1-"><a href="#6-1-" class="header-anchor"></a>6-1. 롤아웃 전략</h3><ol>
+<li>Gateway API 컨트롤러를 <strong>기존 Ingress와 병행 설치</strong></li>
+<li>신규 도메인/경로부터 HTTPRoute로 전환</li>
+<li>동일 도메인 전환 시에는<ul>
+<li>DNS/ALB/LB 레벨에서 트래픽을 분할하거나</li>
+<li>기존 Ingress/새 Gateway로 <strong>별도 엔드포인트</strong>를 만들고 단계적 이동</li>
+</ul>
+</li>
+</ol>
+<h3 id="6-2-"><a href="#6-2-" class="header-anchor"></a>6-2. 관측성/로깅</h3><ul>
+<li>기존: NGINX access log</li>
+<li>전환 후: 컨트롤러별 metrics/log + (가능하면) OpenTelemetry</li>
+</ul>
+<h3 id="6-3-"><a href="#6-3-" class="header-anchor"></a>6-3. 정책/보안</h3><ul>
+<li>WAF, rate-limit, auth, IP allowlist 등은 컨트롤러별 Policy로 구현되는 경우가 많습니다.</li>
+<li>“표준 CRD + 컨트롤러 정책” 조합을 문서화해두면 팀 간 운영이 쉬워집니다.</li>
+</ul>
+<hr>
+<h2 id="7-"><a href="#7-" class="header-anchor"></a>7) 결론</h2><p>Ingress는 여전히 널리 쓰이지만, <strong>표준화·확장성·역할 분리</strong> 측면에서 Gateway API가 점점 더 주류가 되고 있습니다.</p>
+<ul>
+<li>Ingress → Gateway API 전환의 핵심은<ol>
+<li>리소스 매핑(Host/Path/TLS)</li>
+<li>annotation 의존 기능의 치환(Rewrite/Redirect/Canary/Policy)</li>
+<li>운영 전략(병행 → 단계적 전환)</li>
+</ol>
+</li>
+</ul>
+<p>다음 글에서는 실제로 <strong>ingress-nginx → (예: Envoy Gateway / Cilium Gateway API / NGINX Gateway Fabric)</strong> 중 하나를 선택해, Helm 값과 실운영 구성을 좀 더 “현실적인 매니페스트”로 정리해 보겠습니다.</p>
+<hr>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
