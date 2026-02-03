@@ -31,28 +31,22 @@ slug: gost-egress-proxy-for-closed-k8s
 
 ```mermaid
 flowchart LR
-  subgraph INTERNAL[내부 폐쇄망]
-    subgraph K8S[Kubernetes Cluster]
-      POD[특정 Pod
-(egress 허용 대상)]
-      SIDECAR[gost-client
-(HTTP/HTTPS 프록시 또는
-transparent redirect 수신)]
-      POD -->|HTTP/HTTPS or TCP| SIDECAR
+  subgraph INTERNAL["내부 폐쇄망"]
+    subgraph K8S["Kubernetes Cluster"]
+      POD["특정 Pod<br/>(egress 허용 대상)"]
+      SIDECAR["gost client (sidecar)<br/>- HTTP/HTTPS proxy<br/>- transparent redirect 수신"]
+      POD -->|"HTTP/HTTPS 또는 TCP"| SIDECAR
     end
   end
 
-  subgraph DMZ[DMZ 구역]
-    GDMZ[gost-server / gost-proxy
-(인증/TLS/체인)]
-    EGRESS[Outbound Proxy / NAT Gateway
-(허용목록, 로깅)]
+  subgraph DMZ["DMZ 구역"]
+    GDMZ["gost server (DMZ)<br/>(TLS/인증/체인)"]
+    EGRESS["Outbound Proxy 또는 NAT Gateway<br/>(허용목록, 로깅)"]
     GDMZ --> EGRESS
   end
 
-  INTERNET[(Internet)]
-
-  SIDECAR -->|허용된 단일 경로| GDMZ --> INTERNET
+  EGRESS --> INTERNET["Internet"]
+  SIDECAR -->|"허용된 단일 경로"| GDMZ
 ```
 
 구성 요소는 두 덩어리입니다.

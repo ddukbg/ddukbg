@@ -379,28 +379,22 @@
 <li>접근 제어/감사/로깅/허용 도메인 정책을 <strong>DMZ egress proxy</strong>에 집중한다</li>
 </ol>
 <h3 id="mermaid-"><a href="#mermaid-" class="header-anchor"></a>Mermaid: 전체 흐름(권장)</h3><div class="mermaid">flowchart LR
-  subgraph INTERNAL[내부 폐쇄망]
-    subgraph K8S[Kubernetes Cluster]
-      POD[특정 Pod
-(egress 허용 대상)]
-      SIDECAR[gost-client
-(HTTP/HTTPS 프록시 또는
-transparent redirect 수신)]
-      POD -->|HTTP/HTTPS or TCP| SIDECAR
+  subgraph INTERNAL["내부 폐쇄망"]
+    subgraph K8S["Kubernetes Cluster"]
+      POD["특정 Pod<br/>(egress 허용 대상)"]
+      SIDECAR["gost client (sidecar)<br/>- HTTP/HTTPS proxy<br/>- transparent redirect 수신"]
+      POD -->|"HTTP/HTTPS 또는 TCP"| SIDECAR
     end
   end
 
-  subgraph DMZ[DMZ 구역]
-    GDMZ[gost-server / gost-proxy
-(인증/TLS/체인)]
-    EGRESS[Outbound Proxy / NAT Gateway
-(허용목록, 로깅)]
+  subgraph DMZ["DMZ 구역"]
+    GDMZ["gost server (DMZ)<br/>(TLS/인증/체인)"]
+    EGRESS["Outbound Proxy 또는 NAT Gateway<br/>(허용목록, 로깅)"]
     GDMZ --> EGRESS
   end
 
-  INTERNET[(Internet)]
-
-  SIDECAR -->|허용된 단일 경로| GDMZ --> INTERNET</div><p>구성 요소는 두 덩어리입니다.</p>
+  EGRESS --> INTERNET["Internet"]
+  SIDECAR -->|"허용된 단일 경로"| GDMZ</div><p>구성 요소는 두 덩어리입니다.</p>
 <ul>
 <li><strong>클러스터 내부</strong>: Pod 옆(사이드카) 또는 노드 레벨에서 트래픽을 받아 DMZ로 전달</li>
 <li><strong>DMZ</strong>: 외부로 나가는 유일한 출구(Egress) 역할 + 통제</li>
