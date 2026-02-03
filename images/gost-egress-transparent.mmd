@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant App as App Container
+  participant Net as Pod netns/iptables
+  participant Gost as gost (sidecar)
+  participant DMZ as DMZ gost
+  participant Ext as External
+
+  App->>Ext: TCP connect (original intent)
+  Net-->>Gost: iptables REDIRECT to 127.0.0.1:15001
+  Gost->>DMZ: relay (h2/ssh/quic etc)
+  DMZ->>Ext: actual outbound connection

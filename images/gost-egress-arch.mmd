@@ -1,0 +1,5 @@
+flowchart LR
+  POD[Pod egress allowed] --> SIDECAR[gost client sidecar]
+  SIDECAR --> DMZ[gost server in DMZ]
+  DMZ --> EGRESS[Outbound Proxy or NAT Gateway]
+  EGRESS --> INET[Internet]

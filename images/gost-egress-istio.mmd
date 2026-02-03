@@ -1,0 +1,5 @@
+flowchart LR
+  POD[Workload Pod] --> ENVOY[Sidecar Envoy]
+  ENVOY --> EG[Istio Egress Gateway]
+  EG --> OUT[DMZ / Outbound NAT or Proxy]
+  OUT --> INTERNET[Internet]

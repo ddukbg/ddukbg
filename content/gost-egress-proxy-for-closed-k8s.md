@@ -29,13 +29,9 @@ slug: gost-egress-proxy-for-closed-k8s
 
 ### Mermaid: 전체 흐름(권장)
 
-```mermaid
-flowchart LR
-  POD[Pod (egress allowed)] --> SIDECAR[gost client sidecar]
-  SIDECAR --> DMZ[gost server in DMZ]
-  DMZ --> EGRESS[Outbound Proxy or NAT Gateway]
-  EGRESS --> INET[Internet]
-```
+![gost egress architecture](https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-arch.png)
+
+> Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.
 
 구성 요소는 두 덩어리입니다.
 
@@ -166,19 +162,9 @@ HTTP/HTTPS 프록시는 애플리케이션이 환경변수를 따라줘야 합�
 
 ### Mermaid: 투명 프록시(리다이렉트) 흐름
 
-```mermaid
-sequenceDiagram
-  participant App as App Container
-  participant Net as Pod netns/iptables
-  participant Gost as gost (sidecar)
-  participant DMZ as DMZ gost
-  participant Ext as External
+![transparent proxy redirect flow](https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-transparent.png)
 
-  App->>Ext: TCP connect (원래는 직접 나가려 함)
-  Net-->>Gost: iptables REDIRECT to 127.0.0.1:15001
-  Gost->>DMZ: proxy/relay (h2/ssh/quic 등)
-  DMZ->>Ext: 실제 외부 연결
-```
+> Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.
 
 ### 구현 패턴
 
@@ -324,13 +310,9 @@ Istio는 “서비스 메시”이지만, egress 통제 패턴이 잘 정리되�
 
 ### Istio Egress Gateway로 구현하는 그림
 
-```mermaid
-flowchart LR
-  POD[Workload Pod] --> ENVOY[Sidecar Envoy]
-  ENVOY --> EG[Istio Egress Gateway]
-  EG --> OUT[DMZ/Outbound NAT or Proxy]
-  OUT --> INTERNET[(Internet)]
-```
+![istio egress gateway flow](https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-istio.png)
+
+> Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.
 
 ### Istio 방식의 장점
 

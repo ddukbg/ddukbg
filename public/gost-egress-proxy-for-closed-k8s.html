@@ -378,11 +378,11 @@
 <li>외부로 나가야 하는 트래픽은 <strong>Pod → (클러스터 내 프록시 엔드포인트) → DMZ gost → Internet</strong> 단일 경로로 강제한다</li>
 <li>접근 제어/감사/로깅/허용 도메인 정책을 <strong>DMZ egress proxy</strong>에 집중한다</li>
 </ol>
-<h3 id="mermaid-"><a href="#mermaid-" class="header-anchor"></a>Mermaid: 전체 흐름(권장)</h3><div class="mermaid">flowchart LR
-  POD[Pod (egress allowed)] --> SIDECAR[gost client sidecar]
-  SIDECAR --> DMZ[gost server in DMZ]
-  DMZ --> EGRESS[Outbound Proxy or NAT Gateway]
-  EGRESS --> INET[Internet]</div><p>구성 요소는 두 덩어리입니다.</p>
+<h3 id="mermaid-"><a href="#mermaid-" class="header-anchor"></a>Mermaid: 전체 흐름(권장)</h3><p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-arch.png" alt="gost egress architecture"></p>
+<blockquote>
+<p>Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.</p>
+</blockquote>
+<p>구성 요소는 두 덩어리입니다.</p>
 <ul>
 <li><strong>클러스터 내부</strong>: Pod 옆(사이드카) 또는 노드 레벨에서 트래픽을 받아 DMZ로 전달</li>
 <li><strong>DMZ</strong>: 외부로 나가는 유일한 출구(Egress) 역할 + 통제</li>
@@ -478,17 +478,11 @@ gost -L=h2://:443 -F=http://corp-outbound-proxy.dmz:3128</code></pre><blockquote
 <li>프록시 설정이 애플리케이션마다 달라 표준화가 어렵다</li>
 </ul>
 <p>이때는 <strong>Pod 네트워크에서 특정 목적지 트래픽을 강제로 로컬 프록시로 리다이렉트(iptables redirect)</strong> 하는 방식이 필요합니다.</p>
-<h3 id="mermaid--2"><a href="#mermaid--2" class="header-anchor"></a>Mermaid: 투명 프록시(리다이렉트) 흐름</h3><div class="mermaid">sequenceDiagram
-  participant App as App Container
-  participant Net as Pod netns/iptables
-  participant Gost as gost (sidecar)
-  participant DMZ as DMZ gost
-  participant Ext as External
-
-  App->>Ext: TCP connect (원래는 직접 나가려 함)
-  Net-->>Gost: iptables REDIRECT to 127.0.0.1:15001
-  Gost->>DMZ: proxy/relay (h2/ssh/quic 등)
-  DMZ->>Ext: 실제 외부 연결</div><h3 id="--115"><a href="#--115" class="header-anchor"></a>구현 패턴</h3><ul>
+<h3 id="mermaid--2"><a href="#mermaid--2" class="header-anchor"></a>Mermaid: 투명 프록시(리다이렉트) 흐름</h3><p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-transparent.png" alt="transparent proxy redirect flow"></p>
+<blockquote>
+<p>Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.</p>
+</blockquote>
+<h3 id="--115"><a href="#--115" class="header-anchor"></a>구현 패턴</h3><ul>
 <li><strong>sidecar gost</strong>는 로컬 포트를 하나 열어 “리다이렉트된 트래픽”을 받습니다.</li>
 <li><strong>initContainer</strong> 또는 privileged helper가 Pod netns 안에서 iptables 규칙을 넣어
 특정 트래픽을 gost로 리다이렉트합니다.</li>
@@ -605,11 +599,11 @@ gost -L=h2://:443 -F=http://corp-outbound-proxy.dmz:3128</code></pre><blockquote
 <hr>
 <h2 id="-istio-egress-gateway-"><a href="#-istio-egress-gateway-" class="header-anchor"></a>대안: Istio로도 가능할까? (Egress Gateway)</h2><p>결론부터 말하면 <strong>가능한 경우가 많습니다.</strong>
 Istio는 “서비스 메시”이지만, egress 통제 패턴이 잘 정리되어 있습니다.</p>
-<h3 id="istio-egress-gateway-"><a href="#istio-egress-gateway-" class="header-anchor"></a>Istio Egress Gateway로 구현하는 그림</h3><div class="mermaid">flowchart LR
-  POD[Workload Pod] --> ENVOY[Sidecar Envoy]
-  ENVOY --> EG[Istio Egress Gateway]
-  EG --> OUT[DMZ/Outbound NAT or Proxy]
-  OUT --> INTERNET[(Internet)]</div><h3 id="istio-"><a href="#istio-" class="header-anchor"></a>Istio 방식의 장점</h3><ul>
+<h3 id="istio-egress-gateway-"><a href="#istio-egress-gateway-" class="header-anchor"></a>Istio Egress Gateway로 구현하는 그림</h3><p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/gost-egress-istio.png" alt="istio egress gateway flow"></p>
+<blockquote>
+<p>Mermaid 렌더러 호환성 이슈가 있어 다이어그램은 정적 이미지로 고정했습니다.</p>
+</blockquote>
+<h3 id="istio-"><a href="#istio-" class="header-anchor"></a>Istio 방식의 장점</h3><ul>
 <li>iptables redirect/sidecar 패턴이 표준화되어 있음(운영 레퍼런스가 많음)</li>
 <li>ServiceEntry / VirtualService / DestinationRule로 정책을 선언적으로 관리</li>
 <li>관측성(메트릭/트레이싱)과 인증(mTLS) 연계가 쉬움</li>
