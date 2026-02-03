@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>폐쇄망 Kubernetes에서 특정 Pod만 외부 통신시키기: gost 기반 DMZ Egress Proxy (HTTP/HTTPS + 투명 프록시) - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>폐쇄망 Kubernetes에서 특정 Pod만 외부 통신시키기: gost 기반 DMZ Egress Proxy (HTTP/HTTPS + 투명 프록시)</h1>
+    <p><small>2026-02-03 12:55 PM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="-kubernetes-pod-gost-dmz-egress-proxy"><a href="#-kubernetes-pod-gost-dmz-egress-proxy" class="header-anchor"></a>폐쇄망 Kubernetes에서 특정 Pod만 외부 통신시키기: gost 기반 DMZ Egress Proxy</h1><p>폐쇄망(내부망) Kubernetes 환경에서는 보통 <strong>클러스터 전체 egress를 막아야</strong> 합니다.
+하지만 현실에서는 다음 같은 요구가 종종 생깁니다.</p>
+<ul>
+<li>특정 애플리케이션 Pod만 외부 API(결제/지도/알림), Git, 패키지 리포지토리, 이미지 레지스트리 등에 접근해야 한다</li>
+<li>외부 통신은 반드시 <strong>DMZ 구역의 승인된 프록시/중계</strong>를 통해서만 나가야 한다</li>
+<li>가능하면 <strong>HTTP/HTTPS 프록시</strong>로 통제하고, 앱 수정이 어려운 경우에는 <strong>투명(transparent) 프록시</strong>가 필요하다</li>
+</ul>
+<p>이 글에서는 <a href="https://github.com/ginuerzh/gost">gost (GO Simple Tunnel)</a>을 활용해,
+<strong>내부 폐쇄 K8s의 특정 Pod만 외부로 통신시키는 구조</strong>와 <strong>구축 방법</strong>을 기술적으로 정리합니다.
+마지막에는 <strong>Istio로 비슷한 요구를 해결하는 대안</strong>도 비교 관점으로 덧붙입니다.</p>
+<hr>
+<h2 id="--113"><a href="#--113" class="header-anchor"></a>목표 아키텍처(요약)</h2><p>핵심 아이디어는 간단합니다.</p>
+<ol>
+<li>내부 K8s는 기본적으로 외부 egress를 막는다</li>
+<li>외부로 나가야 하는 트래픽은 <strong>Pod → (클러스터 내 프록시 엔드포인트) → DMZ gost → Internet</strong> 단일 경로로 강제한다</li>
+<li>접근 제어/감사/로깅/허용 도메인 정책을 <strong>DMZ egress proxy</strong>에 집중한다</li>
+</ol>
+<h3 id="mermaid-"><a href="#mermaid-" class="header-anchor"></a>Mermaid: 전체 흐름(권장)</h3><div class="mermaid">flowchart LR
+  subgraph INTERNAL[내부 폐쇄망]
+    subgraph K8S[Kubernetes Cluster]
+      POD[특정 Pod
+(egress 허용 대상)]
+      SIDECAR[gost-client
+(HTTP/HTTPS 프록시 또는
+transparent redirect 수신)]
+      POD -->|HTTP/HTTPS or TCP| SIDECAR
+    end
+  end
+
+  subgraph DMZ[DMZ 구역]
+    GDMZ[gost-server / gost-proxy
+(인증/TLS/체인)]
+    EGRESS[Outbound Proxy / NAT Gateway
+(허용목록, 로깅)]
+    GDMZ --> EGRESS
+  end
+
+  INTERNET[(Internet)]
+
+  SIDECAR -->|허용된 단일 경로| GDMZ --> INTERNET</div><p>구성 요소는 두 덩어리입니다.</p>
+<ul>
+<li><strong>클러스터 내부</strong>: Pod 옆(사이드카) 또는 노드 레벨에서 트래픽을 받아 DMZ로 전달</li>
+<li><strong>DMZ</strong>: 외부로 나가는 유일한 출구(Egress) 역할 + 통제</li>
+</ul>
+<hr>
+<h2 id="gost-"><a href="#gost-" class="header-anchor"></a>gost를 쓰는 이유</h2><p>gost는 “프록시 + 터널 + 포트포워딩 + 체인(Proxy chain)”을 한 바이너리로 해결합니다.
+이 글에서 특히 유용한 포인트는 다음입니다.</p>
+<ul>
+<li>표준 <strong>HTTP/HTTPS/HTTP2/SOCKS5</strong> 프록시 지원</li>
+<li><strong>Proxy chain(-F)</strong> 로 “내부 → DMZ → (외부망 프록시/게이트웨이)”처럼 다단 구성이 쉬움</li>
+<li><strong>redirect(transparent proxy)</strong> 류 패턴에 사용 가능 (앱 수정이 어려울 때 유용)</li>
+<li>운영 시 단일 바이너리로 배포/업데이트가 간단</li>
+</ul>
+<p>참고: gost 문서는 기능이 많아 처음 보면 복잡하지만, “우리 요구”는 크게 두 케이스로 정리할 수 있습니다.</p>
+<ul>
+<li>케이스 A: 애플리케이션이 프록시 설정 가능 → HTTP/HTTPS 프록시</li>
+<li>케이스 B: 애플리케이션 수정 불가/다양한 TCP 통신 → 투명 프록시(redirect)</li>
+</ul>
+<hr>
+<h2 id="--114"><a href="#--114" class="header-anchor"></a>사전 조건 / 보안 원칙</h2><p>이 글은 다음 전제를 권장합니다.</p>
+<ul>
+<li><strong>기본 차단(Default deny egress)</strong>: 클러스터 전체 egress는 막고, 예외만 연다.</li>
+<li><strong>DMZ로만 egress 허용</strong>: Pod가 인터넷으로 직접 나가면 안 되고, DMZ의 gost(또는 egress gateway)만 도달 가능해야 한다.</li>
+<li><strong>DMZ에서 정책/감사</strong>: 외부 도메인 allowlist, 인증, TLS, 로그를 DMZ에서 수행한다.</li>
+</ul>
+<p>이렇게 하면 “특정 Pod만 외부 통신”을 만들 때도, 통제 지점이 분산되지 않습니다.</p>
+<hr>
+<h2 id="-a-http-https-"><a href="#-a-http-https-" class="header-anchor"></a>케이스 A) HTTP/HTTPS 프록시(앱이 프록시 설정 가능할 때)</h2><h3 id="1-pod-sidecar-"><a href="#1-pod-sidecar-" class="header-anchor"></a>1) 클러스터 내부: Pod 옆(sidecar)로 로컬 프록시 제공</h3><p>가장 구현/운영 난이도가 낮은 방식은 <strong>Sidecar gost</strong>를 두고,
+애플리케이션은 <code>HTTP_PROXY/HTTPS_PROXY</code> 를 <code>localhost</code> 로 향하게 하는 것입니다.</p>
+<ul>
+<li>장점: iptables/NAT 개입이 최소, 디버깅이 쉽다</li>
+<li>단점: 앱이 프록시 환경변수를 지원해야 한다</li>
+</ul>
+<h4 id="-deployment-"><a href="#-deployment-" class="header-anchor"></a>예시: Deployment(개념)</h4><pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">app-with-egress</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">app-with-egress</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">app-with-egress</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">containers:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app</span>
+          <span class="hljs-attr">image:</span> <span class="hljs-string">your/app:tag</span>
+          <span class="hljs-attr">env:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">HTTP_PROXY</span>
+              <span class="hljs-attr">value:</span> <span class="hljs-string">http://127.0.0.1:18080</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">HTTPS_PROXY</span>
+              <span class="hljs-attr">value:</span> <span class="hljs-string">http://127.0.0.1:18080</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">NO_PROXY</span>
+              <span class="hljs-attr">value:</span> <span class="hljs-string">&quot;.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">gost</span>
+          <span class="hljs-attr">image:</span> <span class="hljs-string">ginuerzh/gost:latest</span>
+          <span class="hljs-attr">args:</span>
+            <span class="hljs-comment"># 로컬에서 HTTP proxy를 열고(-L), DMZ gost로 전달(-F)</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;-L=http://:18080&quot;</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;-F=h2://dmz-gost.example.dmz:443?ping=30&quot;</span>
+          <span class="hljs-attr">ports:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-attr">containerPort:</span> <span class="hljs-number">18080</span></code></pre><p>여기서 포인트는 <code>-F</code> 입니다.</p>
+<ul>
+<li><code>-L=http://:18080</code> : Pod 내부(네임스페이스 네트워크)에서 HTTP 프록시를 엽니다.</li>
+<li><code>-F=h2://dmz-gost...</code> : 프록시 체인(포워드)을 DMZ gost로 보냅니다.<ul>
+<li>운영에서는 평문보다 <strong>h2/TLS</strong> 같은 암호화 채널을 권장합니다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-dmz-gost-egress"><a href="#2-dmz-gost-egress" class="header-anchor"></a>2) DMZ: gost 서버(또는 프록시)로 수신 후 외부로 egress</h3><p>DMZ에서는 “내부에서 온 연결을 받아 외부로 나가는” 역할을 합니다.
+가장 단순한 형태는 DMZ에서 gost를 HTTP 프록시로 열고, 내부가 거기로 붙는 구조입니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># DMZ 서버에서: h2(HTTP/2 터널) 리스닝</span>
+gost -L=h2://:443</code></pre><p>그리고 DMZ에서 실제 외부 통신을 어디로 보낼지는 환경마다 다릅니다.</p>
+<ul>
+<li>DMZ 서버가 직접 NAT 되어 인터넷으로 나가는 경우</li>
+<li>DMZ에서 또 다른 Outbound Proxy(사내 표준 프록시)로 반드시 나가야 하는 경우</li>
+</ul>
+<p>후자의 경우는 gost의 체인(-F)을 DMZ 쪽에 한 단계 더 넣는 식으로 구성할 수 있습니다.</p>
+<pre><code class="hljs bash"><span class="hljs-comment"># DMZ에서 외부 표준 프록시로 체인</span>
+gost -L=h2://:443 -F=http://corp-outbound-proxy.dmz:3128</code></pre><blockquote>
+<p>팁: DMZ Outbound Proxy에 도메인 allowlist / URL filtering / 사용자 인증 / 로깅을 집중시키면
+“K8s 내부에서 누가 어디로 나갔는지” 추적이 훨씬 쉬워집니다.</p>
+</blockquote>
+<hr>
+<h2 id="-b-transparent-"><a href="#-b-transparent-" class="header-anchor"></a>케이스 B) 투명(Transparent) 프록시가 필요한 경우</h2><p>HTTP/HTTPS 프록시는 애플리케이션이 환경변수를 따라줘야 합니다.
+하지만 현실에서는 다음 상황이 자주 발생합니다.</p>
+<ul>
+<li>라이브러리/레거시 앱이라 프록시 환경변수 지원이 불완전</li>
+<li>외부 통신이 HTTP가 아니라 <strong>일반 TCP</strong>(예: 특정 포트의 커스텀 프로토콜)</li>
+<li>프록시 설정이 애플리케이션마다 달라 표준화가 어렵다</li>
+</ul>
+<p>이때는 <strong>Pod 네트워크에서 특정 목적지 트래픽을 강제로 로컬 프록시로 리다이렉트(iptables redirect)</strong> 하는 방식이 필요합니다.</p>
+<h3 id="mermaid--2"><a href="#mermaid--2" class="header-anchor"></a>Mermaid: 투명 프록시(리다이렉트) 흐름</h3><div class="mermaid">sequenceDiagram
+  participant App as App Container
+  participant Net as Pod netns/iptables
+  participant Gost as gost (sidecar)
+  participant DMZ as DMZ gost
+  participant Ext as External
+
+  App->>Ext: TCP connect (원래는 직접 나가려 함)
+  Net-->>Gost: iptables REDIRECT to 127.0.0.1:15001
+  Gost->>DMZ: proxy/relay (h2/ssh/quic 등)
+  DMZ->>Ext: 실제 외부 연결</div><h3 id="--115"><a href="#--115" class="header-anchor"></a>구현 패턴</h3><ul>
+<li><strong>sidecar gost</strong>는 로컬 포트를 하나 열어 “리다이렉트된 트래픽”을 받습니다.</li>
+<li><strong>initContainer</strong> 또는 privileged helper가 Pod netns 안에서 iptables 규칙을 넣어
+특정 트래픽을 gost로 리다이렉트합니다.</li>
+</ul>
+<h4 id="-initcontainer-iptables-"><a href="#-initcontainer-iptables-" class="header-anchor"></a>예시(개념): initContainer로 iptables 설정</h4><blockquote>
+<p>주의: 실제로는 CNI, PSP/PSA 정책, Cilium/eBPF 여부, 커널 모듈 등에 따라 권한/구현이 달라집니다.
+아래는 “패턴”을 보여주기 위한 예시입니다.</p>
+</blockquote>
+<pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">app-transparent-egress</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">replicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">selector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">app-transparent-egress</span>
+  <span class="hljs-attr">template:</span>
+    <span class="hljs-attr">metadata:</span>
+      <span class="hljs-attr">labels:</span>
+        <span class="hljs-attr">app:</span> <span class="hljs-string">app-transparent-egress</span>
+    <span class="hljs-attr">spec:</span>
+      <span class="hljs-attr">initContainers:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">init-iptables</span>
+          <span class="hljs-attr">image:</span> <span class="hljs-string">ghcr.io/nicolaka/netshoot:latest</span>
+          <span class="hljs-attr">securityContext:</span>
+            <span class="hljs-attr">capabilities:</span>
+              <span class="hljs-attr">add:</span> [<span class="hljs-string">&quot;NET_ADMIN&quot;</span>]
+          <span class="hljs-attr">command:</span> [<span class="hljs-string">&quot;sh&quot;</span>, <span class="hljs-string">&quot;-c&quot;</span>]
+          <span class="hljs-attr">args:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">|
+              # 예: 443/80 목적지 트래픽을 로컬 15001로 리다이렉트
+              iptables -t nat -N GOST_REDIRECT || true
+              iptables -t nat -F GOST_REDIRECT
+</span>
+              <span class="hljs-comment"># 클러스터 내부 통신 제외(서비스/파드 CIDR은 환경에 맞게)</span>
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">GOST_REDIRECT</span> <span class="hljs-string">-d</span> <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><span class="hljs-string">/8</span> <span class="hljs-string">-j</span> <span class="hljs-string">RETURN</span>
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">GOST_REDIRECT</span> <span class="hljs-string">-d</span> <span class="hljs-number">172.16</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><span class="hljs-string">/12</span> <span class="hljs-string">-j</span> <span class="hljs-string">RETURN</span>
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">GOST_REDIRECT</span> <span class="hljs-string">-d</span> <span class="hljs-number">192.168</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><span class="hljs-string">/16</span> <span class="hljs-string">-j</span> <span class="hljs-string">RETURN</span>
+
+              <span class="hljs-comment"># 외부로 나가는 TCP 80/443만 잡아서 gost로</span>
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">GOST_REDIRECT</span> <span class="hljs-string">-p</span> <span class="hljs-string">tcp</span> <span class="hljs-string">--dport</span> <span class="hljs-number">80</span>  <span class="hljs-string">-j</span> <span class="hljs-string">REDIRECT</span> <span class="hljs-string">--to-ports</span> <span class="hljs-number">15001</span>
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">GOST_REDIRECT</span> <span class="hljs-string">-p</span> <span class="hljs-string">tcp</span> <span class="hljs-string">--dport</span> <span class="hljs-number">443</span> <span class="hljs-string">-j</span> <span class="hljs-string">REDIRECT</span> <span class="hljs-string">--to-ports</span> <span class="hljs-number">15001</span>
+
+              <span class="hljs-string">iptables</span> <span class="hljs-string">-t</span> <span class="hljs-string">nat</span> <span class="hljs-string">-A</span> <span class="hljs-string">OUTPUT</span> <span class="hljs-string">-p</span> <span class="hljs-string">tcp</span> <span class="hljs-string">-j</span> <span class="hljs-string">GOST_REDIRECT</span>
+
+      <span class="hljs-attr">containers:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app</span>
+          <span class="hljs-attr">image:</span> <span class="hljs-string">your/app:tag</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">gost</span>
+          <span class="hljs-attr">image:</span> <span class="hljs-string">ginuerzh/gost:latest</span>
+          <span class="hljs-attr">args:</span>
+            <span class="hljs-comment"># 15001로 들어온 트래픽을 DMZ로 전달하는 엔드포인트(예시)</span>
+            <span class="hljs-comment"># 실제로는 목적(HTTP/HTTPS/TCP) 및 gost 모드에 따라 -L 형식이 달라질 수 있음</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;-L=redirect://:15001&quot;</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;-F=h2://dmz-gost.example.dmz:443?ping=30&quot;</span></code></pre><p>위 예시는 개념적으로는 “Istio의 sidecar redirect”와 동일한 패턴입니다.
+즉, 앱이 몰라도 네트워크 레벨에서 트래픽을 옆 컨테이너로 우회시키는 방식입니다.</p>
+<h3 id="--116"><a href="#--116" class="header-anchor"></a>투명 프록시에서 반드시 신경쓸 것</h3><ul>
+<li><strong>예외 처리(RETURN)</strong>: 클러스터 내부(서비스/파드 CIDR) 트래픽까지 잡아버리면 장애가 납니다.</li>
+<li><strong>루프 방지</strong>: gost 자체의 아웃바운드 트래픽까지 다시 redirect 되지 않게 설계해야 합니다.<ul>
+<li>보통은 UID 기반 제외(owner match) 또는 별도 라우팅 테이블/마크를 사용합니다.</li>
+</ul>
+</li>
+<li><strong>권한/정책</strong>: NET_ADMIN 권한이 필요한 경우가 많아, 플랫폼 보안 정책과 충돌할 수 있습니다.</li>
+</ul>
+<hr>
+<h2 id="dmz-"><a href="#dmz-" class="header-anchor"></a>DMZ 구역 설계 포인트</h2><p>DMZ는 “외부 통신의 유일한 출구”이므로, 다음을 권장합니다.</p>
+<ol>
+<li><strong>고가용성</strong>: gost 서버를 2대 이상 + 로드밸런서(또는 Anycast/keepalived)</li>
+<li><strong>인증/암호화</strong>: 내부→DMZ 구간은 TLS/h2/ssh/quic 등 암호화 채널로</li>
+<li><strong>정책 집중</strong>: allowlist(도메인/IP), 포트 제한, 로그(누가/언제/어디로)</li>
+<li><strong>관측성</strong>: 접속 로그 + 오류율 + latency를 Prometheus/ELK로 수집</li>
+</ol>
+<hr>
+<h2 id="-kubernetes-pod-"><a href="#-kubernetes-pod-" class="header-anchor"></a>(중요) Kubernetes에서 “특정 Pod만 허용” 만드는 방법</h2><p>gost를 잘 깔아도, 클러스터 레벨 통제가 없으면 우회가 가능합니다.
+따라서 아래 2가지를 같이 가져가는 것을 권장합니다.</p>
+<h3 id="1-networkpolicy-egress-dmz-"><a href="#1-networkpolicy-egress-dmz-" class="header-anchor"></a>1) NetworkPolicy로 egress를 DMZ로만 열기</h3><p>예시(개념): 해당 앱 라벨을 가진 Pod만 DMZ IP/Port로 egress 허용</p>
+<pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">networking.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">NetworkPolicy</span>
+<span class="hljs-attr">metadata:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">allow-egress-to-dmz-gost</span>
+  <span class="hljs-attr">namespace:</span> <span class="hljs-string">default</span>
+<span class="hljs-attr">spec:</span>
+  <span class="hljs-attr">podSelector:</span>
+    <span class="hljs-attr">matchLabels:</span>
+      <span class="hljs-attr">app:</span> <span class="hljs-string">app-with-egress</span>
+  <span class="hljs-attr">policyTypes:</span> [<span class="hljs-string">&quot;Egress&quot;</span>]
+  <span class="hljs-attr">egress:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">to:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">ipBlock:</span>
+            <span class="hljs-attr">cidr:</span> <span class="hljs-number">203.0</span><span class="hljs-number">.113</span><span class="hljs-number">.10</span><span class="hljs-string">/32</span>   <span class="hljs-comment"># DMZ gost VIP/IP</span>
+      <span class="hljs-attr">ports:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">protocol:</span> <span class="hljs-string">TCP</span>
+          <span class="hljs-attr">port:</span> <span class="hljs-number">443</span></code></pre><blockquote>
+<p>실제로는 CNI가 NetworkPolicy를 지원해야 합니다(Cilium/Calico 등).</p>
+</blockquote>
+<h3 id="2-egress-"><a href="#2-egress-" class="header-anchor"></a>2) 노드/서브넷 라우팅에서 “인터넷 직접 egress”를 막기</h3><ul>
+<li>내부 노드 서브넷이 인터넷 NAT 라우트로 바로 나가지 않도록</li>
+<li>방화벽에서 내부 K8s 서브넷 → 인터넷을 차단하고, DMZ만 허용</li>
+</ul>
+<p>이 두 가지가 합쳐져야 “정말 특정 Pod만” 외부 통신이 가능해집니다.</p>
+<hr>
+<h2 id="--117"><a href="#--117" class="header-anchor"></a>운영 팁(실전)</h2><ul>
+<li><strong>헬스체크</strong>: DMZ gost에 <code>/healthz</code> 같은 HTTP 엔드포인트를 두기 어렵다면, TCP connect 체크를 별도로 둡니다.</li>
+<li><strong>timeout/keepalive</strong>: 장기 연결이 많은 서비스면 ping/keepalive 설정을 조정합니다.</li>
+<li><strong>로그</strong>: DMZ에서 최소한<ul>
+<li>Source(클러스터/네임스페이스/워크로드)</li>
+<li>Destination(도메인/IP/포트)</li>
+<li>결과(성공/실패/지연)
+를 남기도록 파이프라인을 설계합니다.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="-istio-egress-gateway-"><a href="#-istio-egress-gateway-" class="header-anchor"></a>대안: Istio로도 가능할까? (Egress Gateway)</h2><p>결론부터 말하면 <strong>가능한 경우가 많습니다.</strong>
+Istio는 “서비스 메시”이지만, egress 통제 패턴이 잘 정리되어 있습니다.</p>
+<h3 id="istio-egress-gateway-"><a href="#istio-egress-gateway-" class="header-anchor"></a>Istio Egress Gateway로 구현하는 그림</h3><div class="mermaid">flowchart LR
+  POD[Workload Pod] --> ENVOY[Sidecar Envoy]
+  ENVOY --> EG[Istio Egress Gateway]
+  EG --> OUT[DMZ/Outbound NAT or Proxy]
+  OUT --> INTERNET[(Internet)]</div><h3 id="istio-"><a href="#istio-" class="header-anchor"></a>Istio 방식의 장점</h3><ul>
+<li>iptables redirect/sidecar 패턴이 표준화되어 있음(운영 레퍼런스가 많음)</li>
+<li>ServiceEntry / VirtualService / DestinationRule로 정책을 선언적으로 관리</li>
+<li>관측성(메트릭/트레이싱)과 인증(mTLS) 연계가 쉬움</li>
+</ul>
+<h3 id="istio--2"><a href="#istio--2" class="header-anchor"></a>Istio 방식의 한계/주의</h3><ul>
+<li>L7(HTTP) 기반 정책은 강력하지만, <strong>모든 TCP 트래픽을 원하는 수준으로 제어</strong>하려면 설계가 복잡해질 수 있습니다.</li>
+<li>이미 Istio를 쓰고 있지 않다면, 도입 비용이 큽니다(사이드카 오버헤드 포함).</li>
+</ul>
+<h3 id="--118"><a href="#--118" class="header-anchor"></a>그래서 무엇을 선택할까?</h3><ul>
+<li>이미 Istio를 운영 중이고, egress 정책/관측성을 메시로 통합하고 싶다 → <strong>Istio Egress Gateway</strong></li>
+<li>Istio 없이 “특정 워크로드만 빠르게 egress 열기 + DMZ 단일 출구”가 목적 → <strong>gost + DMZ egress proxy</strong></li>
+<li>앱 수정이 어렵고 투명 프록시가 필요한 케이스가 많다 → <strong>(gost or Istio) redirect 기반 패턴</strong></li>
+</ul>
+<hr>
+<h2 id="--119"><a href="#--119" class="header-anchor"></a>마무리</h2><p>폐쇄망 K8s에서 외부 통신을 열 때 중요한 건 “열었다”가 아니라,</p>
+<ul>
+<li>누가(어떤 Pod/워크로드가)</li>
+<li>어디로(어떤 도메인/포트로)</li>
+<li>어떤 경로로(DMZ 단일 출구)</li>
+<li>어떤 정책으로(allowlist/로그/감사)</li>
+</ul>
+<p>를 <strong>운영 가능한 형태로 만드는 것</strong>입니다.</p>
+<p>gost는 이 요구를 비교적 낮은 복잡도로 구현할 수 있는 실전 도구이고,
+Istio는 이미 메시를 운영하는 조직이라면 더 강력한 정책/관측성을 제공할 수 있습니다.</p>
+<p>필요하시면 다음 확장도 같이 정리할 수 있습니다.</p>
+<ul>
+<li>도메인 기반 allowlist(특히 HTTPS SNI 기반)</li>
+<li>mTLS/인증서 운영(내부→DMZ 구간)</li>
+<li>HA 구성(Active/Standby 또는 LB)과 장애 시나리오</li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
