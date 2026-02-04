@@ -1,0 +1,10 @@
+graph LR
+    User["User"] -->|Browser| Web["Web UI (HTML/JS)"]
+    Web -->|"POST /api/tts"| API["FastAPI Server"]
+    subgraph Backend ["Backend (Python)"]
+        API -->|"Async Queue"| Limiter["Concurrency Limiter"]
+        Limiter -->|"Load/Inference"| Model["Qwen3-TTS Model"]
+        Model -->|"HuggingFace"| HF["Weights (0.6B / 1.7B)"]
+    end
+    Model -->|"WAV bytes"| API
+    API -->|"Audio Playback"| Web
