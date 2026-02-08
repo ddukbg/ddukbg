@@ -16,7 +16,7 @@
 
 I'm a **DevOps Engineer** who thrives on building **scalable, secure, and cost-efficient systems**. My focus is on **maximizing impact with minimal resources**, automating everything that can be automated, and designing **lean CI/CD pipelines** and modern cloud infrastructure.
 
-While I'm not a traditional full-time developer, I make full use of **AI tools and automation** to develop, learn, and ship faster—turning ideas into working products as efficiently as possible. I also enjoy **vibe coding**, blending creative live coding sessions with innovative technology to spark new ideas and engaging solutions.
+While I'm not a traditional full-time developer, I make full use of **AI tools and automation** to develop, learn, and ship faster—turning ideas into working products as efficiently as possible. I also enjoy **agentic coding**, blending creative live coding sessions with innovative technology to spark new ideas and engaging solutions.
 
 My personal projects are primarily developed under my **ddukbg** account, while engineer-friendly projects for broader audiences are actively maintained at **[containerelic](https://github.com/containerelic)**.
 
