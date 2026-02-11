@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qwen3-TTS 기술 분석 및 qwen3-tts-studio 구축기 - </title>
+  <title>Polymarket 차익거래(Arbitrage) 봇 구축을 위한 기술 분석 및 설계 - </title>
   <style>
     body {
       background-color: #008080; /* Teal */
@@ -354,66 +354,89 @@
           
           <div class="explorer-content">
             <header>
-    <h1>Qwen3-TTS 기술 분석 및 qwen3-tts-studio 구축기</h1>
-    <p><small>2026-02-04 6:50 PM</small></p>
+    <h1>Polymarket 차익거래(Arbitrage) 봇 구축을 위한 기술 분석 및 설계</h1>
+    <p><small>2026-02-12 10:00 AM</small></p>
     <nav class="nav-links">
       <a href="index.html" class="win98-button">Home</a>
         <a href="about.html" class="win98-button">About</a>
     </nav>
   </header>
-    <h1 id="qwen3-tts-qwen3-tts-studio-"><a href="#qwen3-tts-qwen3-tts-studio-" class="header-anchor"></a>Qwen3-TTS 기술 분석 및 qwen3-tts-studio 구축기</h1><p>최근 알리바바 Qwen 팀이 공개한 <strong>Qwen3-TTS</strong>가 로컬 AI 커뮤니티에서 큰 주목을 받고 있습니다. 단순한 TTS 모델을 넘어, 자연어 프롬프트를 통한 보이스 디자인(Voice Design)과 제로샷 클로닝 성능이 비약적으로 향상되었기 때문입니다.</p>
-<p>이 글에서는 Qwen3-TTS가 왜 주목받는지 기술적으로 분석하고, 이를 쉽게 테스트하고 서비스화하기 위해 직접 개발한 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">qwen3-tts-studio</a></strong> 프로젝트의 아키텍처와 구현 과정을 공유합니다.</p>
+    <h1 id="polymarket-arbitrage-"><a href="#polymarket-arbitrage-" class="header-anchor"></a>Polymarket 차익거래(Arbitrage) 봇 구축: 기술 분석부터 설계까지</h1><p>최근 예측 시장(Prediction Market)인 <strong>Polymarket</strong>의 거래량이 폭발적으로 증가했습니다. 단순한 도박을 넘어, 금융 상품으로서의 성격이 짙어지면서 필연적으로 <strong>차익거래(Arbitrage)</strong> 기회가 발생하고 있습니다.</p>
+<p>이 글에서는 Polymarket의 기술적 기반인 <strong>Gnosis CTF(Conditional Tokens Framework)</strong> 메커니즘을 심층 분석하여 차익거래 원리를 파악하고, 이를 자동화할 <strong>HFT(High Frequency Trading) 봇</strong>의 설계 계획을 정리합니다.</p>
 <hr>
-<h2 id="1-qwen3-tts-"><a href="#1-qwen3-tts-" class="header-anchor"></a>1. Qwen3-TTS: 무엇이 달라졌나?</h2><p>기존 오픈소스 TTS(XTTS v2, StyleTTS2 등)들이 &quot;텍스트 읽기&quot;에 집중했다면, Qwen3-TTS는 **&quot;음성 생성(Speech Generation)&quot;**으로 패러다임을 확장했습니다.</p>
-<h3 id="--140"><a href="#--140" class="header-anchor"></a>핵심 기술 포인트</h3><ol>
-<li><strong>Natural Language Control</strong>: &quot;속삭이듯이&quot;, &quot;화난 목소리로&quot; 같은 지시문을 LLM이 이해하고 음성에 반영합니다.</li>
-<li><strong>Factorized Diffusion?</strong>: (추정) Qwen 팀의 이전작 CosyVoice에서 보여준 플로우 매칭(Flow Matching)이나 디퓨전 기반의 아키텍처를 개량하여, 0.6B / 1.7B 파라미터 사이즈에서도 높은 품질을 냅니다.</li>
-<li><strong>Streaming First</strong>: 초기 응답 지연(TTFT)을 최소화하여 대화형 에이전트에 적합하도록 설계되었습니다.</li>
+<h2 id="1-ctf-atomic-arbitrage"><a href="#1-ctf-atomic-arbitrage" class="header-anchor"></a>1. 핵심 원리: CTF와 Atomic Arbitrage</h2><p>Polymarket은 단순한 베팅 사이트가 아닙니다. 이더리움(Polygon) 상의 스마트 컨트랙트인 <strong>CTF(Conditional Tokens Framework)</strong> 위에서 작동합니다.</p>
+<h3 id="split-amp-merge-"><a href="#split-amp-merge-" class="header-anchor"></a>Split &amp; Merge 메커니즘</h3><p>모든 마켓은 **담보(Collateral, 주로 USDC)**를 기반으로 파생된 토큰을 거래합니다.</p>
+<ul>
+<li><strong>Split (발행)</strong>: 1 USDC를 락업하면, 모든 가능한 결과(예: Yes + No)의 토큰을 각각 1개씩 받습니다.<ul>
+<li><code>1 USDC → 1 Yes Token + 1 No Token</code></li>
+</ul>
+</li>
+<li><strong>Merge (상환)</strong>: 모든 결과의 토큰을 1개씩 모아서 가져오면, 다시 1 USDC로 바꿀 수 있습니다.<ul>
+<li><code>1 Yes Token + 1 No Token → 1 USDC</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="-the-opportunity-"><a href="#-the-opportunity-" class="header-anchor"></a>차익거래 기회 (The Opportunity)</h3><p>이 메커니즘 덕분에, 시장 가격의 합이 **1$**와 다를 때 무위험 차익거래가 가능합니다.</p>
+<ol>
+<li><strong>Minting Arb (가격 합 &gt; 1$)</strong><ul>
+<li>시장에서 Yes가 $0.6, No가 $0.5에 거래된다고 가정 (합 $1.1)</li>
+<li><strong>전략</strong>: 1 USDC로 (Yes+No)를 Minting → 시장에 각각 매도 → $1.1 수익 (ROI 10%)</li>
+</ul>
+</li>
+<li><strong>Burn/Redeem Arb (가격 합 &lt; 1$)</strong><ul>
+<li>시장에서 Yes가 $0.4, No가 $0.5에 거래된다고 가정 (합 $0.9)</li>
+<li><strong>전략</strong>: 시장에서 Yes, No를 각각 매수($0.9 소요) → Merge하여 1 USDC 상환 → $0.1 수익</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>현실적인 제약</strong>: Polymarket은 오더북(CLOB) 기반이므로, <strong>Taker Fee</strong>와 <strong>Slippage</strong>를 고려해야 합니다. 따라서 <code>(Price_Yes + Price_No + Fees) &lt; 1.0</code> 인 순간을 포착하는 것이 핵심입니다.</p>
+</blockquote>
+<hr>
+<h2 id="2-bot-strategy-"><a href="#2-bot-strategy-" class="header-anchor"></a>2. 봇 구축 전략 (Bot Strategy)</h2><p>단순한 스크립트로는 경쟁력이 없습니다. 오더북의 갭을 밀리초(ms) 단위로 캐치해야 합니다.</p>
+<h3 id="-negative-risk-arbitrage"><a href="#-negative-risk-arbitrage" class="header-anchor"></a>타겟 전략: Negative Risk Arbitrage</h3><p>최근 Polymarket은 여러 결과 중 하나만 실현되는(Mutually Exclusive) <strong>Negative Risk</strong> 마켓을 지원합니다. (예: &quot;공화당 후보는 누구?&quot; - 트럼프/헤일리/디샌티스 등)</p>
+<ul>
+<li><strong>기회</strong>: 10명의 후보가 있을 때, 각 후보 토큰 가격의 합이 $0.95라면?</li>
+<li><strong>액션</strong>: 10개 토큰을 전부 시장가 매수 → Merge → 5% 확정 수익.</li>
+<li><strong>난이도</strong>: 슬리피지 계산과 Execution 속도가 생명.</li>
+</ul>
+<hr>
+<h2 id="3-"><a href="#3-" class="header-anchor"></a>3. 시스템 아키텍처 설계</h2><p>이 봇은 안정성과 속도를 위해 <strong>Python</strong> 기반의 비동기 마이크로서비스 아키텍처로 설계합니다.</p>
+<h3 id="tech-stack"><a href="#tech-stack" class="header-anchor"></a>Tech Stack</h3><ul>
+<li><strong>Language</strong>: Python 3.11+ (<code>asyncio</code>)</li>
+<li><strong>SDK</strong>: <code>py-clob-client</code> (Polymarket 공식 CLOB 클라이언트)</li>
+<li><strong>Chain</strong>: Polygon RPC (Alchemy/Infura) - <em>CTF Mint/Redeem용</em></li>
+<li><strong>DB</strong>: TimescaleDB (틱 데이터 저장 및 백테스팅)</li>
+</ul>
+<h3 id="architecture-diagram"><a href="#architecture-diagram" class="header-anchor"></a>Architecture Diagram</h3><p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/polymarket-bot-arch.png" alt="Polymarket Bot Architecture"></p>
+<ol>
+<li><strong>Market Data Service</strong>: CLOB Websocket을 통해 수천 개 마켓의 오더북(L2 Data)을 실시간 수신.</li>
+<li><strong>Strategy Engine</strong>: 메모리 내에서 <code>Sum(Ask_Prices)</code>를 계산. 임계값(예: 0.99) 이하로 떨어지면 트리거.</li>
+<li><strong>Risk Manager</strong>: 현재 잔고(USDC)와 가스비를 고려해 진입 가능 여부 판단.</li>
+<li><strong>Execution Service</strong>:<ul>
+<li><strong>Atomic Transaction</strong>이 중요. 매수 후 즉시 Merge가 불가능할 수 있음(포지션 홀딩 리스크).</li>
+<li>1단계: CLOB API로 토큰 매수 (Fill or Kill)</li>
+<li>2단계: CTF 컨트랙트 호출 (Merge/Redeem)</li>
+</ul>
+</li>
 </ol>
 <hr>
-<h2 id="2-qwen3-tts-studio-"><a href="#2-qwen3-tts-studio-" class="header-anchor"></a>2. qwen3-tts-studio 개발 배경</h2><p>모델이 좋아도, 터미널에서 파이썬 스크립트로만 돌리기엔 사용성이 떨어집니다. 특히 비개발자 동료들이나 기획자가 바로 테스트해볼 수 있는 <strong>웹 UI</strong>가 필요했습니다.</p>
-<p>그래서 다음과 같은 목표로 <strong>qwen3-tts-studio</strong>를 개발했습니다.</p>
-<ul>
-<li><strong>Web UI 제공</strong>: 텍스트 입력, 화자 선택, 음성 생성 결과를 브라우저에서 바로 확인</li>
-<li><strong>API 서버화</strong>: 추후 다른 서비스(챗봇 등)에서 호출할 수 있도록 REST API 제공</li>
-<li><strong>리소스 최적화</strong>: GPU/CPU 자동 감지 및 동시성 제어</li>
+<h2 id="4-roadmap-"><a href="#4-roadmap-" class="header-anchor"></a>4. 운영 계획 (Roadmap)</h2><h3 id="phase-1-paper-trading-"><a href="#phase-1-paper-trading-" class="header-anchor"></a>Phase 1: Paper Trading (모의 투자)</h3><ul>
+<li>실제 자금 투입 없이, 실시간 데이터만 수신하며 <code>가상 체결</code> 시뮬레이션.</li>
+<li>슬리피지와 수수료를 보수적으로 적용하여 수익성 검증.</li>
+</ul>
+<h3 id="phase-2-live-trading-small-cap-"><a href="#phase-2-live-trading-small-cap-" class="header-anchor"></a>Phase 2: Live Trading (Small Cap)</h3><ul>
+<li><strong>뱅크롤</strong>: 100 USDC</li>
+<li><strong>대상</strong>: 유동성이 적어 스프레드가 큰 롱테일 마켓(정치 외 이슈 등).</li>
+<li><strong>목표</strong>: 일일 승률 90% 이상, MDD(Maximum Drawdown) 1% 미만.</li>
+</ul>
+<h3 id="phase-3-scaling-amp-optimization"><a href="#phase-3-scaling-amp-optimization" class="header-anchor"></a>Phase 3: Scaling &amp; Optimization</h3><ul>
+<li>Rust로 코어 로직 포팅 고려 (Latency 단축).</li>
+<li>Polygon 노드 직접 운영 (RPC 레이턴시 최소화).</li>
 </ul>
 <hr>
-<h2 id="3--4"><a href="#3--4" class="header-anchor"></a>3. 시스템 아키텍처</h2><p>전체 시스템은 <strong>FastAPI</strong> 기반의 백엔드와 정적 HTML/JS 기반의 프론트엔드로 구성됩니다. 복잡도를 줄이기 위해 별도의 프론트엔드 빌드 도구 없이 단일 레포지토리로 구성했습니다.</p>
-<p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/qwen3-studio-arch.png" alt="qwen3-studio-arch"></p>
-<h3 id="tech-stack-2"><a href="#tech-stack-2" class="header-anchor"></a>Tech Stack</h3><ul>
-<li><strong>Backend</strong>: Python, FastAPI, Uvicorn</li>
-<li><strong>Model Engine</strong>: HuggingFace Transformers, PyTorch (CUDA/CPU)</li>
-<li><strong>Frontend</strong>: Vanilla JS + HTML5 Audio</li>
-<li><strong>Concurrency</strong>: <code>asyncio</code> + 커스텀 세마포어(Limiter)</li>
-</ul>
-<hr>
-<h2 id="4--5"><a href="#4--5" class="header-anchor"></a>4. 핵심 구현 디테일</h2><h3 id="-1-cpu-gpu-"><a href="#-1-cpu-gpu-" class="header-anchor"></a>(1) 하이브리드 추론 엔진 (CPU/GPU)</h3><p>배포 환경이 항상 GPU가 있는 것은 아닙니다. <code>backend/app.py</code>에서는 실행 환경을 감지하여 최적의 설정을 로드합니다.</p>
-<pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">_device_config</span>():
-  <span class="hljs-keyword">import</span> torch
-  <span class="hljs-keyword">if</span> torch.cuda.is_available():
-      <span class="hljs-comment"># GPU: bfloat16 + Flash Attention 2 사용으로 속도 최적화</span>
-      <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;cuda:0&quot;</span>, torch.bfloat16, <span class="hljs-string">&quot;flash_attention_2&quot;</span>
-  <span class="hljs-keyword">else</span>:
-      <span class="hljs-comment"># CPU: fp32 + eager execution (호환성 우선)</span>
-      <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;cpu&quot;</span>, <span class="hljs-literal">None</span>, <span class="hljs-string">&quot;eager&quot;</span></code></pre><h3 id="-2-concurrency-limiter-"><a href="#-2-concurrency-limiter-" class="header-anchor"></a>(2) 동시성 제어 (Concurrency Limiter)</h3><p>TTS 모델은 VRAM을 많이 차지하므로, 여러 요청이 동시에 들어오면 OOM(Out of Memory)이 발생할 수 있습니다. 이를 방지하기 위해 <code>ConcurrencyLimiter</code>를 구현하여 동시 생성 요청 수를 제한했습니다.</p>
-<pre><code class="hljs python"><span class="hljs-comment"># 환경변수로 동시성 제어 (기본값: 1)</span>
-CONCURRENCY = <span class="hljs-built_in">int</span>(os.getenv(<span class="hljs-string">&quot;QWEN_TTS_CONCURRENCY&quot;</span>, <span class="hljs-string">&quot;1&quot;</span>))
-limiter = ConcurrencyLimiter(CONCURRENCY)
-
-<span class="hljs-meta">@app.post(<span class="hljs-params"><span class="hljs-string">&quot;/api/tts&quot;</span></span>)</span>
-<span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">tts</span>(<span class="hljs-params">req: TTSRequest</span>):
-    <span class="hljs-keyword">async</span> <span class="hljs-keyword">with</span> limiter.slot():
-        <span class="hljs-comment"># 모델 로드 및 추론 수행</span>
-        ...</code></pre><h3 id="-3-api-"><a href="#-3-api-" class="header-anchor"></a>(3) API 설계</h3><p>단순한 <code>POST /api/tts</code> 엔드포인트를 통해 텍스트와 설정을 받고, 생성된 오디오를 <code>audio/wav</code> 바이너리로 스트리밍 반환합니다.</p>
-<ul>
-<li><strong>Input</strong>: <code>text</code>, <code>mode</code> (custom_voice / voice_design), <code>speaker</code>, <code>instruct</code></li>
-<li><strong>Output</strong>: WAV Audio Byte Stream (브라우저에서 바로 재생)</li>
-</ul>
-<hr>
-<h2 id="5--4"><a href="#5--4" class="header-anchor"></a>5. 마치며</h2><p>Qwen3-TTS는 오픈소스 음성 모델의 수준을 한 단계 높였습니다. <strong>qwen3-tts-studio</strong>를 통해 이 강력한 모델을 누구나 쉽게 웹에서 테스트하고, 나만의 AI 보이스 서비스를 구축해 보시기 바랍니다.</p>
-<p>더 자세한 코드는 아래 리포지토리에서 확인할 수 있습니다.</p>
-<p>👉 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">GitHub: qwen3-tts-studio</a></strong></p>
+<h2 id="--126"><a href="#--126" class="header-anchor"></a>결론</h2><p>Polymarket 차익거래는 단순한 코딩이 아니라, <strong>블록체인 메커니즘(CTF)과 전통적 HFT(CLOB)의 결합</strong>입니다. 시장 효율성이 높아질수록 기회는 줄어들겠지만, 틈새 시장(Long-tail Markets)에는 여전히 기회가 있습니다.</p>
+<p>다음 글에서는 실제 **Python 봇 코드의 핵심 파트(CLOB 연동, 시세 포착 로직)**를 공개하고, 모의 투자 성과를 공유하겠습니다.</p>
 
             <div style="height: 50px;"></div>
           </div>

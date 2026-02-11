@@ -1,0 +1,21 @@
+graph TD
+    subgraph Data Layer
+        CLOB[Polymarket CLOB API] -->|WebSocket| MDS[Market Data Service]
+        Chain[Polygon RPC] -->|Events| MDS
+    end
+
+    subgraph Bot Core
+        MDS -->|OrderBook Update| Engine[Strategy Engine]
+        Engine -->|Opp Found| Risk[Risk Manager]
+        Risk -->|Approve| Exec[Execution Service]
+    end
+
+    subgraph Execution
+        Exec -->|Place Order| CLOB
+        Exec -->|Merge/Redeem| CTF[CTF Contract]
+    end
+
+    subgraph Monitoring
+        Engine -->|Log| DB[(TimescaleDB)]
+        DB --> Dashboard[Streamlit Dashboard]
+    end
