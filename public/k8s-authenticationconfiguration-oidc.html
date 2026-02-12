@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kubernetes OIDC 인증, 이제 플래그 시대는 끝? (AuthenticationConfiguration로 바뀐 점과 Airgap 고려사항) - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>Kubernetes OIDC 인증, 이제 플래그 시대는 끝? (AuthenticationConfiguration로 바뀐 점과 Airgap 고려사항)</h1>
+    <p><small>2026-02-13 9:30 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="kubernetes-oidc-authenticationconfiguration-"><a href="#kubernetes-oidc-authenticationconfiguration-" class="header-anchor"></a>Kubernetes OIDC 인증, 이제 플래그 시대는 끝? (AuthenticationConfiguration)</h1><p>Kubernetes에서 OIDC(OpenID Connect) 기반 사용자 인증을 붙일 때, 많은 분들이 <code>kube-apiserver</code>에 <code>--oidc-*</code> 플래그를 넣어 설정해왔습니다.</p>
+<p>그런데 Kubernetes는 1.30 이후로(점진적 도입) <strong>AuthenticationConfiguration</strong>(구조화된 인증 설정)라는 새로운 방식으로 인증 구성을 파일 기반 API로 옮기고 있습니다. 현재 최신은 1.35이고, 질문 주신 것처럼 1.34에서도 실사용 가능한지 / 기존 OIDC의 Airgap 제약이 개선됐는지 궁금하실 수 있습니다.</p>
+<p>이 글에서는:</p>
+<ul>
+<li>기존 <code>--oidc-*</code> 플래그 방식과 AuthenticationConfiguration의 <strong>차이점</strong></li>
+<li>1.34에서 <strong>사용 가능 여부(현 시점 기능 상태 기준)</strong></li>
+<li>Air-gapped(내부 폐쇄망) 환경에서 늘 문제였던 <strong>issuer URL 통신 요구사항이 개선됐는지</strong></li>
+</ul>
+<p>를 기술적으로 정리합니다.</p>
+<blockquote>
+<p>참고: 본 글은 Kubernetes 공식 문서의 AuthenticationConfiguration 및 API reference 내용을 기반으로 정리했습니다.</p>
+<ul>
+<li>Authentication overview: <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/">https://kubernetes.io/docs/reference/access-authn-authz/authentication/</a></li>
+<li>apiserver config API(v1): <a href="https://kubernetes.io/docs/reference/config-api/apiserver-config.v1/">https://kubernetes.io/docs/reference/config-api/apiserver-config.v1/</a></li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="0-"><a href="#0-" class="header-anchor"></a>0) 한 줄 요약</h2><ul>
+<li>**AuthenticationConfiguration는 “OIDC를 더 잘 설정하는 방법”**이지, <strong>OIDC가 가진 “apiserver가 issuer에 접근해야 하는 구조” 자체를 없애는 기능은 아닙니다.</strong></li>
+<li>Kubernetes 1.34 기준으로 AuthenticationConfiguration는 문서상 기능이 성숙(stable로 표기된 항목 포함)해졌고, <strong>1.34에서도 충분히 적용 가능한 구성</strong>입니다.</li>
+</ul>
+<hr>
+<h2 id="1-oidc-code-oidc-code-"><a href="#1-oidc-code-oidc-code-" class="header-anchor"></a>1) 기존 OIDC(<code>--oidc-*</code>) 방식: 무엇이 불편했나?</h2><p>전통적으로 apiserver의 OIDC 연동은 이런 플로우입니다.</p>
+<p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/k8s-oidc-legacy.png" alt="legacy oidc flow"></p>
+<h3 id="--120"><a href="#--120" class="header-anchor"></a>핵심 포인트</h3><ul>
+<li><code>kubectl</code>(클라이언트)은 <strong>ID Token(JWT)</strong> 을 들고 apiserver에 요청합니다.</li>
+<li>apiserver는 토큰 검증을 위해<ul>
+<li>issuer의 <strong>OIDC discovery</strong>(<code>/.well-known/openid-configuration</code>)</li>
+<li><strong>JWKS(공개키)</strong>
+를 <strong>직접</strong> 조회해서 서명 검증을 합니다.</li>
+</ul>
+</li>
+</ul>
+<p>즉, 많은 운영자들이 겪었던 것처럼:</p>
+<ul>
+<li><strong>apiserver 입장에서 issuer URL에 네트워크 통신이 가능해야</strong> 합니다.<ul>
+<li>(중요) “클라이언트에서 IdP에 접속해야 한다”가 아니라, <strong>apiserver가 IdP/OIDC discovery endpoint에 접속</strong>해야 합니다.</li>
+</ul>
+</li>
+</ul>
+<p>이 특성 때문에 Airgap에서 OIDC가 항상 까다로웠습니다.</p>
+<hr>
+<h2 id="2-authenticationconfiguration-"><a href="#2-authenticationconfiguration-" class="header-anchor"></a>2) AuthenticationConfiguration란?</h2><p>AuthenticationConfiguration는 <code>kube-apiserver</code>의 인증 설정을 <strong>플래그가 아니라 파일(버전드 API)</strong> 로 구성하는 방식입니다.</p>
+<p>공식 API reference에 따르면 AuthenticationConfiguration는 다음을 포함합니다.</p>
+<ul>
+<li><code>jwt[]</code>: JWT/OIDC(정확히는 “OIDC discovery로 키를 찾는 JWT 인증기”) 목록</li>
+<li><code>anonymous</code>: 익명 인증(anonymous)의 세밀한 제어</li>
+</ul>
+<blockquote>
+<p>v1 API 문서에는 “JWTAuthenticator는 issuer의 공개 엔드포인트에서 OIDC discovery로 키를 찾는다”고 명시되어 있습니다.</p>
+</blockquote>
+<h3 id="--121"><a href="#--121" class="header-anchor"></a>왜 이게 중요한가?</h3><p>기존 <code>--oidc-*</code> 플래그의 문제는 크게 2가지였습니다.</p>
+<ol>
+<li><strong>표현력의 한계</strong>: 1개의 issuer, 제한적인 claim mapping.</li>
+<li><strong>운영성/확장성</strong>: 플래그가 많아지고, kubeadm/매니지드 환경에선 변경이 어렵고, 여러 issuer를 운영하기가 곤란.</li>
+</ol>
+<p>AuthenticationConfiguration는 이를 “구조화된 스키마”로 해결합니다.</p>
+<p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/k8s-authnconfig.png" alt="authnconfig overview"></p>
+<hr>
+<h2 id="3-vs-authenticationconfiguration-"><a href="#3-vs-authenticationconfiguration-" class="header-anchor"></a>3) 기존 방식 vs AuthenticationConfiguration: 차이점 정리</h2><h3 id="-a-issuer-jwtauthenticator"><a href="#-a-issuer-jwtauthenticator" class="header-anchor"></a>(A) 단일 issuer → 다중 JWTAuthenticator</h3><ul>
+<li>기존 플래그 방식은 기본적으로 “한 번에 한 issuer”로 쓰는 패턴이 일반적입니다.</li>
+<li>AuthenticationConfiguration는 <code>jwt:</code> 배열을 통해 <strong>여러 issuer(또는 여러 audience/규칙)를 명시적으로 분리</strong>할 수 있습니다.</li>
+</ul>
+<h3 id="-b-claim-"><a href="#-b-claim-" class="header-anchor"></a>(B) Claim 매핑/검증의 구조화</h3><p>v1beta1/v1 스펙에는 claim mapping, 그리고 표현식 기반(문서에 CEL 표현식 언급) 검증/추출 기능이 포함됩니다.
+즉, 단순히 <code>--oidc-username-claim</code> / <code>--oidc-groups-claim</code>만으로는 부족했던</p>
+<ul>
+<li>이메일 검증(email_verified)</li>
+<li>특정 claim 존재/형식 검증</li>
+<li>extra field 매핑</li>
+</ul>
+<p>같은 요구를 더 “정식”으로 구성할 수 있게 됩니다.</p>
+<h3 id="-c-anonymous-1-34-stable-"><a href="#-c-anonymous-1-34-stable-" class="header-anchor"></a>(C) Anonymous 제어의 고도화 (특히 1.34 stable 표기)</h3><p>Authentication 문서에는 1.34 기준으로:</p>
+<ul>
+<li>AuthenticationConfiguration로 <strong>anonymous authenticator</strong>를 구성할 수 있고</li>
+<li>단순 enable/disable 뿐 아니라 <strong>어떤 path만 익명 허용</strong>할지까지 제한 가능</li>
+</ul>
+<p>이라고 명시되어 있습니다.</p>
+<p>(예: <code>/livez</code>, <code>/readyz</code>, <code>/healthz</code>만 익명 허용)</p>
+<blockquote>
+<p>Source: <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/">https://kubernetes.io/docs/reference/access-authn-authz/authentication/</a> (Anonymous authenticator configuration 섹션)</p>
+</blockquote>
+<hr>
+<h2 id="4-1-34-"><a href="#4-1-34-" class="header-anchor"></a>4) 1.34에서 사용 가능한가?</h2><p>결론적으로 “가능”에 가깝습니다.</p>
+<ul>
+<li>문서에서 <strong>Kubernetes v1.34 stable</strong> 표기가 등장(특히 anonymous 설정)</li>
+<li>apiserver config API에는 <code>apiserver.config.k8s.io/v1</code>로 AuthenticationConfiguration 리소스가 존재</li>
+</ul>
+<p>즉, 1.34는 <strong>AuthenticationConfiguration를 본격적으로 운영에 쓰기 좋은 버전대</strong>로 보는 것이 합리적입니다.</p>
+<p>다만, 실제 적용 시에는 환경별로 다음을 확인하는 것을 권장합니다.</p>
+<ul>
+<li>apiserver 실행 인자에 <code>--authentication-config=/path/to/authn.yaml</code>(혹은 동등 옵션) 지원 여부</li>
+<li>kubeadm/매니지드(kops, EKS, GKE 등)에서 해당 옵션을 주입할 수 있는지</li>
+</ul>
+<hr>
+<h2 id="5-airgap-issuer-url-"><a href="#5-airgap-issuer-url-" class="header-anchor"></a>5) Airgap(폐쇄망)에서 issuer URL 통신 요구사항, 개선됐나?</h2><p><strong>근본적으로는 그대로입니다.</strong></p>
+<p>AuthenticationConfiguration의 JWTAuthenticator 역시 “OIDC discovery로 issuer의 공개키를 찾는다”는 모델을 따릅니다.
+즉:</p>
+<ul>
+<li>apiserver가 issuer의 discovery/JWKS endpoint에 접근할 수 있어야 검증이 됩니다.</li>
+</ul>
+<h3 id="-airgap-"><a href="#-airgap-" class="header-anchor"></a>그럼 Airgap에서는 어떻게 운영하나?</h3><p>개선 포인트는 “OIDC 통신이 없어졌다”가 아니라, <strong>통신 경로를 더 명확히 통제/설계할 수 있다</strong>는 쪽에 가깝습니다.</p>
+<p>권장 패턴은 아래 중 하나입니다.</p>
+<h4 id="-1-idp-issuer-"><a href="#-1-idp-issuer-" class="header-anchor"></a>(1) 내부(IdP)로 issuer를 가져온다</h4><ul>
+<li>외부 IdP를 직접 붙이지 않고, <strong>내부에 OIDC issuer(또는 mirror)를 둔다</strong></li>
+</ul>
+<h4 id="-2-dmz-egress-proxy-apiserver-outbound-"><a href="#-2-dmz-egress-proxy-apiserver-outbound-" class="header-anchor"></a>(2) DMZ egress proxy로 apiserver outbound를 한 곳으로 모은다</h4><ul>
+<li>apiserver → (DMZ proxy) → issuer</li>
+<li>방화벽 정책/감사/allowlist를 DMZ에 집중</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/k8s-airgap-egress.png" alt="airgap egress"></p>
+<blockquote>
+<p>이 방식은 이전에 작성한 “폐쇄망 K8s egress” 패턴과 동일하게 적용할 수 있습니다.</p>
+</blockquote>
+<h4 id="-3-egress-selector-apiserver-"><a href="#-3-egress-selector-apiserver-" class="header-anchor"></a>(3) egress selector / 네트워크 정책으로 apiserver의 외부 통신을 고정</h4><p>apiserver의 외부 통신이 필요하다면, 최소한</p>
+<ul>
+<li>“어디로 나가는지”</li>
+<li>“어떤 프로토콜/포트로 나가는지”</li>
+</ul>
+<p>를 기술적으로 고정해야 합니다.</p>
+<hr>
+<h2 id="6-authenticationconfiguration-"><a href="#6-authenticationconfiguration-" class="header-anchor"></a>6) 예시: AuthenticationConfiguration (개념)</h2><p>아래는 개념 예시입니다(필드는 버전/환경에 맞게 조정 필요).</p>
+<pre><code class="hljs yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apiserver.config.k8s.io/v1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">AuthenticationConfiguration</span>
+<span class="hljs-attr">jwt:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">issuer:</span>
+      <span class="hljs-attr">url:</span> <span class="hljs-string">https://issuer.example.com</span>
+    <span class="hljs-attr">audiences:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">kubernetes</span>
+    <span class="hljs-attr">claimMappings:</span>
+      <span class="hljs-attr">username:</span>
+        <span class="hljs-attr">claim:</span> <span class="hljs-string">sub</span>
+        <span class="hljs-attr">prefix:</span> <span class="hljs-string">&quot;&quot;</span>
+      <span class="hljs-attr">groups:</span>
+        <span class="hljs-attr">claim:</span> <span class="hljs-string">groups</span>
+        <span class="hljs-attr">prefix:</span> <span class="hljs-string">&quot;&quot;</span>
+<span class="hljs-attr">anonymous:</span>
+  <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+  <span class="hljs-attr">conditions:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/livez</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/readyz</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/healthz</span></code></pre><hr>
+<h2 id="7-"><a href="#7-" class="header-anchor"></a>7) 결론</h2><ul>
+<li>AuthenticationConfiguration는 기존 OIDC 플래그를 <strong>더 구조화/확장 가능하게 대체</strong>하는 방향입니다.</li>
+<li>1.34는 문서 기준으로 안정화된 요소가 등장하고(v1.34 stable 표기), 운영 적용 가능성이 높습니다.</li>
+<li>Airgap에서 “issuer 통신 필요”는 <strong>본질적으로 남아있으며</strong>, 해결은<ul>
+<li>내부 issuer 운영</li>
+<li>DMZ proxy/egress selector로 outbound 통제
+같은 네트워크 설계로 접근하는 것이 현실적입니다.</li>
+</ul>
+</li>
+</ul>
+<p>다음 글에서는 실제로 kubeadm 기반 클러스터에서 <code>--authentication-config</code>를 주입하는 방법(정적 파드 매니페스트 수정)과,
+issuer/JWKS 경로를 DMZ로 고정하는 예시를 더 구체적으로 정리해보겠습니다.</p>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 

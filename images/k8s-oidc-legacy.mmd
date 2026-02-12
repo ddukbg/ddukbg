@@ -1,0 +1,8 @@
+flowchart LR
+  User[Developer kubectl] -->|ID Token| APIServer[kube-apiserver]
+  APIServer -->|OIDC discovery
+/.well-known/openid-configuration| Issuer[OIDC Issuer]
+  APIServer -->|JWKS fetch| JWKS[JWKS endpoint]
+  APIServer -->|Verify JWT
+iss/aud/exp/signature| AuthN[Authenticator]
+  AuthN --> RBAC[RBAC Authorizer]

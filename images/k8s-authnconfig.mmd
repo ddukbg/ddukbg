@@ -1,0 +1,8 @@
+flowchart LR
+  APIServer[kube-apiserver] -->|reads| File[AuthenticationConfiguration]
+  File --> JWT1[JWTAuthenticator 1 issuer A]
+  File --> JWT2[JWTAuthenticator 2 issuer B]
+  JWT1 -->|CEL validation + mapping| UserInfo[user info]
+  JWT2 -->|CEL validation + mapping| UserInfo
+  File --> Anon[Anonymous config path allowlist]
+  UserInfo --> RBAC[RBAC]

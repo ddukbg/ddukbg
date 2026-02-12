@@ -1,0 +1,7 @@
+flowchart LR
+  subgraph Airgap[Airgapped cluster]
+    APIServer[kube-apiserver]
+    APIServer -->|OIDC discovery + JWKS| Proxy[DMZ egress proxy]
+  end
+  Proxy --> Issuer[OIDC issuer external or corp]
+  Issuer --> Proxy
