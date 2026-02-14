@@ -8,7 +8,7 @@ slug: k8s-authenticationconfiguration-oidc
 
 Kubernetes에서 OIDC(OpenID Connect) 기반 사용자 인증을 붙일 때, 많은 분들이 `kube-apiserver`에 `--oidc-*` 플래그를 넣어 설정해왔습니다.
 
-그런데 Kubernetes는 1.30 이후로(점진적 도입) **AuthenticationConfiguration**(구조화된 인증 설정)라는 새로운 방식으로 인증 구성을 파일 기반 API로 옮기고 있습니다. 현재 최신은 1.35이고, 질문 주신 것처럼 1.34에서도 실사용 가능한지 / 기존 OIDC의 Airgap 제약이 개선됐는지 궁금하실 수 있습니다.
+Kubernetes는 1.30 전후로(점진적 도입) **AuthenticationConfiguration**(구조화된 인증 설정)라는 새로운 방식으로, 인증 구성을 “플래그 중심”에서 “파일 기반(버전드 API) 구성”으로 옮기는 흐름을 타고 있습니다. 현재 문서 버전 기준 최신은 1.35이고, 질문 주신 것처럼 1.34에서도 실사용 가능한지, 그리고 기존 OIDC의 Airgap 제약이 개선됐는지 궁금하실 수 있습니다.
 
 이 글에서는:
 
@@ -122,8 +122,9 @@ Authentication 문서에는 1.34 기준으로:
 
 다만, 실제 적용 시에는 환경별로 다음을 확인하는 것을 권장합니다.
 
-- apiserver 실행 인자에 `--authentication-config=/path/to/authn.yaml`(혹은 동등 옵션) 지원 여부
-- kubeadm/매니지드(kops, EKS, GKE 등)에서 해당 옵션을 주입할 수 있는지
+- apiserver 실행 인자에 **AuthenticationConfiguration 파일을 지정하는 옵션**(환경/버전에 따라 이름이 다를 수 있음) 지원 여부
+- kubeadm/매니지드(kops, EKS, GKE 등)에서 해당 옵션을 **주입/유지**할 수 있는지(업그레이드 시 덮어쓰기 여부 포함)
+- OIDC/JWT 설정이 이미 있는 클러스터에서 전환 시, 기존 `--oidc-*` 플래그와의 **동시 사용/충돌 규칙**(문서상 일부 항목은 동시 설정 불가)
 
 ---
 
@@ -201,5 +202,31 @@ anonymous:
   - DMZ proxy/egress selector로 outbound 통제
   같은 네트워크 설계로 접근하는 것이 현실적입니다.
 
-다음 글에서는 실제로 kubeadm 기반 클러스터에서 `--authentication-config`를 주입하는 방법(정적 파드 매니페스트 수정)과,
-issuer/JWKS 경로를 DMZ로 고정하는 예시를 더 구체적으로 정리해보겠습니다.
+---
+
+## (추가) Airgap에서 자주 헷갈리는 포인트: Issuer URL은 “바꿀 수 있는 프록시 URL”이 아니다
+
+Air-gapped 환경에서 흔히 나오는 접근이 “외부 IdP(OIDC issuer) 앞에 DMZ 프록시를 두고, apiserver는 프록시로만 나가게 하자”입니다.
+
+여기서 중요한 제약이 있습니다.
+
+- Kubernetes는 **토큰의 `iss`(issuer) 클레임**과, apiserver에 설정한 **issuer URL**을 **정확히 일치**시키는 방식으로 검증을 시작합니다.
+- 그리고 서명 검증을 위해 **issuer URL의 OIDC discovery/JWKS 엔드포인트를 조회**합니다.
+
+즉, 단순히 `issuer: https://idp.example.com`을 `issuer: https://dmz-proxy.local`로 바꾸면:
+- `iss`가 `https://idp.example.com`인 토큰은 **매칭 단계에서 바로 실패**합니다.
+
+### 현실적인 해결 패턴
+
+1) **Split-horizon DNS**
+- issuer URL(예: `https://idp.example.com`)은 그대로 유지
+- 내부 DNS에서는 `idp.example.com`을 DMZ 프록시 IP로 해석
+- DMZ 프록시는 외부 IdP로 프록시(또는 캐시)해줌
+
+2) **내부에 OIDC issuer(미러/프록시가 아닌 “진짜 issuer”)를 운영**
+- `iss`가 내부 URL을 가리키도록 토큰 발급 경로 자체를 설계
+
+3) (가능한 경우에 한해) **JWKS/Discovery 캐싱을 DMZ에서 제공**
+- 단, 이 경우도 “issuer URL 자체”는 토큰 `iss`와 동일해야 합니다.
+
+이 포인트 때문에 Airgap OIDC는 “네트워크만 뚫으면 된다”가 아니라, **DNS/URL/토큰 발급 체계까지 포함한 설계**가 필요합니다.

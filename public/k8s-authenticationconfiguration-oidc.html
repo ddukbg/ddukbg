@@ -362,7 +362,7 @@
     </nav>
   </header>
     <h1 id="kubernetes-oidc-authenticationconfiguration-"><a href="#kubernetes-oidc-authenticationconfiguration-" class="header-anchor"></a>Kubernetes OIDC 인증, 이제 플래그 시대는 끝? (AuthenticationConfiguration)</h1><p>Kubernetes에서 OIDC(OpenID Connect) 기반 사용자 인증을 붙일 때, 많은 분들이 <code>kube-apiserver</code>에 <code>--oidc-*</code> 플래그를 넣어 설정해왔습니다.</p>
-<p>그런데 Kubernetes는 1.30 이후로(점진적 도입) <strong>AuthenticationConfiguration</strong>(구조화된 인증 설정)라는 새로운 방식으로 인증 구성을 파일 기반 API로 옮기고 있습니다. 현재 최신은 1.35이고, 질문 주신 것처럼 1.34에서도 실사용 가능한지 / 기존 OIDC의 Airgap 제약이 개선됐는지 궁금하실 수 있습니다.</p>
+<p>Kubernetes는 1.30 전후로(점진적 도입) <strong>AuthenticationConfiguration</strong>(구조화된 인증 설정)라는 새로운 방식으로, 인증 구성을 “플래그 중심”에서 “파일 기반(버전드 API) 구성”으로 옮기는 흐름을 타고 있습니다. 현재 문서 버전 기준 최신은 1.35이고, 질문 주신 것처럼 1.34에서도 실사용 가능한지, 그리고 기존 OIDC의 Airgap 제약이 개선됐는지 궁금하실 수 있습니다.</p>
 <p>이 글에서는:</p>
 <ul>
 <li>기존 <code>--oidc-*</code> 플래그 방식과 AuthenticationConfiguration의 <strong>차이점</strong></li>
@@ -451,8 +451,9 @@
 <p>즉, 1.34는 <strong>AuthenticationConfiguration를 본격적으로 운영에 쓰기 좋은 버전대</strong>로 보는 것이 합리적입니다.</p>
 <p>다만, 실제 적용 시에는 환경별로 다음을 확인하는 것을 권장합니다.</p>
 <ul>
-<li>apiserver 실행 인자에 <code>--authentication-config=/path/to/authn.yaml</code>(혹은 동등 옵션) 지원 여부</li>
-<li>kubeadm/매니지드(kops, EKS, GKE 등)에서 해당 옵션을 주입할 수 있는지</li>
+<li>apiserver 실행 인자에 <strong>AuthenticationConfiguration 파일을 지정하는 옵션</strong>(환경/버전에 따라 이름이 다를 수 있음) 지원 여부</li>
+<li>kubeadm/매니지드(kops, EKS, GKE 등)에서 해당 옵션을 <strong>주입/유지</strong>할 수 있는지(업그레이드 시 덮어쓰기 여부 포함)</li>
+<li>OIDC/JWT 설정이 이미 있는 클러스터에서 전환 시, 기존 <code>--oidc-*</code> 플래그와의 <strong>동시 사용/충돌 규칙</strong>(문서상 일부 항목은 동시 설정 불가)</li>
 </ul>
 <hr>
 <h2 id="5-airgap-issuer-url-"><a href="#5-airgap-issuer-url-" class="header-anchor"></a>5) Airgap(폐쇄망)에서 issuer URL 통신 요구사항, 개선됐나?</h2><p><strong>근본적으로는 그대로입니다.</strong></p>
@@ -512,8 +513,38 @@
 </ul>
 </li>
 </ul>
-<p>다음 글에서는 실제로 kubeadm 기반 클러스터에서 <code>--authentication-config</code>를 주입하는 방법(정적 파드 매니페스트 수정)과,
-issuer/JWKS 경로를 DMZ로 고정하는 예시를 더 구체적으로 정리해보겠습니다.</p>
+<hr>
+<h2 id="-airgap-issuer-url-url-"><a href="#-airgap-issuer-url-url-" class="header-anchor"></a>(추가) Airgap에서 자주 헷갈리는 포인트: Issuer URL은 “바꿀 수 있는 프록시 URL”이 아니다</h2><p>Air-gapped 환경에서 흔히 나오는 접근이 “외부 IdP(OIDC issuer) 앞에 DMZ 프록시를 두고, apiserver는 프록시로만 나가게 하자”입니다.</p>
+<p>여기서 중요한 제약이 있습니다.</p>
+<ul>
+<li>Kubernetes는 <strong>토큰의 <code>iss</code>(issuer) 클레임</strong>과, apiserver에 설정한 <strong>issuer URL</strong>을 <strong>정확히 일치</strong>시키는 방식으로 검증을 시작합니다.</li>
+<li>그리고 서명 검증을 위해 <strong>issuer URL의 OIDC discovery/JWKS 엔드포인트를 조회</strong>합니다.</li>
+</ul>
+<p>즉, 단순히 <code>issuer: https://idp.example.com</code>을 <code>issuer: https://dmz-proxy.local</code>로 바꾸면:</p>
+<ul>
+<li><code>iss</code>가 <code>https://idp.example.com</code>인 토큰은 <strong>매칭 단계에서 바로 실패</strong>합니다.</li>
+</ul>
+<h3 id="--122"><a href="#--122" class="header-anchor"></a>현실적인 해결 패턴</h3><ol>
+<li><strong>Split-horizon DNS</strong></li>
+</ol>
+<ul>
+<li>issuer URL(예: <code>https://idp.example.com</code>)은 그대로 유지</li>
+<li>내부 DNS에서는 <code>idp.example.com</code>을 DMZ 프록시 IP로 해석</li>
+<li>DMZ 프록시는 외부 IdP로 프록시(또는 캐시)해줌</li>
+</ul>
+<ol start="2">
+<li><strong>내부에 OIDC issuer(미러/프록시가 아닌 “진짜 issuer”)를 운영</strong></li>
+</ol>
+<ul>
+<li><code>iss</code>가 내부 URL을 가리키도록 토큰 발급 경로 자체를 설계</li>
+</ul>
+<ol start="3">
+<li>(가능한 경우에 한해) <strong>JWKS/Discovery 캐싱을 DMZ에서 제공</strong></li>
+</ol>
+<ul>
+<li>단, 이 경우도 “issuer URL 자체”는 토큰 <code>iss</code>와 동일해야 합니다.</li>
+</ul>
+<p>이 포인트 때문에 Airgap OIDC는 “네트워크만 뚫으면 된다”가 아니라, <strong>DNS/URL/토큰 발급 체계까지 포함한 설계</strong>가 필요합니다.</p>
 
             <div style="height: 50px;"></div>
           </div>
