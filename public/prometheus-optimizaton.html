@@ -364,8 +364,8 @@
     <h1 id="amazon-managed-service-for-prometheus-"><a href="#amazon-managed-service-for-prometheus-" class="header-anchor"></a>Amazon Managed Service for Prometheus 비용 최적화 여정: 메트릭 기반 접근법</h1><blockquote>
 <p>안녕하세요! 이 글은 Amazon Managed Service for Prometheus(AMP)의 비용을 최적화하며 겪었던 경험과 배운 내용을 공유하기 위해 작성되었습니다. 모니터링 시스템의 효율성을 높이면서도 비용을 절감하는 방법에 관심이 있는 분들께 도움이 되길 바랍니다.</p>
 </blockquote>
-<h2 id="--127"><a href="#--127" class="header-anchor"></a>들어가며</h2><p>클라우드 환경에서 대규모 서비스를 운영할 때, 모니터링 시스템은 안정적인 운영을 위한 필수 요소입니다. 특히 Kubernetes 환경에서는 Prometheus가 사실상 표준 모니터링 도구로 자리잡았으며, AWS에서는 Amazon Managed Service for Prometheus(AMP)를 통해 관리형 서비스로 이를 제공하고 있습니다. 하지만 서비스 규모가 커질수록 모니터링 데이터의 양도 급증하며, 이에 따라 비용도 증가합니다. 이 글에서는 AMP 비용이 예상보다 높게 발생하는 문제를 분석하고, mimirtool을 활용해 사용률이 낮은 메트릭을 식별하여 제외함으로써 비용을 대폭 절감한 경험을 공유하고자 합니다.</p>
-<h2 id="--128"><a href="#--128" class="header-anchor"></a>문제 상황</h2><h3 id="-amp-"><a href="#-amp-" class="header-anchor"></a>증가하는 AMP 비용</h3><p>2025년 초, AWS 청구서를 분석하는 과정에서 Amazon Managed Service for Prometheus 비용이 월 약 6,000달러 수준으로 상당히 높게 발생하고 있음을 발견했습니다. 가상화폐 거래소 특성상 모니터링이 매우 중요하기 때문에 발생하는 비용이라고 생각했지만, 면밀히 분석할 필요가 있었습니다.</p>
+<h2 id="--130"><a href="#--130" class="header-anchor"></a>들어가며</h2><p>클라우드 환경에서 대규모 서비스를 운영할 때, 모니터링 시스템은 안정적인 운영을 위한 필수 요소입니다. 특히 Kubernetes 환경에서는 Prometheus가 사실상 표준 모니터링 도구로 자리잡았으며, AWS에서는 Amazon Managed Service for Prometheus(AMP)를 통해 관리형 서비스로 이를 제공하고 있습니다. 하지만 서비스 규모가 커질수록 모니터링 데이터의 양도 급증하며, 이에 따라 비용도 증가합니다. 이 글에서는 AMP 비용이 예상보다 높게 발생하는 문제를 분석하고, mimirtool을 활용해 사용률이 낮은 메트릭을 식별하여 제외함으로써 비용을 대폭 절감한 경험을 공유하고자 합니다.</p>
+<h2 id="--131"><a href="#--131" class="header-anchor"></a>문제 상황</h2><h3 id="-amp-"><a href="#-amp-" class="header-anchor"></a>증가하는 AMP 비용</h3><p>2025년 초, AWS 청구서를 분석하는 과정에서 Amazon Managed Service for Prometheus 비용이 월 약 6,000달러 수준으로 상당히 높게 발생하고 있음을 발견했습니다. 가상화폐 거래소 특성상 모니터링이 매우 중요하기 때문에 발생하는 비용이라고 생각했지만, 면밀히 분석할 필요가 있었습니다.</p>
 <p>AWS Cost Explorer를 통해 비용 구조를 살펴본 결과, 대부분의 비용이 &#39;메트릭 샘플(Ingested Samples)&#39; 항목에서 발생하고 있었습니다. AMP는 수집되는 메트릭 샘플 수에 따라 비용이 부과되며, 당시 우리 시스템에서는 월 평균 약 15억 개의 메트릭 샘플이 수집되고 있었습니다.</p>
 <div class="mermaid">graph TD
     A[Amazon EKS Cluster] -->|scrape| B[Prometheus Agents]
@@ -374,7 +374,7 @@
     C -->|alert| E[Alert Manager]
     C -->|query| F[AMP Query API]
     C -->|$$$| G[높은 비용]
-    style G fill:#f9d0c4,stroke:#333,stroke-width:2px</div><h3 id="--129"><a href="#--129" class="header-anchor"></a>비효율적인 메트릭 수집</h3><p>문제의 근본 원인을 파악하기 위해 수집되는 메트릭의 종류와 양을 분석했습니다. 분석 결과, 다음과 같은 문제점들이 발견되었습니다:</p>
+    style G fill:#f9d0c4,stroke:#333,stroke-width:2px</div><h3 id="--132"><a href="#--132" class="header-anchor"></a>비효율적인 메트릭 수집</h3><p>문제의 근본 원인을 파악하기 위해 수집되는 메트릭의 종류와 양을 분석했습니다. 분석 결과, 다음과 같은 문제점들이 발견되었습니다:</p>
 <ol>
 <li><p><strong>과도한 메트릭 수집</strong>: 많은 시스템 및 애플리케이션 메트릭이 기본 설정으로 수집되고 있었으며, 그중 상당수는 실제로 모니터링 대시보드나 알림 설정에 사용되지 않고 있었습니다.</p>
 </li>
@@ -385,7 +385,7 @@
 <li><p><strong>중복 메트릭</strong>: 여러 소스에서 유사한 정보를 제공하는 중복 메트릭이 발견되었습니다.</p>
 </li>
 </ol>
-<h2 id="--130"><a href="#--130" class="header-anchor"></a>비용 최적화 접근 방법</h2><p>위 문제들을 해결하기 위해 다음과 같은 체계적인 접근 방식을 채택했습니다:</p>
+<h2 id="--133"><a href="#--133" class="header-anchor"></a>비용 최적화 접근 방법</h2><p>위 문제들을 해결하기 위해 다음과 같은 체계적인 접근 방식을 채택했습니다:</p>
 <ol>
 <li><strong>사용 중인 메트릭 식별</strong>: 실제로 Grafana 대시보드 및 알림 룰에서 사용 중인 메트릭을 정확히 파악합니다.</li>
 <li><strong>불필요한 메트릭 제외</strong>: 사용되지 않는 메트릭은 수집 대상에서 제외합니다.</li>
@@ -414,18 +414,18 @@ curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_
 <span class="hljs-comment"># 정규식을 사용하여 메트릭 이름 추출</span>
 <span class="hljs-built_in">cat</span> alert-metrics.txt | grep -o -E <span class="hljs-string">&#x27;[a-z_]+[a-z0-9_]*{&#x27;</span> | <span class="hljs-built_in">tr</span> -d <span class="hljs-string">&#x27;{&#x27;</span> | <span class="hljs-built_in">sort</span> | <span class="hljs-built_in">uniq</span> &gt;&gt; used-metrics.txt</code></pre><h4 id="3-prometheus-"><a href="#3-prometheus-" class="header-anchor"></a>3. Prometheus에서 수집 중인 전체 메트릭 목록 추출</h4><p>다음으로, AMP에서 실제로 수집 중인 모든 메트릭 목록을 추출합니다:</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># 메트릭 이름 API 호출</span>
-curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_ADDR</span>/label/__name__/values&quot;</span> | jq -r <span class="hljs-string">&#x27;.data[]&#x27;</span> &gt; all-metrics.txt</code></pre><h4 id="4--2"><a href="#4--2" class="header-anchor"></a>4. 사용되지 않는 메트릭 식별</h4><p>이제 두 목록을 비교하여 수집은 되고 있지만 실제로 사용되지 않는 메트릭을 식별합니다:</p>
+curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_ADDR</span>/label/__name__/values&quot;</span> | jq -r <span class="hljs-string">&#x27;.data[]&#x27;</span> &gt; all-metrics.txt</code></pre><h4 id="4--3"><a href="#4--3" class="header-anchor"></a>4. 사용되지 않는 메트릭 식별</h4><p>이제 두 목록을 비교하여 수집은 되고 있지만 실제로 사용되지 않는 메트릭을 식별합니다:</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># 사용되지 않는 메트릭 목록 생성</span>
 <span class="hljs-built_in">sort</span> all-metrics.txt | <span class="hljs-built_in">uniq</span> &gt; sorted-all-metrics.txt
 <span class="hljs-built_in">sort</span> used-metrics.txt | <span class="hljs-built_in">uniq</span> &gt; sorted-used-metrics.txt
 <span class="hljs-built_in">comm</span> -23 sorted-all-metrics.txt sorted-used-metrics.txt &gt; unused-metrics.txt</code></pre><p>이 과정을 통해 <code>unused-metrics.txt</code> 파일에는 현재 수집 중이지만 어떤 대시보드나 알림에서도 사용되지 않는 메트릭 목록이 생성됩니다.</p>
-<h4 id="5--2"><a href="#5--2" class="header-anchor"></a>5. 메트릭별 샘플 수 확인</h4><p>각 메트릭이 얼마나 많은 샘플을 생성하는지 확인하여 우선적으로 제외할 대상을 선정합니다:</p>
+<h4 id="5--3"><a href="#5--3" class="header-anchor"></a>5. 메트릭별 샘플 수 확인</h4><p>각 메트릭이 얼마나 많은 샘플을 생성하는지 확인하여 우선적으로 제외할 대상을 선정합니다:</p>
 <pre><code class="hljs bash"><span class="hljs-comment"># 메트릭별 샘플 수를 확인하는 스크립트</span>
 <span class="hljs-keyword">for</span> metric <span class="hljs-keyword">in</span> $(<span class="hljs-built_in">cat</span> unused-metrics.txt); <span class="hljs-keyword">do</span>
   count=$(curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_ADDR</span>/query?query=count(<span class="hljs-variable">$metric</span>)&quot;</span> | jq -r <span class="hljs-string">&#x27;.data.result[0].value[1]&#x27;</span>)
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$metric</span>: <span class="hljs-variable">$count</span>&quot;</span>
 <span class="hljs-keyword">done</span> | <span class="hljs-built_in">sort</span> -t: -k2 -nr &gt; unused-metrics-count.txt</code></pre><p>이 명령어를 통해 <code>unused-metrics-count.txt</code> 파일에는 사용되지 않는 메트릭들이 샘플 수 기준으로 내림차순 정렬되어 저장됩니다.</p>
-<h3 id="--131"><a href="#--131" class="header-anchor"></a>실제로 사용 중인 메트릭과 전체 메트릭의 차이 분석</h3><p>위 과정을 통해 분석한 결과, 놀랍게도 전체 수집 메트릭 중 약 35%만이 실제로 Grafana 대시보드나 알림 규칙에서 활용되고 있음을 확인했습니다. 나머지 65%의 메트릭은 수집되고 있지만 실질적으로 사용되지 않고 있었습니다.</p>
+<h3 id="--134"><a href="#--134" class="header-anchor"></a>실제로 사용 중인 메트릭과 전체 메트릭의 차이 분석</h3><p>위 과정을 통해 분석한 결과, 놀랍게도 전체 수집 메트릭 중 약 35%만이 실제로 Grafana 대시보드나 알림 규칙에서 활용되고 있음을 확인했습니다. 나머지 65%의 메트릭은 수집되고 있지만 실질적으로 사용되지 않고 있었습니다.</p>
 <div class="mermaid">pie title 메트릭 사용 현황
     "사용 중인 메트릭" : 35
     "미사용 메트릭" : 65</div><p>특히, 다음과 같은 메트릭 유형이 주로 미사용 상태였습니다:</p>
@@ -436,7 +436,7 @@ curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_
 <li>테스트 목적으로 임시 추가되었으나 제거되지 않은 메트릭</li>
 </ol>
 <p>샘플 수 분석 결과, 상위 20개의 미사용 메트릭이 전체 메트릭 샘플의 약 40%를 차지하고 있었습니다. 이는 소수의 메트릭만 제외해도 상당한 비용 절감 효과를 얻을 수 있음을 의미했습니다.</p>
-<h2 id="--132"><a href="#--132" class="header-anchor"></a>최적화 구현 과정</h2><h3 id="1-prometheus-"><a href="#1-prometheus-" class="header-anchor"></a>1. Prometheus 설정 최적화를 통한 메트릭 필터링</h3><p>먼저, 실제 사용 중인 메트릭 목록을 바탕으로 Prometheus 수집 설정(scrape_config)을 최적화했습니다. 불필요한 메트릭을 제외하기 위해 <code>metric_relabel_configs</code>를 활용했습니다.</p>
+<h2 id="--135"><a href="#--135" class="header-anchor"></a>최적화 구현 과정</h2><h3 id="1-prometheus-"><a href="#1-prometheus-" class="header-anchor"></a>1. Prometheus 설정 최적화를 통한 메트릭 필터링</h3><p>먼저, 실제 사용 중인 메트릭 목록을 바탕으로 Prometheus 수집 설정(scrape_config)을 최적화했습니다. 불필요한 메트릭을 제외하기 위해 <code>metric_relabel_configs</code>를 활용했습니다.</p>
 <pre><code class="hljs yaml"><span class="hljs-attr">scrape_configs:</span>
   <span class="hljs-bullet">-</span> <span class="hljs-attr">job_name:</span> <span class="hljs-string">&#x27;kubernetes-pods&#x27;</span>
     <span class="hljs-comment"># ... 기존 설정 ...</span>
@@ -461,11 +461,11 @@ curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_
     <span class="hljs-attr">regex:</span> <span class="hljs-string">&#x27;(.*)-[a-z0-9]{9,10}-[a-z0-9]{5}&#x27;</span>
     <span class="hljs-attr">target_label:</span> <span class="hljs-string">pod_name</span>
     <span class="hljs-attr">replacement:</span> <span class="hljs-string">&#x27;$1&#x27;</span>
-    <span class="hljs-attr">action:</span> <span class="hljs-string">replace</span></code></pre><h3 id="3--2"><a href="#3--2" class="header-anchor"></a>3. 스크래핑 간격 조정</h3><p>변화가 적은 메트릭의 경우, 스크래핑 간격을 10초에서 30초 또는 60초로 늘렸습니다. 이는 수집되는 메트릭 샘플 수를 직접적으로 줄이는 효과가 있었습니다.</p>
+    <span class="hljs-attr">action:</span> <span class="hljs-string">replace</span></code></pre><h3 id="3--3"><a href="#3--3" class="header-anchor"></a>3. 스크래핑 간격 조정</h3><p>변화가 적은 메트릭의 경우, 스크래핑 간격을 10초에서 30초 또는 60초로 늘렸습니다. 이는 수집되는 메트릭 샘플 수를 직접적으로 줄이는 효과가 있었습니다.</p>
 <pre><code class="hljs yaml"><span class="hljs-attr">scrape_configs:</span>
   <span class="hljs-bullet">-</span> <span class="hljs-attr">job_name:</span> <span class="hljs-string">&#x27;slow-changing-metrics&#x27;</span>
     <span class="hljs-attr">scrape_interval:</span> <span class="hljs-string">60s</span>
-    <span class="hljs-comment"># ... 기타 설정 ...</span></code></pre><h3 id="4--3"><a href="#4--3" class="header-anchor"></a>4. 실행 계획과 단계적 적용</h3><p>최적화 설정은 다음과 같은 단계로 신중하게 적용했습니다:</p>
+    <span class="hljs-comment"># ... 기타 설정 ...</span></code></pre><h3 id="4--4"><a href="#4--4" class="header-anchor"></a>4. 실행 계획과 단계적 적용</h3><p>최적화 설정은 다음과 같은 단계로 신중하게 적용했습니다:</p>
 <ol>
 <li><strong>테스트 환경 검증</strong>: 모든 변경 사항을 먼저 테스트 환경에 적용하여 모니터링 시스템의 무결성을 검증했습니다.</li>
 <li><strong>점진적 적용</strong>: 운영 환경에는 우선 낮은 위험의 변경부터 시작하여 단계적으로 적용했습니다.</li>
@@ -479,11 +479,11 @@ curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_
     D -->|이슈 발생| E[롤백]
     D -->|정상 동작| F[다음 최적화 단계 진행]
     F --> D
-    E --> B</div><h2 id="--133"><a href="#--133" class="header-anchor"></a>성과와 비용 절감 효과</h2><h3 id="--134"><a href="#--134" class="header-anchor"></a>메트릭 샘플 수 감소</h3><p>최적화 작업을 통해 월 평균 메트릭 샘플 수를 약 15억 개에서 7억 개로 대폭 줄일 수 있었습니다. 이는 약 53%의 감소율입니다.</p>
+    E --> B</div><h2 id="--136"><a href="#--136" class="header-anchor"></a>성과와 비용 절감 효과</h2><h3 id="--137"><a href="#--137" class="header-anchor"></a>메트릭 샘플 수 감소</h3><p>최적화 작업을 통해 월 평균 메트릭 샘플 수를 약 15억 개에서 7억 개로 대폭 줄일 수 있었습니다. 이는 약 53%의 감소율입니다.</p>
 <div class="mermaid">graph LR
     A["최적화 전: 15억 샘플/월"] --> B["최적화 후: 7억 샘플/월"]
     style A fill:#f9d0c4,stroke:#333,stroke-width:2px
-    style B fill:#d4f1c5,stroke:#333,stroke-width:2px</div><h3 id="--135"><a href="#--135" class="header-anchor"></a>비용 절감 효과</h3><p>메트릭 샘플 수 감소에 따라 AMP 비용도 월 약 6,000달러에서 3,000달러 수준으로 약 50% 절감되었습니다. 연간으로 환산하면 약 36,000달러의 비용 절감 효과입니다.</p>
+    style B fill:#d4f1c5,stroke:#333,stroke-width:2px</div><h3 id="--138"><a href="#--138" class="header-anchor"></a>비용 절감 효과</h3><p>메트릭 샘플 수 감소에 따라 AMP 비용도 월 약 6,000달러에서 3,000달러 수준으로 약 50% 절감되었습니다. 연간으로 환산하면 약 36,000달러의 비용 절감 효과입니다.</p>
 <table>
 <thead>
 <tr>
@@ -512,21 +512,21 @@ curl -s <span class="hljs-string">&quot;<span class="hljs-variable">$PROMETHEUS_
 <td>$36,000 절감</td>
 </tr>
 </tbody></table>
-<h3 id="--136"><a href="#--136" class="header-anchor"></a>성능 개선 효과</h3><p>비용 절감뿐만 아니라, 불필요한 메트릭 처리량 감소로 인해 다음과 같은 성능 개선 효과도 얻을 수 있었습니다:</p>
+<h3 id="--139"><a href="#--139" class="header-anchor"></a>성능 개선 효과</h3><p>비용 절감뿐만 아니라, 불필요한 메트릭 처리량 감소로 인해 다음과 같은 성능 개선 효과도 얻을 수 있었습니다:</p>
 <ol>
 <li><strong>쿼리 응답 시간 개선</strong>: Prometheus 쿼리 응답 시간이 평균 약 30% 빨라졌습니다.</li>
 <li><strong>리소스 사용량 감소</strong>: Prometheus 에이전트의 CPU 및 메모리 사용량이 약 40% 감소했습니다.</li>
 <li><strong>알림 지연 감소</strong>: 알림 평가 및 발송 지연이 개선되었습니다.</li>
 </ol>
-<h2 id="--137"><a href="#--137" class="header-anchor"></a>교훈 및 모범 사례</h2><p>이 프로젝트를 통해 얻은 중요한 교훈과 모범 사례를 공유합니다:</p>
-<h3 id="1--3"><a href="#1--3" class="header-anchor"></a>1. 메트릭 수집 전략의 중요성</h3><p>클라우드 환경에서 관리형 모니터링 서비스를 사용할 때는 &quot;수집 가능한 모든 것을 수집한다&quot;는 접근보다 &quot;실제로 필요한 것만 수집한다&quot;는 전략이 비용과 성능 측면에서 훨씬 효율적입니다.</p>
+<h2 id="--140"><a href="#--140" class="header-anchor"></a>교훈 및 모범 사례</h2><p>이 프로젝트를 통해 얻은 중요한 교훈과 모범 사례를 공유합니다:</p>
+<h3 id="1--4"><a href="#1--4" class="header-anchor"></a>1. 메트릭 수집 전략의 중요성</h3><p>클라우드 환경에서 관리형 모니터링 서비스를 사용할 때는 &quot;수집 가능한 모든 것을 수집한다&quot;는 접근보다 &quot;실제로 필요한 것만 수집한다&quot;는 전략이 비용과 성능 측면에서 훨씬 효율적입니다.</p>
 <h3 id="2--3"><a href="#2--3" class="header-anchor"></a>2. 사용 중심 분석의 가치</h3><p>실제로 사용 중인 메트릭을 정확히 파악하는 것이 최적화의 첫 단계입니다. mimirtool과 같은 도구를 활용하면 이 과정을 효율적으로 수행할 수 있습니다.</p>
-<h3 id="3--3"><a href="#3--3" class="header-anchor"></a>3. 카디널리티 관리의 중요성</h3><p>메트릭의 수뿐만 아니라, 각 메트릭의 카디널리티도 비용에 큰 영향을 미칩니다. 특히 동적인 환경(Kubernetes 등)에서는 라벨 설계에 주의가 필요합니다.</p>
-<h3 id="4--4"><a href="#4--4" class="header-anchor"></a>4. 최적화와 가시성의 균형</h3><p>비용 절감을 위해 메트릭을 제거할 때는 시스템 가시성과 운영 능력이 저하되지 않도록 주의해야 합니다. 중요한 메트릭이 실수로 제외되지 않도록 철저한 검증이 필요합니다.</p>
-<h3 id="5--3"><a href="#5--3" class="header-anchor"></a>5. 정기적인 모니터링 시스템 검토</h3><p>클라우드 환경과 애플리케이션은 지속적으로 변화하므로, 모니터링 설정도 정기적으로 검토하고 최적화해야 합니다. 6개월마다 사용 중인 메트릭을 재분석하는 것이 좋은 관행입니다.</p>
-<h2 id="--138"><a href="#--138" class="header-anchor"></a>결론</h2><p>Amazon Managed Service for Prometheus는 강력한 모니터링 기능을 제공하지만, 효율적인 메트릭 관리 없이는 비용이 빠르게 증가할 수 있습니다. 이 프로젝트를 통해 실제 사용 중인 메트릭에 집중하고 불필요한 메트릭을 과감하게 제외함으로써, 시스템 가시성은 유지하면서도 비용을 절반으로 줄일 수 있었습니다.</p>
+<h3 id="3--4"><a href="#3--4" class="header-anchor"></a>3. 카디널리티 관리의 중요성</h3><p>메트릭의 수뿐만 아니라, 각 메트릭의 카디널리티도 비용에 큰 영향을 미칩니다. 특히 동적인 환경(Kubernetes 등)에서는 라벨 설계에 주의가 필요합니다.</p>
+<h3 id="4--5"><a href="#4--5" class="header-anchor"></a>4. 최적화와 가시성의 균형</h3><p>비용 절감을 위해 메트릭을 제거할 때는 시스템 가시성과 운영 능력이 저하되지 않도록 주의해야 합니다. 중요한 메트릭이 실수로 제외되지 않도록 철저한 검증이 필요합니다.</p>
+<h3 id="5--4"><a href="#5--4" class="header-anchor"></a>5. 정기적인 모니터링 시스템 검토</h3><p>클라우드 환경과 애플리케이션은 지속적으로 변화하므로, 모니터링 설정도 정기적으로 검토하고 최적화해야 합니다. 6개월마다 사용 중인 메트릭을 재분석하는 것이 좋은 관행입니다.</p>
+<h2 id="--141"><a href="#--141" class="header-anchor"></a>결론</h2><p>Amazon Managed Service for Prometheus는 강력한 모니터링 기능을 제공하지만, 효율적인 메트릭 관리 없이는 비용이 빠르게 증가할 수 있습니다. 이 프로젝트를 통해 실제 사용 중인 메트릭에 집중하고 불필요한 메트릭을 과감하게 제외함으로써, 시스템 가시성은 유지하면서도 비용을 절반으로 줄일 수 있었습니다.</p>
 <p>또한, 이러한 최적화 과정은 모니터링 시스템 자체의 성능도 개선하여, 더 빠르고 효율적인 모니터링 환경을 구축하는 데 도움이 되었습니다. 클라우드 환경에서 모니터링 시스템을 운영할 때는 단순히 &#39;더 많은 데이터&#39;가 아닌 &#39;더 가치 있는 데이터&#39;에 초점을 맞추는 것이 중요함을 다시 한번 확인할 수 있었습니다.</p>
-<h2 id="--139"><a href="#--139" class="header-anchor"></a>참고 자료</h2><ul>
+<h2 id="--142"><a href="#--142" class="header-anchor"></a>참고 자료</h2><ul>
 <li><a href="https://aws.amazon.com/prometheus/pricing/">Amazon Managed Service for Prometheus 가격 책정</a></li>
 <li><a href="https://github.com/grafana/mimir/tree/main/pkg/mimirtool">Grafana Labs의 mimirtool</a></li>
 <li><a href="https://prometheus.io/docs/practices/naming/">Prometheus 메트릭 카디널리티 관리 가이드</a></li>

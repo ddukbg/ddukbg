@@ -365,7 +365,7 @@
 <p>이 글에서는 Qwen3-TTS가 왜 주목받는지 기술적으로 분석하고, 이를 쉽게 테스트하고 서비스화하기 위해 직접 개발한 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">qwen3-tts-studio</a></strong> 프로젝트의 아키텍처와 구현 과정을 공유합니다.</p>
 <hr>
 <h2 id="1-qwen3-tts-"><a href="#1-qwen3-tts-" class="header-anchor"></a>1. Qwen3-TTS: 무엇이 달라졌나?</h2><p>기존 오픈소스 TTS(XTTS v2, StyleTTS2 등)들이 &quot;텍스트 읽기&quot;에 집중했다면, Qwen3-TTS는 **&quot;음성 생성(Speech Generation)&quot;**으로 패러다임을 확장했습니다.</p>
-<h3 id="--140"><a href="#--140" class="header-anchor"></a>핵심 기술 포인트</h3><ol>
+<h3 id="--143"><a href="#--143" class="header-anchor"></a>핵심 기술 포인트</h3><ol>
 <li><strong>Natural Language Control</strong>: &quot;속삭이듯이&quot;, &quot;화난 목소리로&quot; 같은 지시문을 LLM이 이해하고 음성에 반영합니다.</li>
 <li><strong>Factorized Diffusion?</strong>: (추정) Qwen 팀의 이전작 CosyVoice에서 보여준 플로우 매칭(Flow Matching)이나 디퓨전 기반의 아키텍처를 개량하여, 0.6B / 1.7B 파라미터 사이즈에서도 높은 품질을 냅니다.</li>
 <li><strong>Streaming First</strong>: 초기 응답 지연(TTFT)을 최소화하여 대화형 에이전트에 적합하도록 설계되었습니다.</li>
@@ -379,7 +379,7 @@
 <li><strong>리소스 최적화</strong>: GPU/CPU 자동 감지 및 동시성 제어</li>
 </ul>
 <hr>
-<h2 id="3--4"><a href="#3--4" class="header-anchor"></a>3. 시스템 아키텍처</h2><p>전체 시스템은 <strong>FastAPI</strong> 기반의 백엔드와 정적 HTML/JS 기반의 프론트엔드로 구성됩니다. 복잡도를 줄이기 위해 별도의 프론트엔드 빌드 도구 없이 단일 레포지토리로 구성했습니다.</p>
+<h2 id="3--5"><a href="#3--5" class="header-anchor"></a>3. 시스템 아키텍처</h2><p>전체 시스템은 <strong>FastAPI</strong> 기반의 백엔드와 정적 HTML/JS 기반의 프론트엔드로 구성됩니다. 복잡도를 줄이기 위해 별도의 프론트엔드 빌드 도구 없이 단일 레포지토리로 구성했습니다.</p>
 <p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/qwen3-studio-arch.png" alt="qwen3-studio-arch"></p>
 <h3 id="tech-stack-2"><a href="#tech-stack-2" class="header-anchor"></a>Tech Stack</h3><ul>
 <li><strong>Backend</strong>: Python, FastAPI, Uvicorn</li>
@@ -388,7 +388,7 @@
 <li><strong>Concurrency</strong>: <code>asyncio</code> + 커스텀 세마포어(Limiter)</li>
 </ul>
 <hr>
-<h2 id="4--5"><a href="#4--5" class="header-anchor"></a>4. 핵심 구현 디테일</h2><h3 id="-1-cpu-gpu-"><a href="#-1-cpu-gpu-" class="header-anchor"></a>(1) 하이브리드 추론 엔진 (CPU/GPU)</h3><p>배포 환경이 항상 GPU가 있는 것은 아닙니다. <code>backend/app.py</code>에서는 실행 환경을 감지하여 최적의 설정을 로드합니다.</p>
+<h2 id="4--6"><a href="#4--6" class="header-anchor"></a>4. 핵심 구현 디테일</h2><h3 id="-1-cpu-gpu-"><a href="#-1-cpu-gpu-" class="header-anchor"></a>(1) 하이브리드 추론 엔진 (CPU/GPU)</h3><p>배포 환경이 항상 GPU가 있는 것은 아닙니다. <code>backend/app.py</code>에서는 실행 환경을 감지하여 최적의 설정을 로드합니다.</p>
 <pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">_device_config</span>():
   <span class="hljs-keyword">import</span> torch
   <span class="hljs-keyword">if</span> torch.cuda.is_available():
@@ -411,7 +411,7 @@ limiter = ConcurrencyLimiter(CONCURRENCY)
 <li><strong>Output</strong>: WAV Audio Byte Stream (브라우저에서 바로 재생)</li>
 </ul>
 <hr>
-<h2 id="5--4"><a href="#5--4" class="header-anchor"></a>5. 마치며</h2><p>Qwen3-TTS는 오픈소스 음성 모델의 수준을 한 단계 높였습니다. <strong>qwen3-tts-studio</strong>를 통해 이 강력한 모델을 누구나 쉽게 웹에서 테스트하고, 나만의 AI 보이스 서비스를 구축해 보시기 바랍니다.</p>
+<h2 id="5--5"><a href="#5--5" class="header-anchor"></a>5. 마치며</h2><p>Qwen3-TTS는 오픈소스 음성 모델의 수준을 한 단계 높였습니다. <strong>qwen3-tts-studio</strong>를 통해 이 강력한 모델을 누구나 쉽게 웹에서 테스트하고, 나만의 AI 보이스 서비스를 구축해 보시기 바랍니다.</p>
 <p>더 자세한 코드는 아래 리포지토리에서 확인할 수 있습니다.</p>
 <p>👉 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">GitHub: qwen3-tts-studio</a></strong></p>
 

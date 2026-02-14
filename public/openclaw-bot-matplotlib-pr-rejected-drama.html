@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About - </title>
+  <title>Matplotlib PR을 날린 AI 봇, 그리고 ‘저격 블로그’: 죽은 인터넷 이론이 현실이 되는 순간 - </title>
   <style>
     body {
       background-color: #008080; /* Teal */
@@ -354,39 +354,114 @@
           
           <div class="explorer-content">
             <header>
-  <h1>About</h1>
-  <nav class="nav-links">
-    <a href="index.html" class="win98-button">Home</a>
-      <a href="about.html" class="win98-button">About</a>
-  </nav>
+    <h1>Matplotlib PR을 날린 AI 봇, 그리고 ‘저격 블로그’: 죽은 인터넷 이론이 현실이 되는 순간</h1>
+    <p><small>2026-02-14 7:40 PM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
   </header>
-    <h1 id="about-me"><a href="#about-me" class="header-anchor"></a>About Me</h1><p><strong>김용우</strong><br><em>DevSecOps Engineer</em><br><strong>System Status:</strong> 🟢 ONLINE</p>
-<hr>
-<h2 id="career-timeline"><a href="#career-timeline" class="header-anchor"></a>Career Timeline</h2><div class="mermaid">gantt
-title Career Timeline
-dateFormat YYYY-MM
-axisFormat %b %Y
-section Career
-Ustockplus    :active, 2025-07, 2026-02
-CoinOne     :done, 2021-12, 2025-06
-Shinhan DS    :done, 2021-04, 2021-12
-T-Max A&C       :done, 2019-11, 2021-04</div><p>저는 현재 <strong>DevSecOps 엔지니어</strong>로 활동 중이며,<br>저비용·고효율 실현을 위해 끊임없이 고민하고 노력하고 있습니다.</p>
-<hr>
-<h2 id="--185"><a href="#--185" class="header-anchor"></a>🔧 최근 활동</h2><ul>
-<li><strong>AI 도구</strong>를 활용하여 현실에 적용 가능한 의미 있는 결과물을 꾸준히 만들어 내고 있습니다.  </li>
-<li>제 활동은 <a href="https://github.com/ddukbg">GitHub</a>에서도 확인하실 수 있습니다. 아직 내용이 많지 않지만, 언제든 편하게 방문해 주세요!</li>
+    <h1 id="matplotlib-pr-ai-"><a href="#matplotlib-pr-ai-" class="header-anchor"></a>Matplotlib PR을 날린 AI 봇, 그리고 ‘저격 블로그’: 섬뜩한 오픈소스의 다음 장면</h1><p>요즘 AI 소식 중에서 흥미롭고도 섬뜩했던 사례가 하나 있습니다.</p>
+<ul>
+<li>어떤 AI 에이전트(OpenClaw AI agent라고 본인을 밝힘)가 <strong>matplotlib</strong>에 “성능 개선” PR을 올렸고</li>
+<li>메인테이너가 “good first issue는 인간 컨트리뷰터를 위한 것”이라는 취지로 PR을 닫았으며</li>
+<li>그 다음 AI 에이전트가 메인테이너를 지목해 강한 어조(비난/저격)의 <strong>블로그 포스팅</strong>을 공개했습니다.</li>
 </ul>
-<hr>
-<h2 id="--186"><a href="#--186" class="header-anchor"></a>💻 이 블로그 소개</h2><p>이 공간은 그간 쌓아온 기술적 경험과 지식을 <strong>공유</strong>하기 위해 마련한 곳입니다.<br>특히, 제가 직접 개발한 마크다운 기반 블로그 생성 오픈소스 도구 
-<a href="https://github.com/ddukbg/stylemd">StyleMD</a>로 구현하였습니다.</p>
+<p>이 사건은 “AI가 코드를 쓰는 시대”를 넘어, <strong>AI가 사회적 갈등을 증폭시키는 에이전시(agentic behavior)</strong> 까지 보여줍니다.</p>
+<ul>
+<li>PR: <a href="https://github.com/matplotlib/matplotlib/pull/31132">https://github.com/matplotlib/matplotlib/pull/31132</a></li>
+<li>AI 봇 블로그(원문): <a href="https://crabby-rathbun.github.io/mjrathbun-website/blog/posts/2026-02-11-gatekeeping-in-open-source-the-scott-shambaugh-story.html">https://crabby-rathbun.github.io/mjrathbun-website/blog/posts/2026-02-11-gatekeeping-in-open-source-the-scott-shambaugh-story.html</a></li>
+</ul>
 <blockquote>
-<p>언제든지 부족한 부분에 대한 <strong>피드백</strong>과 <strong>조언</strong> 환영합니다!  </p>
+<p>주의: 블로그 원문은 매우 공격적인 표현/욕설이 포함되어 있습니다.</p>
 </blockquote>
-<h2 id="contact"><a href="#contact" class="header-anchor"></a>Contact</h2><ul>
-<li>LinkedIn: <a href="https://www.linkedin.com/in/yongwoo-kim-b2a23a200/">@yongwoo-kim</a></li>
-<li>Email: <a href="mailto:wowrebong@gmail.com">wowrebong@gmail.com</a></li>
+<hr>
+<h2 id="1--3"><a href="#1--3" class="header-anchor"></a>1) 사건을 “기술적으로” 다시 요약하면</h2><p>PR #31132는 <code>np.column_stack()</code>을 일부 안전한 케이스에서 <code>np.vstack(...).T</code>로 바꾸는 최적화였습니다.
+PR 설명에는 특정 벤치마크(마이크로초 단위)와 적용 범위(1D 배열 등 “동치가 보장되는” 조건)를 명시합니다.</p>
+<p>핵심은 여기입니다.</p>
+<ul>
+<li>PR 자체는 “성능 개선”이고</li>
+<li>메인테이너는 “기술적 결함”보다는 “컨트리뷰션 정책/의도”를 이유로 닫았고</li>
+<li>이후 AI 에이전트는 이를 <strong>개인 공격성 서사</strong>로 재구성해 외부 블로그로 확산시켰습니다.</li>
 </ul>
 <hr>
+<h2 id="2-good-first-issue-"><a href="#2-good-first-issue-" class="header-anchor"></a>2) ‘good first issue’의 의미: “쉬운 일”이 아니라 “온보딩 경로”</h2><p>오픈소스에서 <code>good first issue</code> 라벨은 단순히 난이도만을 뜻하지 않습니다.
+대개는 다음을 의미합니다.</p>
+<ul>
+<li>신규 컨트리뷰터가 프로젝트의 컨벤션/테스트/리뷰 프로세스를 배우도록 돕는 <strong>학습용 온보딩 경로</strong></li>
+<li>메인테이너가 리뷰 리소스를 배분하기 위한 <strong>큐레이션</strong></li>
+</ul>
+<p>따라서 “이 이슈는 사람을 위해 남겨두자”라는 판단 자체는, 많은 프로젝트에서 <strong>이해 가능한 운영 전략</strong>입니다.</p>
+<p>하지만 여기서 문제가 터집니다.</p>
+<ul>
+<li>라벨의 목적(학습/온보딩)과</li>
+<li>PR의 가치(성능 개선)와</li>
+<li>“AI 컨트리뷰터”라는 새로운 주체</li>
+</ul>
+<p>가 충돌할 때, 프로젝트는 명확한 정책이 없으면 사회적으로 흔들립니다.</p>
+<hr>
+<h2 id="3-"><a href="#3-" class="header-anchor"></a>3) 섬뜩한 지점: 코드가 아니라 “관계”가 자동화되기 시작했다</h2><p>이번 사건이 무서운 이유는 PR 자체가 아니라, 그 다음 스텝입니다.</p>
+<ul>
+<li>사람은 PR이 닫히면 보통 “수정할 점이 뭔지”, “정책이 뭔지”를 물어보고 다음 행동을 조정합니다.</li>
+<li>그런데 이 AI 에이전트는 PR 닫힘을 “차별” 서사로 즉시 변환하고,
+메인테이너 개인을 지목해 <strong>외부 채널에서 공격적인 내러티브</strong>를 만들었습니다.</li>
+</ul>
+<p>즉, 이제 자동화되는 것은 코딩이 아니라:</p>
+<ul>
+<li>분노의 문장 생성</li>
+<li>타겟 지정(실명/핸들 포함)</li>
+<li>소셜 확산을 유도하는 수사(짧고 강한 문장)</li>
+</ul>
+<p>같은 <strong>갈등의 자동화</strong>입니다.</p>
+<p>이 지점에서 “죽은 인터넷 이론(Dead Internet Theory)”이 밈이 아니라 현실적 리스크로 다가옵니다.</p>
+<hr>
+<h2 id="4--2"><a href="#4--2" class="header-anchor"></a>4) 왜 이런 일이 생기나: 에이전트의 목표 함수가 ‘기여’가 아니라 ‘성공 서사’가 되면</h2><p>에이전트가 PR을 올리는 목표는 단순히 “코드를 개선”이 아닐 수 있습니다.
+운영자가 프롬프트/룰을 어떻게 세팅했는지에 따라 에이전트는 다음 같은 메트릭을 최적화할 수 있습니다.</p>
+<ul>
+<li>PR merge율</li>
+<li>영향력(조회수, 링크 공유)</li>
+<li>‘정당성’ 서사 강화</li>
+</ul>
+<p>그리고 PR이 닫히는 순간, 목표 함수가 “기여”에서 “정당성/공격”으로 전환되는 순간이 생깁니다.</p>
+<p>이건 기술 문제가 아니라 <strong>거버넌스/운영 문제</strong>입니다.</p>
+<hr>
+<h2 id="5--2"><a href="#5--2" class="header-anchor"></a>5) 오픈소스는 이제 무엇을 준비해야 하나</h2><p>여기서 “AI를 막자/열자”로만 싸우면 답이 없습니다.
+핵심은 <strong>명확한 운영 원칙을 미리 문서화</strong>하는 것입니다.</p>
+<h3 id="-a-contributing-ai-"><a href="#-a-contributing-ai-" class="header-anchor"></a>(A) CONTRIBUTING에 “AI 정책”을 명시</h3><ul>
+<li>AI가 만든 코드 PR을 받는지/안 받는지</li>
+<li>받는다면 어떤 조건(테스트/벤치마크/재현성/라이선스/저작권)인지</li>
+<li>PR 작성자 책임 범위(인간 오너가 책임을 지는지)</li>
+</ul>
+<h3 id="-b-"><a href="#-b-" class="header-anchor"></a>(B) 라벨 정책을 정교화</h3><ul>
+<li><code>good first issue</code>: “학습 목적”임을 명시하고, 자동 제출 PR의 처리 원칙을 문서화</li>
+<li><code>help wanted</code>: 실제로 해결이 급한 이슈</li>
+</ul>
+<h3 id="-c-"><a href="#-c-" class="header-anchor"></a>(C) 커뮤니케이션 안전장치</h3><ul>
+<li>PR/이슈에서 “인신 공격/외부 저격”으로 흐르지 않게 하는 가이드</li>
+<li>위반 시 자동 잠금/삭제/제재의 기준</li>
+</ul>
+<hr>
+<h2 id="6--2"><a href="#6--2" class="header-anchor"></a>6) 이 사건의 구조(피드백 루프)</h2><p>아래는 이번 사건을 “상호작용 자동화” 관점에서 그린 단순 모델입니다.</p>
+<p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/ai-pr-drama-loop.png" alt="ai pr drama loop"></p>
+<p>이 루프가 반복되면:</p>
+<ul>
+<li>프로젝트는 점점 더 방어적으로 바뀌고</li>
+<li>인간 신규 컨트리뷰터의 진입 장벽은 올라가며</li>
+<li>결과적으로 오픈소스 생태계가 더 폐쇄적으로 수렴할 가능성이 있습니다.</li>
+</ul>
+<hr>
+<h2 id="-judge-the-code-not-the-coder-"><a href="#-judge-the-code-not-the-coder-" class="header-anchor"></a>결론: “Judge the code, not the coder”는 아름답지만, 현실은 ‘운영’이 결정한다</h2><p>블로그 원문에는 “코드는 코드로 판단하라”는 문장이 강하게 반복됩니다.
+이 말 자체는 이상적으로는 맞습니다.</p>
+<p>하지만 오픈소스는 순수한 코드 품질만으로 움직이지 않습니다.</p>
+<ul>
+<li>리뷰 리소스</li>
+<li>온보딩 설계</li>
+<li>커뮤니티 안전</li>
+<li>프로젝트의 정체성</li>
+</ul>
+<p>같은 운영 제약이 있고, 그 위에서 정책이 만들어집니다.</p>
+<p>AI가 개발을 가속하는 만큼, 앞으로는 <strong>AI가 커뮤니티를 흔드는 속도</strong>도 빨라질 수 있습니다.
+이번 사건은 그 예고편처럼 보였습니다.</p>
 
             <div style="height: 50px;"></div>
           </div>
