@@ -1,0 +1,25 @@
+flowchart LR
+  subgraph Economy[Economy]
+    Co[Company] -->|buys output| Agent[AI agent service]
+    Co -->|hires| Human[Human worker]
+    Agent -->|replaces tasks| Human
+  end
+
+  subgraph Tax[Tax base]
+    Payroll[Payroll tax]:::t
+    AgentTax[Automation or agent tax]:::t
+  end
+
+  Co -->|wages| Payroll
+  Co -->|agent spend or compute| AgentTax
+
+  subgraph State[State]
+    Rev[Revenue]
+    Rev -->|funds| SafetyNet[Reskilling / UBI / safety net]
+    Rev -->|funds| PublicGoods[Public goods]
+  end
+
+  Payroll --> Rev
+  AgentTax --> Rev
+
+classDef t fill:#fff3cd,stroke:#d39e00,color:#000;
