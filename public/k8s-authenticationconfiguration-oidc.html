@@ -385,7 +385,7 @@
 <hr>
 <h2 id="1-oidc-code-oidc-code-"><a href="#1-oidc-code-oidc-code-" class="header-anchor"></a>1) 기존 OIDC(<code>--oidc-*</code>) 방식: 무엇이 불편했나?</h2><p>전통적으로 apiserver의 OIDC 연동은 이런 플로우입니다.</p>
 <p><img src="https://raw.githubusercontent.com/ddukbg/ddukbg/refs/heads/main/images/k8s-oidc-legacy.png" alt="legacy oidc flow"></p>
-<h3 id="--120"><a href="#--120" class="header-anchor"></a>핵심 포인트</h3><ul>
+<h3 id="--121"><a href="#--121" class="header-anchor"></a>핵심 포인트</h3><ul>
 <li><code>kubectl</code>(클라이언트)은 <strong>ID Token(JWT)</strong> 을 들고 apiserver에 요청합니다.</li>
 <li>apiserver는 토큰 검증을 위해<ul>
 <li>issuer의 <strong>OIDC discovery</strong>(<code>/.well-known/openid-configuration</code>)</li>
@@ -412,7 +412,7 @@
 <blockquote>
 <p>v1 API 문서에는 “JWTAuthenticator는 issuer의 공개 엔드포인트에서 OIDC discovery로 키를 찾는다”고 명시되어 있습니다.</p>
 </blockquote>
-<h3 id="--121"><a href="#--121" class="header-anchor"></a>왜 이게 중요한가?</h3><p>기존 <code>--oidc-*</code> 플래그의 문제는 크게 2가지였습니다.</p>
+<h3 id="--122"><a href="#--122" class="header-anchor"></a>왜 이게 중요한가?</h3><p>기존 <code>--oidc-*</code> 플래그의 문제는 크게 2가지였습니다.</p>
 <ol>
 <li><strong>표현력의 한계</strong>: 1개의 issuer, 제한적인 claim mapping.</li>
 <li><strong>운영성/확장성</strong>: 플래그가 많아지고, kubeadm/매니지드 환경에선 변경이 어렵고, 여러 issuer를 운영하기가 곤란.</li>
@@ -503,7 +503,7 @@
     <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/livez</span>
     <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/readyz</span>
     <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/healthz</span></code></pre><hr>
-<h2 id="7-"><a href="#7-" class="header-anchor"></a>7) 결론</h2><ul>
+<h2 id="7--2"><a href="#7--2" class="header-anchor"></a>7) 결론</h2><ul>
 <li>AuthenticationConfiguration는 기존 OIDC 플래그를 <strong>더 구조화/확장 가능하게 대체</strong>하는 방향입니다.</li>
 <li>1.34는 문서 기준으로 안정화된 요소가 등장하고(v1.34 stable 표기), 운영 적용 가능성이 높습니다.</li>
 <li>Airgap에서 “issuer 통신 필요”는 <strong>본질적으로 남아있으며</strong>, 해결은<ul>
@@ -524,7 +524,7 @@
 <ul>
 <li><code>iss</code>가 <code>https://idp.example.com</code>인 토큰은 <strong>매칭 단계에서 바로 실패</strong>합니다.</li>
 </ul>
-<h3 id="--122"><a href="#--122" class="header-anchor"></a>현실적인 해결 패턴</h3><ol>
+<h3 id="--123"><a href="#--123" class="header-anchor"></a>현실적인 해결 패턴</h3><ol>
 <li><strong>Split-horizon DNS</strong></li>
 </ol>
 <ul>

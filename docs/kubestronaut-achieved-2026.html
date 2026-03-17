@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kubestronaut 달성 후기: 5개 자격증 완주 + 2026년 시험 정리 - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>Kubestronaut 달성 후기: 5개 자격증 완주 + 2026년 시험 정리</h1>
+    <p><small>2026-03-18 7:28 AM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="kubestronaut-5-2026-"><a href="#kubestronaut-5-2026-" class="header-anchor"></a>Kubestronaut 달성 후기: 5개 자격증 완주 + 2026년 시험 정리</h1><p>작년에 “Kubestronaut 한 번 따보자”라고 말만 해두고… 결국 <strong>5개 자격증을 전부 취득해서 Kubestronaut를 달성</strong>했습니다.</p>
+<ul>
+<li>(제가 마지막으로 딴 순서 기준) <strong>CKS → CKA → CKAD → KCSA → KCNA</strong></li>
+<li>핵심은 <strong>5개 모두 ‘유효(active)’ 상태를 동시에 유지</strong>해야 한다는 점입니다. (만료되면 자격/혜택이 조건부로 정리됩니다)</li>
+</ul>
+<p>이 글은 두 파트로 구성했습니다.</p>
+<ol>
+<li>“드디어 땄다” 후기 + 제가 체감한 난이도/전략</li>
+<li><strong>2026년 기준으로 5개 시험을 한 번에 정리</strong> (무엇을 준비해야 하는지)</li>
+</ol>
+<hr>
+<h2 id="kubestronaut--3"><a href="#kubestronaut--3" class="header-anchor"></a>Kubestronaut 요건 (공식)</h2><p>CNCF FAQ 기준으로 Kubestronaut가 되려면 아래 5개 인증을 모두 취득해야 하고, <strong>전부 만료되지 않은 상태(유효/active)</strong> 여야 합니다.</p>
+<ul>
+<li>CKA</li>
+<li>CKAD</li>
+<li>CKS</li>
+<li>KCNA</li>
+<li>KCSA</li>
+</ul>
+<blockquote>
+<p>“Do all 5 certifications need to be active at the same time?” → <strong>Yes</strong></p>
+</blockquote>
+<p>출처: CNCF Kubestronaut FAQ</p>
+<ul>
+<li><a href="https://www.cncf.io/training/kubestronaut/kubestronaut-faq/">https://www.cncf.io/training/kubestronaut/kubestronaut-faq/</a></li>
+</ul>
+<hr>
+<h2 id="-kubestronaut-mermaid-"><a href="#-kubestronaut-mermaid-" class="header-anchor"></a>내 Kubestronaut 로드맵 (Mermaid)</h2><p>제가 실제로는 “기초 → 실습 → 보안” 순서로 쌓아왔고,
+마지막 관문으로 CKS를 뚫으면서 완주가 됐습니다.</p>
+<div class="mermaid">timeline
+    title CNCF Kubestronaut — My Path
+    section Foundation
+      KCNA : Kubernetes + Cloud Native 기초 다지기
+      KCSA : Cloud Native Security 사고방식 잡기
+    section Professional
+      CKAD : 앱을 쿠버네티스에 '제대로' 올리기
+      CKA  : 클러스터를 운영자 관점에서 다루기
+    section Final Boss
+      CKS  : 보안 관점으로 다시 클러스터/워크로드 보기</div><hr>
+<h2 id="2026-"><a href="#2026-" class="header-anchor"></a>2026년 기준: 각 시험 한 장 요약</h2><blockquote>
+<p>숫자(시간/문항/커트라인 등)는 정책이 바뀔 수 있으니, <strong>응시 전 공식 페이지에서 최종 확인</strong>을 권장합니다.</p>
+</blockquote>
+<h3 id="1-kcna-"><a href="#1-kcna-" class="header-anchor"></a>1) KCNA — “클라우드 네이티브 문해력”</h3><ul>
+<li>성격: 객관식 기반(이론/개념 중심)</li>
+<li>무엇을 보나:<ul>
+<li>쿠버네티스 기본 오브젝트/아키텍처</li>
+<li>컨테이너/오케스트레이션 기초</li>
+<li>CNCF 생태계(관측/배포/보안/서비스메시 등) 큰 그림</li>
+</ul>
+</li>
+<li>준비 팁:<ul>
+<li>“용어”를 안다고 끝이 아니라, <strong>개념 간 관계(왜/언제 쓰는지)</strong> 를 묻는 느낌이 있습니다.</li>
+</ul>
+</li>
+</ul>
+<p>공식 참고:</p>
+<ul>
+<li>KCNA 페이지(시험 정보/도메인): <a href="https://training.linuxfoundation.org/certification/kubernetes-cloud-native-associate/">https://training.linuxfoundation.org/certification/kubernetes-cloud-native-associate/</a></li>
+</ul>
+<h3 id="2-kcsa-"><a href="#2-kcsa-" class="header-anchor"></a>2) KCSA — “보안은 옵션이 아니라 기본값”</h3><ul>
+<li>성격: 객관식 기반(보안 개념/프레임워크/위협모델 중심)</li>
+<li>포인트:<ul>
+<li>4C, Threat Model, PSS(Policy/Admission), AuthN/AuthZ, 네트워크 정책, 감사로그</li>
+<li>“Kubernetes 내부 컴포넌트 관점 보안”을 질문 형태로 체득</li>
+</ul>
+</li>
+</ul>
+<p>공식 참고:</p>
+<ul>
+<li>KCSA 도메인/설명: <a href="https://training.linuxfoundation.org/certification/kubernetes-and-cloud-native-security-associate-kcsa/">https://training.linuxfoundation.org/certification/kubernetes-and-cloud-native-security-associate-kcsa/</a></li>
+</ul>
+<h3 id="3-ckad-"><a href="#3-ckad-" class="header-anchor"></a>3) CKAD — “개발자 관점 실전 쿠버네티스”</h3><ul>
+<li>성격: <strong>실습(Performance-based)</strong></li>
+<li>포인트:<ul>
+<li>디플로이먼트/롤링업데이트, 서비스/인그레스, 환경설정(ConfigMap/Secret), 프로브, 리소스 제한</li>
+<li>제한 시간 안에 <strong><code>kubectl</code>로 정확하게 만들어 내는 속도</strong>가 승부</li>
+</ul>
+</li>
+</ul>
+<p>공식 참고:</p>
+<ul>
+<li>CKAD 소개(실습 기반 시험): <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/">https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/</a></li>
+</ul>
+<h3 id="4-cka-"><a href="#4-cka-" class="header-anchor"></a>4) CKA — “운영자 관점: 클러스터를 굴리는 사람의 실력”</h3><ul>
+<li>성격: <strong>실습(Performance-based)</strong></li>
+<li>포인트:<ul>
+<li>클러스터 아키텍처/설치/업그레이드, 네트워킹, 스토리지, 트러블슈팅</li>
+<li>“왜 안 붙지?” “왜 DNS가 안 되지?” 같은 <strong>현업 감각</strong>이 그대로 시험에 등장</li>
+</ul>
+</li>
+</ul>
+<p>공식 참고:</p>
+<ul>
+<li>CKA 소개(실습 기반 시험): <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/">https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/</a></li>
+</ul>
+<h3 id="5-cks-"><a href="#5-cks-" class="header-anchor"></a>5) CKS — “마지막 관문(그리고 진짜 실력 체크)”</h3><ul>
+<li>성격: <strong>실습(Performance-based)</strong></li>
+<li>전제: <strong>CKA 합격이 먼저</strong>여야 응시 가능</li>
+<li>포인트:<ul>
+<li>클러스터/시스템/워크로드/서플라이체인/런타임 보안까지 전방위</li>
+<li>시간 압박이 강해서 <strong>찾아보기(문서/치트시트) + 즉시 적용</strong> 루틴이 중요</li>
+</ul>
+</li>
+</ul>
+<p>공식 참고:</p>
+<ul>
+<li>CKS 소개(실습 기반 시험 + CKA prerequisite): <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/">https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/</a></li>
+</ul>
+<hr>
+<h2 id="kubestronaut-people-"><a href="#kubestronaut-people-" class="header-anchor"></a>Kubestronaut 달성 혜택 정리 (재킷/People/프라이빗 채널)</h2><p>제가 가장 궁금했던 부분이라, 여기만 따로 정리합니다.</p>
+<h3 id="1-kubestronaut-jacket-"><a href="#1-kubestronaut-jacket-" class="header-anchor"></a>1) Kubestronaut 재킷 (Jacket)</h3><ul>
+<li>CNCF FAQ 기준: 자격 충족 시 CNCF 쪽에서 연락/온보딩을 진행하며, <strong>배송은 CNCF가 담당</strong>합니다.</li>
+<li>다만 <strong>추가 관세/통관 비용은 지원이 어려울 수 있다</strong>고 명시되어 있습니다.</li>
+<li>재킷은 <strong>평생 1회</strong>만 지급(자격을 잃었다가 다시 획득해도 재킷은 추가 지급 X)</li>
+</ul>
+<p>출처: CNCF Kubestronaut FAQ</p>
+<ul>
+<li><a href="https://www.cncf.io/training/kubestronaut/kubestronaut-faq/">https://www.cncf.io/training/kubestronaut/kubestronaut-faq/</a></li>
+</ul>
+<h3 id="2-cncf-people-"><a href="#2-cncf-people-" class="header-anchor"></a>2) CNCF People(프로필/리스트) 등록</h3><ul>
+<li>CNCF FAQ 기준: 주간 단위로 신규 자격자를 확인 → 이메일로 온보딩 폼 안내 → 승인 후 <strong>웹사이트에 listing</strong> 됩니다.</li>
+</ul>
+<p>출처: CNCF Kubestronaut FAQ</p>
+<ul>
+<li><a href="https://www.cncf.io/training/kubestronaut/kubestronaut-faq/">https://www.cncf.io/training/kubestronaut/kubestronaut-faq/</a></li>
+</ul>
+<h3 id="3-slack-"><a href="#3-slack-" class="header-anchor"></a>3) 프라이빗 Slack 채널 / 메일링 리스트</h3><ul>
+<li>공식/커뮤니티 자료에서 반복적으로 언급되는 대표 혜택: <strong>전용 Slack + 메일링 리스트 접근</strong></li>
+<li>고수들끼리 “정답 공유” 같은 게 아니라,<ul>
+<li>실무에서 겪는 케이스를 공유하고</li>
+<li>커리어/학습/커뮤니티 정보를 연결해주는
+그런 <strong>밀도 높은 네트워크</strong>가 핵심이라고 봤습니다.</li>
+</ul>
+</li>
+</ul>
+<p>참고(서드파티 설명):</p>
+<ul>
+<li><a href="https://blog.techiescamp.com/kubestronaut/">https://blog.techiescamp.com/kubestronaut/</a></li>
+</ul>
+<h3 id="4--3"><a href="#4--3" class="header-anchor"></a>4) 할인 쿠폰(시험/행사)</h3><p>CNCF FAQ 기준으로,</p>
+<ul>
+<li><strong>CNCF 이벤트(KubeCon/KubeDays 등) 20% 할인</strong> 관련 안내가 있고</li>
+<li>50% 바우처(시험용) 사용 범위에 대한 Q&amp;A가 있습니다.</li>
+</ul>
+<p>출처: CNCF Kubestronaut FAQ</p>
+<ul>
+<li><a href="https://www.cncf.io/training/kubestronaut/kubestronaut-faq/">https://www.cncf.io/training/kubestronaut/kubestronaut-faq/</a></li>
+</ul>
+<hr>
+<h2 id="-3-"><a href="#-3-" class="header-anchor"></a>제가 느낀 “합격을 좌우한 것” 3가지</h2><ol>
+<li><strong>문제풀이 속도는 실력의 일부</strong></li>
+</ol>
+<ul>
+<li>실습형은 결국 “아는 것”과 “빨리 해내는 것”이 다릅니다.</li>
+</ul>
+<ol start="2">
+<li><strong>문서 탐색/검색 루틴을 미리 ‘자동화’</strong></li>
+</ol>
+<ul>
+<li>시간 제한에서 제일 많이 까먹는 게 “어디에 뭐가 있었지?”입니다.</li>
+</ul>
+<ol start="3">
+<li><strong>보안은 따로 떼어놓지 말고, 운영/개발에 계속 섞어보기</strong></li>
+</ol>
+<ul>
+<li>CKS는 ‘보안만 아는 사람’보다 ‘운영+개발을 해본 사람의 보안 감각’을 요구합니다.</li>
+</ul>
+<hr>
+<h2 id="--129"><a href="#--129" class="header-anchor"></a>마무리</h2><p>작년에 던졌던 목표를, 1년(+)에 걸쳐 실제로 회수했습니다.</p>
+<p>혹시 Kubestronaut를 목표로 하시는 분께는 이렇게 말하고 싶습니다.</p>
+<ul>
+<li>“5개 합격”은 결과고,</li>
+<li>그 과정에서 얻는 건 <strong>쿠버네티스 생태계 전체를 다루는 시야</strong>입니다.</li>
+</ul>
+<p>다음은… (사람 욕심이 끝이 없어서) Golden 쪽도 한 번 슬쩍 생각은 해보겠습니다.</p>
+<hr>
+<h3 id="references"><a href="#references" class="header-anchor"></a>References</h3><ul>
+<li>CNCF Kubestronaut FAQ: <a href="https://www.cncf.io/training/kubestronaut/kubestronaut-faq/">https://www.cncf.io/training/kubestronaut/kubestronaut-faq/</a></li>
+<li>Linux Foundation — CKA: <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/">https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/</a></li>
+<li>Linux Foundation — CKAD: <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/">https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/</a></li>
+<li>Linux Foundation — CKS: <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/">https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/</a></li>
+<li>Linux Foundation — KCSA: <a href="https://training.linuxfoundation.org/certification/kubernetes-and-cloud-native-security-associate-kcsa/">https://training.linuxfoundation.org/certification/kubernetes-and-cloud-native-security-associate-kcsa/</a></li>
+<li>Linux Foundation — KCNA: <a href="https://training.linuxfoundation.org/certification/kubernetes-cloud-native-associate/">https://training.linuxfoundation.org/certification/kubernetes-cloud-native-associate/</a></li>
+<li>(참고) Techiescamp Kubestronaut 소개: <a href="https://blog.techiescamp.com/kubestronaut/">https://blog.techiescamp.com/kubestronaut/</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
