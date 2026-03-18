@@ -365,7 +365,7 @@
 <p>이 글에서는 Qwen3-TTS가 왜 주목받는지 기술적으로 분석하고, 이를 쉽게 테스트하고 서비스화하기 위해 직접 개발한 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">qwen3-tts-studio</a></strong> 프로젝트의 아키텍처와 구현 과정을 공유합니다.</p>
 <hr>
 <h2 id="1-qwen3-tts-"><a href="#1-qwen3-tts-" class="header-anchor"></a>1. Qwen3-TTS: 무엇이 달라졌나?</h2><p>기존 오픈소스 TTS(XTTS v2, StyleTTS2 등)들이 &quot;텍스트 읽기&quot;에 집중했다면, Qwen3-TTS는 **&quot;음성 생성(Speech Generation)&quot;**으로 패러다임을 확장했습니다.</p>
-<h3 id="--148"><a href="#--148" class="header-anchor"></a>핵심 기술 포인트</h3><ol>
+<h3 id="--149"><a href="#--149" class="header-anchor"></a>핵심 기술 포인트</h3><ol>
 <li><strong>Natural Language Control</strong>: &quot;속삭이듯이&quot;, &quot;화난 목소리로&quot; 같은 지시문을 LLM이 이해하고 음성에 반영합니다.</li>
 <li><strong>Factorized Diffusion?</strong>: (추정) Qwen 팀의 이전작 CosyVoice에서 보여준 플로우 매칭(Flow Matching)이나 디퓨전 기반의 아키텍처를 개량하여, 0.6B / 1.7B 파라미터 사이즈에서도 높은 품질을 냅니다.</li>
 <li><strong>Streaming First</strong>: 초기 응답 지연(TTFT)을 최소화하여 대화형 에이전트에 적합하도록 설계되었습니다.</li>
@@ -411,7 +411,7 @@ limiter = ConcurrencyLimiter(CONCURRENCY)
 <li><strong>Output</strong>: WAV Audio Byte Stream (브라우저에서 바로 재생)</li>
 </ul>
 <hr>
-<h2 id="5--6"><a href="#5--6" class="header-anchor"></a>5. 마치며</h2><p>Qwen3-TTS는 오픈소스 음성 모델의 수준을 한 단계 높였습니다. <strong>qwen3-tts-studio</strong>를 통해 이 강력한 모델을 누구나 쉽게 웹에서 테스트하고, 나만의 AI 보이스 서비스를 구축해 보시기 바랍니다.</p>
+<h2 id="5--7"><a href="#5--7" class="header-anchor"></a>5. 마치며</h2><p>Qwen3-TTS는 오픈소스 음성 모델의 수준을 한 단계 높였습니다. <strong>qwen3-tts-studio</strong>를 통해 이 강력한 모델을 누구나 쉽게 웹에서 테스트하고, 나만의 AI 보이스 서비스를 구축해 보시기 바랍니다.</p>
 <p>더 자세한 코드는 아래 리포지토리에서 확인할 수 있습니다.</p>
 <p>👉 <strong><a href="https://github.com/ddukbg/openclaw-playground/tree/main/qwen3-tts-studio">GitHub: qwen3-tts-studio</a></strong></p>
 

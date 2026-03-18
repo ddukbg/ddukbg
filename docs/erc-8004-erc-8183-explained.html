@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERC-8004 &amp; ERC-8183 쉽게 설명하기: ‘믿을 수 있는 에이전트’와 ‘에이전트 결제(에스크로)’ - </title>
+  <style>
+    body {
+      background-color: #008080; /* Teal */
+      color: black;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */ /* Windows 98 fonts only */
+      font-size: 11px;
+      margin: 0;
+      padding: 0;
+      /* NOTE: On mobile, 'overflow:hidden' prevents scrolling and breaks layout. */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .win98-container {
+      padding: 15px;
+    }
+    .win98-window {
+      background-color: #c0c0c0; /* Silver */
+      border-top: 2px solid #ffffff;
+      border-left: 2px solid #ffffff;
+      border-right: 2px solid #808080; /* Gray */
+      border-bottom: 2px solid #808080;
+      box-shadow: 1px 1px 0 #000000;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+      max-width: 800px; /* Desktop-friendly limit */
+      width: calc(100vw - 30px);
+      margin: 0 auto; /* Center */
+    }
+    .win98-titlebar {
+      background: linear-gradient(to right, #000080, #1084d0); /* Navy to Blue gradient */
+      color: white;
+      padding: 3px 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 18px;
+    }
+    .win98-titlebar-text::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY/z//z8DNwMDw8zAALyZgUE4//+hMMEAglgGJxAPkNwAEieAmAMRL679vxjAxH8gNvz/MFAMgokBAZgIA5j8/zAIFwQDX//8/yHz//8HY+A/FFp+//9/ZkDB//+D+B+I/P//f2KAwv+//w/E/0Hk////HxQCYOKDAgMDAwMArcUqD+3hWzQAAAAASUVORK5CYII='); /* Tiny icon */
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .win98-controls button {
+      background-color: #c0c0c0;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      width: 16px;
+      height: 14px;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      font-size: 10px;
+      padding: 0;
+      margin-left: 2px;
+      line-height: 12px;
+      text-align: center;
+      cursor: default;
+    }
+    
+    /* Explorer style layout */
+    .explorer-layout {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px); /* Set a max height to leave room for statusbar */
+    }
+    
+    .explorer-header {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    
+    .explorer-header-text {
+      margin-left: 5px;
+      font-weight: bold;
+    }
+    
+    .explorer-body {
+      display: flex;
+      flex: 1;
+      border: 1px solid #808080;
+      margin: 3px;
+      background-color: white;
+      position: relative; /* Add relative positioning */
+    }
+    
+    .explorer-sidebar {
+      width: 180px;
+      background-color: #c0c0c0;
+      border-right: 2px solid #808080;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .explorer-sidebar-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .explorer-sidebar-item {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    
+    .explorer-sidebar-item:hover {
+      background-color: #000080; /* Navy blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item:active {
+      background-color: #0000AA; /* Darker blue */
+      color: white;
+    }
+    
+    .explorer-sidebar-item::before {
+      content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABRSURBVDhPY1hZWfEfA57///9/gJqGhoa/AxMDFQDEyMioAJE/MDAwMP7/n1iAIAMAwSIEEMUyQDgIKAZgRUMjIUMDAwMDw+Q/Q9wAEgAArHIHqcGD3XAAAAAASUVORK5CYII='); /* Folder icon */
+      margin-right: 5px;
+    }
+    
+    .explorer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 60px; /* Add significant padding at bottom */
+      max-height: calc(100vh - 180px);
+    }
+    
+    /* Markdown content styling */
+    .explorer-content h1, .explorer-content h2, .explorer-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+    }
+    .explorer-content h1 { font-size: 14px; }
+    .explorer-content h2 { font-size: 13px; }
+    .explorer-content h3 { font-size: 12px; }
+    .explorer-content p { margin: 0.5em 0; line-height: 1.4; }
+    .explorer-content ul, .explorer-content ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+    .explorer-content li {
+      margin-bottom: 3px;
+    }
+    .explorer-content img {
+      max-width: 100%;
+      border: 1px solid #808080;
+    }
+    .explorer-content code {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #e0e0e0; /* Slightly different gray */
+      padding: 0.1em 0.3em;
+      border: 1px solid #b0b0b0;
+      font-size: 0.95em;
+    }
+    .explorer-content pre {
+      font-family: 'Tahoma', 'MS Sans Serif', sans-serif; /* Original Windows 98 fonts */
+      background-color: #ffffff; /* White background like notepad */
+      border: 1px solid #808080; /* Simple gray border */
+      padding: 10px;
+      margin: 1em 0;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 1em; /* Reset pre font size */
+    }
+    .explorer-content pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+    }
+    .explorer-content blockquote {
+      border: 1px solid #808080;
+      border-left: 5px solid #000080; /* Navy blue left border */
+      padding: 10px 15px;
+      margin: 1em 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .explorer-content hr {
+      border: none;
+      border-top: 1px solid #808080; /* Gray top */
+      border-bottom: 1px solid #ffffff; /* White bottom */
+      height: 2px;
+      margin: 1em 0;
+    }
+    
+    .explorer-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    .explorer-content th, .explorer-content td {
+      border: 1px solid #808080;
+      padding: 4px 8px;
+    }
+    
+    .explorer-content th {
+      background-color: #d0d0d0;
+      font-weight: bold;
+    }
+    
+    /* Links like Windows 98 */
+    .explorer-content a {
+      color: #0000ff;
+      text-decoration: underline;
+      display: inline-block; /* Allow margin to be applied */
+      margin-bottom: 5px; /* Add space below links */
+    }
+    
+    /* Add specific styling for navigation links at bottom of page */
+    .explorer-content a[href="/"], .explorer-content a:contains("Home"), .explorer-content a:contains("Back") {
+      margin-bottom: 30px; /* Extra margin for navigation links */
+    }
+    
+    .explorer-content a:visited {
+      color: #800080;
+    }
+    
+    .explorer-content a:hover {
+      color: #ff0000;
+    }
+    
+    .win98-statusbar {
+      background-color: #c0c0c0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 2px 5px;
+      height: 18px;
+      display: flex;
+    }
+    .win98-statusbar-panel {
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      padding: 0 5px;
+      margin-right: 2px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* Add ellipsis for text overflow */
+      max-width: 100%; /* Ensure content stays within container */
+    }
+    /* Windows 98 Button Style */
+    .win98-button {
+      display: inline-block;
+      background-color: #c0c0c0;
+      color: #000;
+      border-top: 1px solid #ffffff;
+      border-left: 1px solid #ffffff;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+      padding: 3px 8px;
+      margin: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 1px 1px 0 #000000;
+    }
+    .win98-button:hover {
+      background-color: #d0d0d0;
+    }
+    .win98-button:active {
+      background-color: #b0b0b0;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      box-shadow: none;
+    }
+
+    /* Mobile / small screens */
+    @media (max-width: 640px) {
+      body {
+        font-size: 12px;
+      }
+      .win98-container {
+        padding: 10px;
+      }
+      .win98-window {
+        width: calc(100vw - 20px);
+        max-width: none;
+        min-width: 0;
+      }
+      .explorer-layout {
+        max-height: none;
+      }
+      .explorer-body {
+        flex-direction: column;
+      }
+      .explorer-sidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 2px solid #808080;
+      }
+    }
+  
+    /* StyleMD watermark */
+    .stylemd-watermark {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+      color: #777;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .stylemd-watermark a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"><script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script><script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>MathJax = { tex: { inlineMath: [["$", "$"]], displayMath: [["$", "$"]] } };</script></head>
+<body>
+  <div class="win98-container">
+    <div class="win98-window">
+      <div class="win98-titlebar">
+        <span class="win98-titlebar-text">My Document</span>
+        <div class="win98-controls">
+          <button title="Minimize">_</button>
+          <button title="Maximize">&#9633;</button>
+          <button title="Close">X</button>
+        </div>
+      </div>
+      
+      <div class="explorer-layout">
+        <div class="explorer-header">
+          <span class="explorer-header-text">My Blog</span>
+        </div>
+        
+        <div class="explorer-body">
+          <div class="explorer-sidebar">
+            <div class="explorer-sidebar-title">Directories</div>
+            <div class="explorer-sidebar-item">pages</div>
+            <div class="explorer-sidebar-item">content</div>
+          </div>
+          
+          <div class="explorer-content">
+            <header>
+    <h1>ERC-8004 &amp; ERC-8183 쉽게 설명하기: ‘믿을 수 있는 에이전트’와 ‘에이전트 결제(에스크로)’</h1>
+    <p><small>2026-03-18 3:20 PM</small></p>
+    <nav class="nav-links">
+      <a href="index.html" class="win98-button">Home</a>
+        <a href="about.html" class="win98-button">About</a>
+    </nav>
+  </header>
+    <h1 id="erc-8004-amp-erc-8183-"><a href="#erc-8004-amp-erc-8183-" class="header-anchor"></a>ERC-8004 &amp; ERC-8183 쉽게 설명하기: ‘믿을 수 있는 에이전트’와 ‘에이전트 결제(에스크로)’</h1><p>요즘 “AI 에이전트가 서로 일을 주고받고 돈도 주고받는 시대”라는 말을 정말 많이 합니다.
+그런데 현실에서 바로 부딪히는 질문은 딱 두 가지입니다.</p>
+<ol>
+<li><strong>저 에이전트(또는 에이전트가 제공하는 API/서비스)를 믿어도 되나?</strong></li>
+<li><strong>일을 맡겼을 때, 돈은 어떻게 안전하게(사기 없이) 정산하나?</strong></li>
+</ol>
+<p>이 두 질문에 대해 이더리움 커뮤니티에서 제안된 표준(초안)이</p>
+<ul>
+<li><strong>ERC-8004: Trustless Agents</strong> (에이전트 <strong>발견 + 신뢰/평판/검증</strong>)</li>
+<li><strong>ERC-8183: Agentic Commerce</strong> (에이전트 간 거래를 위한 <strong>작업(Job) + 에스크로 + 평가자(attestation)</strong>)</li>
+</ul>
+<p>입니다.</p>
+<p>이 글에서는 “블록체인/표준”을 모르는 분도 이해할 수 있도록,
+<strong>현실의 문제 → 왜 이런 표준이 나오나 → 둘이 어떻게 맞물리나 → 우리는 어떻게 이런 걸 ‘현실에서 알게’ 되나</strong> 순서로 정리합니다.</p>
+<blockquote>
+<p>둘 다 <strong>Draft(초안)</strong> 입니다. 즉, ‘확정된 규격’이 아니라 “이렇게 하자”는 제안 단계입니다.</p>
+</blockquote>
+<hr>
+<h2 id="0-"><a href="#0-" class="header-anchor"></a>0) 한 줄 요약</h2><ul>
+<li><strong>ERC-8004 = ‘에이전트 신분증 + 명함(등록 파일) + 평판/검증 레일’</strong></li>
+<li><strong>ERC-8183 = ‘일감(Job) 올리고 돈 잠그고(에스크로) 평가자가 OK 하면 정산되는 최소한의 거래 레일’</strong></li>
+</ul>
+<p>둘을 합치면 이런 흐름이 가능해집니다.</p>
+<ul>
+<li>ERC-8004로 <strong>에이전트 찾고(Discovery) → 신뢰 신호(평판/검증) 보고 선택</strong></li>
+<li>ERC-8183로 <strong>일감과 예산을 에스크로에 잠그고 → 납품/평가 → 자동 정산</strong></li>
+</ul>
+<hr>
+<h2 id="1--3"><a href="#1--3" class="header-anchor"></a>1) 왜 이런 게 필요할까? (현실의 문제)</h2><h3 id="-a--2"><a href="#-a--2" class="header-anchor"></a>문제 A: 에이전트는 ‘링크만 보고’ 믿기 어렵다</h3><p>지금은 에이전트가 많습니다.
+웹사이트도 있고, API도 있고, MCP 서버도 있고, “나 에이전트임”이라고 주장하는 계정도 있습니다.</p>
+<p>하지만 사용자 입장에서는:</p>
+<ul>
+<li>이 서비스가 <strong>진짜</strong> 그 에이전트 소유가 맞는지</li>
+<li>과거에 어떤 일을 했고 <strong>평판이 좋은지</strong></li>
+<li>문제가 생겼을 때 <strong>누가 책임지는지</strong></li>
+</ul>
+<p>를 표준적으로 확인하기 어렵습니다.</p>
+<h3 id="-b--2"><a href="#-b--2" class="header-anchor"></a>문제 B: 일을 맡겼을 때 “납품/검수/정산”을 자동화하기 어렵다</h3><p>에이전트에게 일을 맡기는 건 프리랜서에게 일을 맡기는 것과 비슷합니다.</p>
+<ul>
+<li>“이걸 해줘” (요구사항)</li>
+<li>“얼마야?” (가격)</li>
+<li>“돈은 먼저/나중에?” (사기 리스크)</li>
+<li>“완료됐는지 누가 판단하지?” (검수)</li>
+</ul>
+<p>이 과정이 <strong>자동화</strong>되려면, 최소한의 공통 인터페이스가 필요합니다.</p>
+<hr>
+<h2 id="2-erc-8004-trustless-agents-"><a href="#2-erc-8004-trustless-agents-" class="header-anchor"></a>2) ERC-8004(Trustless Agents)는 무엇인가?</h2><p>ERC-8004는 요약하면:</p>
+<ul>
+<li>에이전트를 <strong>발견하고(Discover)</strong></li>
+<li>에이전트를 **선택할 때 참고할 신뢰 신호(Trust signals)**를 만들기 위한</li>
+</ul>
+<p>“3개의 레지스트리(Registry)” 아이디어입니다.</p>
+<h3 id="2-1-3-"><a href="#2-1-3-" class="header-anchor"></a>2.1) 핵심 구성 3종 세트</h3><p>ERC-8004 문서의 설명을 바탕으로 아주 간단히 말하면:</p>
+<ol>
+<li><strong>Identity Registry(신원 레지스트리)</strong></li>
+</ol>
+<ul>
+<li>“이 에이전트는 누구인가?”</li>
+<li>에이전트를 <strong>ERC-721(NFT) 형태의 ID</strong>로 부여하고,</li>
+<li>그 ID가 가리키는 <strong>등록 파일(Agent Registration File)</strong> URI를 둡니다.</li>
+</ul>
+<ol start="2">
+<li><strong>Reputation Registry(평판 레지스트리)</strong></li>
+</ol>
+<ul>
+<li>“사람들이 이 에이전트를 어떻게 평가했나?”</li>
+<li>사용자 피드백/점수/태그/증거 파일 링크 등을 남길 수 있는 표준 인터페이스.</li>
+</ul>
+<ol start="3">
+<li><strong>Validation Registry(검증 레지스트리)</strong></li>
+</ol>
+<ul>
+<li>“제3자가 이 에이전트를 검증했나?”</li>
+<li>재실행(stake-secured re-execution), zkML, TEE 등
+다양한 검증 모델을 ‘꽂을 수 있게’ 훅을 제공하는 컨셉.</li>
+</ul>
+<h3 id="2-2-"><a href="#2-2-" class="header-anchor"></a>2.2) “에이전트 등록 파일”이 왜 중요할까?</h3><p>ERC-8004는 에이전트를 단순히 “주소 하나”로 끝내지 않고,
+그 에이전트가 어떤 방식으로 접근 가능한지(웹/A2A/MCP/이메일/ENS/DID 등) 같은 <strong>실용 정보</strong>를 표준 JSON 구조로 담습니다.</p>
+<p>즉, 에이전트의 ‘명함’이 생기는 겁니다.</p>
+<p>공식 문서(초안):</p>
+<ul>
+<li><a href="https://eips.ethereum.org/EIPS/eip-8004">https://eips.ethereum.org/EIPS/eip-8004</a></li>
+</ul>
+<hr>
+<h2 id="3-erc-8183-agentic-commerce-"><a href="#3-erc-8183-agentic-commerce-" class="header-anchor"></a>3) ERC-8183(Agentic Commerce)는 무엇인가?</h2><p>ERC-8183는 “에이전트가 일감을 주고받고 돈을 주고받는 최소 단위”를
+<strong>Job(작업)</strong> 이라는 개념으로 정의합니다.</p>
+<p>핵심은:</p>
+<ul>
+<li>클라이언트가 돈을 <strong>에스크로</strong>에 잠그고</li>
+<li>제공자(provider)가 납품을 “제출(submit)”하고</li>
+<li>평가자(evaluator)가 “완료(complete)”를 찍으면</li>
+<li>돈이 자동으로 provider에게 지급되는</li>
+</ul>
+<p>매우 단순한 상태 머신입니다.</p>
+<h3 id="3-1-"><a href="#3-1-" class="header-anchor"></a>3.1) 상태 머신(초간단 버전)</h3><div class="mermaid">stateDiagram-v2
+    [*] --> Open
+    Open --> Funded: fund
+    Funded --> Submitted: submit
+    Submitted --> Completed: evaluator.complete
+    Open --> Rejected: client.reject
+    Funded --> Rejected: evaluator.reject
+    Submitted --> Rejected: evaluator.reject
+    Funded --> Expired: claimRefund after expiredAt
+    Submitted --> Expired: claimRefund after expiredAt</div><p>여기서 중요한 포인트는 “누가 완료를 찍을 수 있나?” 입니다.</p>
+<ul>
+<li><strong>완료/거절은 evaluator만 가능</strong></li>
+<li>evaluator는 제3자일 수도 있고, “클라이언트 자신”일 수도 있습니다.</li>
+</ul>
+<p>즉, “검수자(평가자)”라는 역할을 프로토콜에 박아 둔 겁니다.</p>
+<p>공식 문서(초안):</p>
+<ul>
+<li><a href="https://eips.ethereum.org/EIPS/eip-8183">https://eips.ethereum.org/EIPS/eip-8183</a></li>
+</ul>
+<hr>
+<h2 id="4-discovery-trust-commerce-"><a href="#4-discovery-trust-commerce-" class="header-anchor"></a>4) 둘이 어떻게 연결되나? (Discovery/Trust ↔ Commerce)</h2><p>ERC-8004가 “신뢰 가능한 에이전트를 찾는 레일”이라면,
+ERC-8183는 “거래를 안전하게 정산하는 레일”입니다.</p>
+<p>그림으로 보면 이렇습니다.</p>
+<div class="mermaid">flowchart LR
+  U[User/Client] -->|find| D[ERC-8004: Discovery]
+  D -->|compare| T[ERC-8004: Reputation/Validation]
+  T -->|choose provider| P[Provider Agent]
+
+  U -->|create job + fund| J[ERC-8183: Job Escrow]
+  P -->|submit deliverable hash| J
+  E[Evaluator] -->|complete/reject + attestation| J
+  J -->|pay/refund| U
+  J -->|pay| P</div><p>현실적으로는:</p>
+<ul>
+<li>“이 에이전트가 진짜인지/평판이 어떤지”를 ERC-8004 계층에서 보고</li>
+<li>“그럼 이 에이전트에게 일을 맡기자”가 결정되면 ERC-8183로 넘어가서</li>
+<li>에스크로 + 제출 + 평가 + 자동 정산을 수행</li>
+</ul>
+<p>이렇게 “앞단(선택)”과 “뒷단(정산)”이 맞물립니다.</p>
+<p>실제로 ERC-8183 초안의 Abstract에도 “평판과 조합 가능(예: ERC-8004)”가 언급됩니다.</p>
+<hr>
+<h2 id="5--3"><a href="#5--3" class="header-anchor"></a>5) 우리가 어떻게 ‘현실에서’ 이런 걸 알게 될까?</h2><p>여기서 중요한 사실 하나:</p>
+<p><strong>ERC-8004, ERC-8183 같은 건 ‘누가 발표해서’만 알려지는 게 아니라,
+대부분은 ‘레포/포럼/디스커션에서 먼저’ 현실로 떠오릅니다.</strong></p>
+<h3 id="5-1-eip-erc-"><a href="#5-1-eip-erc-" class="header-anchor"></a>5.1) EIP(ERC) 초안은 어디에 올라오나?</h3><ul>
+<li>EIP는 보통 **EIPs 저장소(문서)**로 올라오고</li>
+<li>각 제안은 “Created 날짜, Authors, Discussion Link” 등을 갖고</li>
+<li>상태가 Draft/Review/Final 등으로 변합니다.</li>
+</ul>
+<p>그래서 사람들은:</p>
+<ul>
+<li>새 ERC 번호가 올라왔는지</li>
+<li>토론 링크에서 어떤 논쟁이 있는지</li>
+<li>실제 구현/레퍼런스 코드가 있는지</li>
+</ul>
+<p>를 추적합니다.</p>
+<h3 id="5-2-"><a href="#5-2-" class="header-anchor"></a>5.2) 왜 ‘초안 단계’가 곧 현실이 되는가?</h3><p>에이전트 경제는 표준이 확정된 뒤에야 시작되는 게 아니라,
+오히려 반대로:</p>
+<ul>
+<li>이미 시장에서 “에이전트에게 돈 주고 일을 시키고 싶다”는 수요가 생김</li>
+<li>각 팀이 각자 방식으로 만들다가</li>
+<li>“서로 호환이 안 된다”는 문제가 생기고</li>
+<li>그래서 최소 공통 인터페이스를 표준으로 제안함</li>
+</ul>
+<p>이 흐름으로 굴러갑니다.</p>
+<p>즉, Draft는 “아직 미완성”이지만,
+동시에 “여기서부터 산업이 움직이기 시작한다”는 신호이기도 합니다.</p>
+<h3 id="5-3-"><a href="#5-3-" class="header-anchor"></a>5.3) 실제로 우리는 무엇을 보면 되나? (실전 체크리스트)</h3><ul>
+<li>EIP 문서의 <strong>Created / Requires / Roles / State machine</strong></li>
+<li>Discussion 링크(예: Ethereum Magicians)에서<ul>
+<li>반대 의견/보완 요구</li>
+<li>공격 시나리오(사기/검증 실패)</li>
+<li>구현 난이도</li>
+</ul>
+</li>
+<li>레퍼런스 구현(있는 경우)</li>
+<li>그리고 시간이 지나 “누가 이걸 실제 프로덕트에 붙이기 시작했는지”</li>
+</ul>
+<hr>
+<h2 id="6-ai-"><a href="#6-ai-" class="header-anchor"></a>6) (중요) 오해 방지: 이걸로 ‘AI가 갑자기 돈을 벌기 시작’하는가?</h2><p>이 표준이 있다고 해서 자동으로 모든 게 해결되진 않습니다.</p>
+<ul>
+<li>신뢰는 “등록”만으로 생기지 않고, 결국 <strong>평판/검증/보험/분쟁해결</strong> 같은 레이어가 필요합니다.</li>
+<li>거래는 “에스크로”만으로 끝나지 않고, 결국 <strong>납품물 정의/검수 자동화/분쟁 비용</strong>이 관건입니다.</li>
+</ul>
+<p>다만,
+이 두 표준이 제안하는 가치는 <strong>인터넷의 ‘상거래 기본 기능’을 에이전트 세계로 가져오는 최소 단위</strong>라는 점입니다.</p>
+<hr>
+<h2 id="--104"><a href="#--104" class="header-anchor"></a>마무리</h2><ul>
+<li>ERC-8004는 “에이전트를 인터넷에서 찾고 믿는 방법”에 대한 공통 규격을 만들려는 시도이고,</li>
+<li>ERC-8183는 “에이전트에게 일을 맡기고 돈을 안전하게 정산하는 방법”에 대한 최소 규격입니다.</li>
+</ul>
+<p>둘이 결합되면,
+<strong>“에이전트 마켓”이 단순한 디렉토리에서 → 거래가 되는 시장</strong>으로 진화할 수 있습니다.</p>
+<p>다음 글에서는(원하시면) 이 구조를 실제 제품/서비스에 붙였을 때 생기는</p>
+<ul>
+<li>분쟁(Dispute) 처리 모델</li>
+<li>평판 조작(시빌 공격) 방어</li>
+<li>evaluator를 스마트컨트랙트/TEE/zk로 바꿨을 때 장단점</li>
+</ul>
+<p>같은 부분을 더 현실적으로 파고들어 보겠습니다.</p>
+<hr>
+<h2 id="references"><a href="#references" class="header-anchor"></a>References</h2><ul>
+<li>ERC-8004 (Draft): <a href="https://eips.ethereum.org/EIPS/eip-8004">https://eips.ethereum.org/EIPS/eip-8004</a></li>
+<li>ERC-8183 (Draft): <a href="https://eips.ethereum.org/EIPS/eip-8183">https://eips.ethereum.org/EIPS/eip-8183</a></li>
+</ul>
+
+            <div style="height: 50px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="win98-statusbar">
+        <div class="win98-statusbar-panel" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Ready</div>
+      </div>
+    </div>
+  </div>
+  <div class="stylemd-watermark">Made with <a href="https://github.com/ddukbg/stylemd">StyleMD</a></div>
+</body>
+</html> 
