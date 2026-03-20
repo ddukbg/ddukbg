@@ -77,8 +77,8 @@ My personal projects are primarily developed under my **ddukbg** account, while 
 
 ## 🏆 Open Source Contributions
 
-- **[amazon-ecr-login: Improve behavior / fix edge-case (PR #740)](https://github.com/aws-actions/amazon-ecr-login/pull/740)**  
-  Merged upstream: contribution to the official `aws-actions/amazon-ecr-login` GitHub Action.
+- **[amazon-ecr-login: Supprot EKS Pod Identity (PR #740)](https://github.com/aws-actions/amazon-ecr-login/pull/740)**  
+  Add EKS Pod Identity support to Amazon ECR login action (#624, #735) (#740) (dcb4c27)
 
 - **[Fluent Plugin S3 Zstd](https://github.com/fluent/fluent-plugin-s3/pull/439)**  
   Official contribution: Added Zstd compression to Fluentd’s S3 plugin, featured in the v1.8.1 release.
